@@ -32,7 +32,7 @@ Simulations: two stage fixed Simon's design
 }
 \examples{
 \donttest{
-one_arm_rej_simon_binary(p_1=0.4,p_0=0.2,n_1=37,r_1=9,n_2=53,r_2=16,sim_num=100000)
+one_arm_rej_simon_binary(p_1=0.4,p_0=0.2,n_1=37,r_1=9,n_2=53,r_2=16,sim_num=20)
 }
 
 }

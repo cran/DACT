@@ -37,7 +37,7 @@
 #'
 #' @examples
 #' \donttest{
-#' one_arm_rej_simon_binary(p_1=0.4,p_0=0.2,n_1=37,r_1=9,n_2=53,r_2=16,sim_num=100000)
+#' one_arm_rej_simon_binary(p_1=0.4,p_0=0.2,n_1=37,r_1=9,n_2=53,r_2=16,sim_num=20)
 #' }
 #'
 #' @export
@@ -161,7 +161,7 @@ one_arm_rej_simon_binary<-function(p_1,p_0,n_1,r_1,n_2,r_2,sim_num){
 #' @examples
 #' \donttest{
 #' one_arm_rej_2_stg_binary(p_1=0.2,p_0=0.2,n_1=100,r_1_f=25,r_1_e=33,
-#' n_2=105,r_2=29,sim_num=100000)
+#' n_2=105,r_2=29,sim_num=20)
 #' }
 #'
 #' @export
@@ -176,7 +176,6 @@ one_arm_rej_2_stg_binary<-function(p_1,p_0,n_1,r_1_f,r_1_e=NA,n_2,r_2,sim_num){
   ############################################
   ####  begining of the simulation loops  ####
   ############################################
-  parloop = getParLoop(sim_num)
   simr <- simuloop(sim_num, "SINGLE", function() {
     ########################################
     ### Step 1: Generate random samples ####
@@ -315,7 +314,7 @@ one_arm_rej_2_stg_binary<-function(p_1,p_0,n_1,r_1_f,r_1_e=NA,n_2,r_2,sim_num){
 #' @examples
 #' \donttest{
 #' one_arm_ad_two_stg_binary(p_1=0.2,p_0=0.2,n_1=37,r_1=9,r_1_e=NA,n_2=53,r_2=16,
-#' N_max=140,beta=0.1,sim_num=100000)
+#' N_max=140,beta=0.1,sim_num=20)
 #' }
 #'
 #' @export
@@ -643,7 +642,7 @@ one_arm_ad_two_stg_binary<-function(p_1,p_0,n_1,r_1,r_1_e=NA,n_2,r_2,N_max,beta,
 #' @examples
 #' \donttest{
 #' one_arm_rej_3_stg_binary(p_1=0.2,p_0=0.2,n_1=37,r_1=8,n_2=100,r_2_f=22,r_2_e=33,
-#' n_3=105,r_3=29,sim_num=100000)
+#' n_3=105,r_3=29,sim_num=20)
 #' }
 #'
 #' @export
@@ -831,7 +830,7 @@ one_arm_rej_3_stg_binary<-function(p_1,p_0,n_1,r_1,n_2,r_2_f,r_2_e=NA,n_3,r_3,si
 #' @examples
 #' \donttest{
 #' one_arm_ad_3_stg_binary(p_1=0.2,p_0=0.2,n_1=37,r_1=8,n_2=100,r_2=22,r_2_e=33,
-#' n_3=105,r_3=29,N_max=150,beta=0.1,sim_num=100000)
+#' n_3=105,r_3=29,N_max=150,beta=0.1,sim_num=20)
 #' }
 #'
 #' @export

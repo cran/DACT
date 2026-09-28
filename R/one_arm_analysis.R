@@ -27,6 +27,7 @@
 #'
 #' @examples
 #' interim_analysis(p_0=0.2,r_final=17,n_inter=22,n_final=56,x_inter=7,beta=0.1,N_max=120)
+#'
 #' @export
 interim_analysis<-function(p_0,r_final,n_inter,n_final,x_inter,beta,N_max){
   b=stats::qnorm(1-beta)

@@ -230,6 +230,26 @@ asd_new_info_time<-function(theta,s,inter_vt,snew,c_alpha,theta_hat_inter,theta_
 
 
 ##################################
+#' Group sequential designs / Adaptive sequential designs: Interim analysis, Non-survival analysis, Input theta
+#'
+#' @param theta Assumed effect size
+#' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
+#' @param c_bry Vector of critical boundaries for each analysis
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
+#' @param snew Vector of new information fractions after the sample size is changed
+#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis
+#' @param theta_hat_inter_sd Standard error of 'theta_hat_inter'
+#' @param n_control_inter Sample size of the control arm at the interim analysis
+#' @param beta Type II error rate, i.e. 1 - power
+#'
+#' @return A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics', 'Critical boundary', 'Assumed effect size: theta', 'c_alpha', 'c_power_theta', 'N_control_new', 'new information fraction', 'New critical boundary'.
+#'
+#' @examples
+#' asd_new_design_theta(theta = 0.2, s = c(1/3, 2/3, 1), c_bry = c(3.984298, 3.961146, 2.349682),
+#' inter_vt = 1, snew = c(0.5, 1), theta_hat_inter = 0.3, theta_hat_inter_sd = 0.5,
+#' n_control_inter = 100, beta = 0.1)
+#'
+#' @export
 asd_new_design_theta<-function(theta,s,c_bry,inter_vt,snew,theta_hat_inter,theta_hat_inter_sd,n_control_inter,beta){
   #this function calculates the new sample size to achieve desired conditional power of 1-beta#
   #theta is the effect size
@@ -292,6 +312,25 @@ asd_new_design_theta<-function(theta,s,c_bry,inter_vt,snew,theta_hat_inter,theta
 
 ####################################
 ####################################
+#' Group sequential designs / Adaptive sequential designs: Interim analysis, Non-survival analysis, Use theta_interim
+#'
+#' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
+#' @param c_bry Vector of critical boundaries for each analysis
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
+#' @param snew Vector of new information fractions after the sample size is changed
+#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis
+#' @param theta_hat_inter_sd Standard error of 'theta_hat_inter'
+#' @param n_control_inter Sample size of the control arm at the interim analysis
+#' @param beta Type II error rate, i.e. 1 - power
+#'
+#' @return A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics', 'Critical boundary', 'Estimated effect size: theta', 'c_alpha', 'c_power_theta', 'N_control_new', 'new information fraction', 'New critical boundary'.
+#'
+#' @examples
+#' asd_new_design(s = c(1/3, 2/3, 1), c_bry = c(3.984298, 3.961146, 2.349682), inter_vt = 1,
+#' snew = c(0.5, 1), theta_hat_inter = 0.3, theta_hat_inter_sd = 0.5,
+#' n_control_inter = 100, beta = 0.1)
+#'
+#' @export
 asd_new_design<-function(s,c_bry,inter_vt,snew,theta_hat_inter,theta_hat_inter_sd,n_control_inter,beta){
   #this function calculates the new sample size to achieve desired conditional power of 1-beta#
   #theta is the effect size
@@ -352,6 +391,26 @@ asd_new_design<-function(s,c_bry,inter_vt,snew,theta_hat_inter,theta_hat_inter_s
 
 ####################################
 ####################################
+#' Group sequential designs / Adaptive sequential designs: Interim analysis, Survival analysis, Input theta
+#'
+#' @param theta Assumed effect size
+#' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
+#' @param c_bry Vector of critical boundaries for each analysis
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
+#' @param snew Vector of new information fractions after the sample size is changed
+#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis
+#' @param theta_hat_inter_sd Standard error of 'theta_hat_inter'
+#' @param events_inter Number of events observed at the interim analysis
+#' @param beta Type II error rate, i.e. 1 - power
+#'
+#' @return A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics', 'Critical boundary', 'Assumed effect size: theta', 'c_alpha', 'c_power_theta', ' events_new', 'New information fraction', 'New critical boundary'.
+#'
+#' @examples
+#' asd_new_design_theta_survival(theta = 0.2, s = c(1/3, 2/3, 1),
+#' c_bry = c(3.984298, 3.961146, 2.349682), inter_vt = 1, snew = c(0.5, 1), theta_hat_inter = 0.3,
+#' theta_hat_inter_sd = 0.5, events_inter = 100, beta = 0.1)
+#'
+#' @export
 asd_new_design_theta_survival<-function(theta,s,c_bry,inter_vt,snew,theta_hat_inter,theta_hat_inter_sd,events_inter,beta){
   #this function calculates the new sample size to achieve desired conditional power of 1-beta#
   #theta is the effect size
@@ -410,6 +469,25 @@ asd_new_design_theta_survival<-function(theta,s,c_bry,inter_vt,snew,theta_hat_in
 
 #####################################
 ####################################
+#' Group sequential designs / Adaptive sequential designs: Interim analysis, Survival analysis, Use theta_interim
+#'
+#' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
+#' @param c_bry Vector of critical boundaries for each analysis
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
+#' @param snew Vector of new information fractions after the sample size is changed
+#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis
+#' @param theta_hat_inter_sd Standard error of 'theta_hat_inter'
+#' @param events_inter Number of events observed at the interim analysis
+#' @param beta Type II error rate, i.e. 1 - power
+#'
+#' @return A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics', 'Critical boundary', 'Estimated effect size: theta', 'c_alpha', 'c_power_theta', ' events_new', 'New information fraction', 'New critical boundary'.
+#'
+#' @examples
+#' asd_new_design_survival(s = c(1/3, 2/3, 1), c_bry = c(3.984298, 3.961146, 2.349682),
+#' inter_vt = 1, snew = c(0.5, 1), theta_hat_inter = 0.3, theta_hat_inter_sd = 0.5,
+#' events_inter = 100, beta = 0.1)
+#'
+#' @export
 asd_new_design_survival<-function(s,c_bry,inter_vt,snew,theta_hat_inter,theta_hat_inter_sd,events_inter,beta){
   #this function calculates the new sample size to achieve desired conditional power of 1-beta#
   #theta is the effect size
@@ -588,6 +666,22 @@ asd_bk_img_gen<-function(theta,s,c_bry,theta_hat_inter,theta_hat_inter_sd,inter_
 
 ##########Final analysi, without sample size change ###########
 
+#' Group sequential designs / Adaptive sequential designs: Final analysis, Without sample size change
+#'
+#' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
+#' @param c_bry Vector of critical boundaries for each analysis
+#' @param theta_hat_last Treatment effect estimate observed at the final analysis
+#' @param theta_hat_last_sd Standard error of 'theta_hat_last'
+#' @param last_vt Index of the analysis at which the trial stopped
+#' @param alpha_2 Type I error for the two-sided test
+#'
+#' @return A named list containing the following elements: 'p-value', 'confidence interval'.
+#'
+#' @examples
+#' gsd_ci_est(s = c(1/3,2/3,1), c_bry = c(3.471095, 2.454434,2.004037), theta_hat_last = 2.004,
+#' theta_hat_last_sd = 1, last_vt = 3, alpha_2 = 0.05)
+#'
+#' @export
 gsd_ci_est<-function(s,c_bry,theta_hat_last,theta_hat_last_sd,last_vt,alpha_2){
   #This function calculates the confidence interval and the point estimate
   #s is the vector of information fractions. The length of s can be either 2 or 3#

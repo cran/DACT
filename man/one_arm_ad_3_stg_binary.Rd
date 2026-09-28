@@ -60,7 +60,7 @@ Simulations: adaptive three stage design
 \examples{
 \donttest{
 one_arm_ad_3_stg_binary(p_1=0.2,p_0=0.2,n_1=37,r_1=8,n_2=100,r_2=22,r_2_e=33,
-n_3=105,r_3=29,N_max=150,beta=0.1,sim_num=100000)
+n_3=105,r_3=29,N_max=150,beta=0.1,sim_num=20)
 }
 
 }

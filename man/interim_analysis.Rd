@@ -32,6 +32,7 @@ The interim analysis can be conducted for both two-stage and three-stage designs
 }
 \examples{
 interim_analysis(p_0=0.2,r_final=17,n_inter=22,n_final=56,x_inter=7,beta=0.1,N_max=120)
+
 }
 \references{
 R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).

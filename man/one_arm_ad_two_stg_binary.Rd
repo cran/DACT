@@ -54,7 +54,7 @@ Simulations: adaptive two stage design
 \examples{
 \donttest{
 one_arm_ad_two_stg_binary(p_1=0.2,p_0=0.2,n_1=37,r_1=9,r_1_e=NA,n_2=53,r_2=16,
-N_max=140,beta=0.1,sim_num=100000)
+N_max=140,beta=0.1,sim_num=20)
 }
 
 }

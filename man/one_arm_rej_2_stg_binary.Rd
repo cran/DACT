@@ -37,7 +37,7 @@ Simulations: Two stage fixed expanded Simon's design: either hybrid or mid-point
 \examples{
 \donttest{
 one_arm_rej_2_stg_binary(p_1=0.2,p_0=0.2,n_1=100,r_1_f=25,r_1_e=33,
-n_2=105,r_2=29,sim_num=100000)
+n_2=105,r_2=29,sim_num=20)
 }
 
 }

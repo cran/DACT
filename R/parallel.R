@@ -3,9 +3,6 @@
 #library(parallel)
 #library(doParallel)
 
-#' @import foreach
-#' @import parallel
-#' @import doParallel
 
 #debug_simu = TRUE
 debug_simu = FALSE
@@ -179,7 +176,7 @@ parallelStop <- function()
   stopCluster(clusterObj)
 }
 
-simuloop_windows <- function(sim_num, type, func)
+simuloop_windows2 <- function(sim_num, type, func)
 {
   cores = detectCores()
   if (sim_num>=cores) {
@@ -219,6 +216,10 @@ simuloop_windows <- function(sim_num, type, func)
     clusterExport(cl, "new_OF_bundry_s")
   } else if (type == "SINGLE") {
     #      clusterExport(cl, "pmvnorm")
+  } else if (type == "FIXED") {
+    #      clusterExport(cl, "pmvnorm")
+  } else if (type == "HYBRID") {
+    #      clusterExport(cl, "pmvnorm")
   }
   registerDoParallel(cl)
 
@@ -227,6 +228,17 @@ simuloop_windows <- function(sim_num, type, func)
   }#(end of q loop)
 
   stopCluster(cl)
+  return(simr)
+}
+
+simuloop_windows <- function(sim_num, type, func)
+{
+  parloop = getParLoopNum(sim_num)
+  simr = foreach(q = 1:parloop$cores, .combine = "rbind") %do% {
+    foreach(m = 1:parloop$loop[q], .combine = "rbind") %do% {
+      out = func()
+    }
+  }#(end of q loop)
   return(simr)
 }
 

@@ -52,7 +52,7 @@ Simulations: Expanded Simon's design: the three stage design, no sample size cha
 \examples{
 \donttest{
 one_arm_rej_3_stg_binary(p_1=0.2,p_0=0.2,n_1=37,r_1=8,n_2=100,r_2_f=22,r_2_e=33,
-n_3=105,r_3=29,sim_num=100000)
+n_3=105,r_3=29,sim_num=20)
 }
 
 }
