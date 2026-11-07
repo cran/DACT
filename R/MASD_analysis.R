@@ -15,17 +15,32 @@
 #'
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param c_bry Vector of critical boundaries for each analysis
-#' @param theta_hat_last_m1 'theta_hat_last_m1' as used by this function; see Examples.
-#' @param theta_hat_last_m1_sd 'theta_hat_last_m1_sd' as used by this function; see Examples.
-#' @param last_vt Index of the analysis at which the trial stopped
+#' @param theta_hat_last_m1 Numeric vector of treatment effect estimates observed at the analysis at
+#'   which the trial stopped, one per comparison (dose), e.g. the difference of the observed means or
+#'   event rates between a test arm and the common control arm, or minus the log of the observed hazard
+#'   ratio; its length gives the number of comparisons
+#' @param theta_hat_last_m1_sd Standard error of 'theta_hat_last_m1'; either a single value shared by
+#'   all comparisons or a vector with one value per comparison; must be > 0
+#' @param last_vt Index of the analysis at which the trial stopped (1-based); this can be the final
+#'   analysis, at which s = 1, or an interim analysis, and it must not exceed length(s)
 #' @param alpha_2 Type I error for the two-sided test
-#' @param dist Indicator of the endpoint / distribution type
+#' @param dist Distribution indicator: 1 = the comparisons (doses) share one common control arm and the
+#'   endpoint is normally distributed, so that the treatment effect estimates are correlated with
+#'   correlation 1/2; otherwise the comparisons are treated as independent
 #'
-#' @return A named list containing the following elements: 'p-value', 'confidence interval'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{p-value}{The p-value of the test of the null hypothesis that the treatment effect of the
+#'     dose (comparison) with the best efficacy is 0}
+#'   \item{confidence interval}{Numeric vector of length 3 giving the lower confidence limit, the
+#'     conservatively median unbiased point estimate and the upper confidence limit for the dose
+#'     (comparison) with the best efficacy; the lower limit is consistent with the p-value, in the
+#'     sense that the p-value < alpha_2/2 if and only if the lower limit is greater than 0}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
@@ -688,34 +703,70 @@ masd_new_samsz_theta_1<-function(theta,s,c_bry,snew,inter_vt,theta_hat_inter_m1,
 ###################################
 #' Multiple comparisons Group sequential design: Interim analysis, Non-survival analysis, Input theta
 #'
-#' @param theta Assumed effect size
+#' @param theta Assumed effect size for each of the M^(1) comparisons, i.e. a vector with
+#'   length(theta) = length(theta_hat_inter_m1); different values can be entered to check the
+#'   sensitivity of the conditional power to the effect size
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param c_bry Vector of critical boundaries for each analysis
-#' @param snew Vector of new information fractions after the sample size is changed
-#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
-#' @param theta_hat_inter_m1 'theta_hat_inter_m1' as used by this function; see Examples.
-#' @param theta_hat_inter_m1_sd 'theta_hat_inter_m1_sd' as used by this function; see Examples.
-#' @param theta_hat_inter_m2 'theta_hat_inter_m2' as used by this function; see Examples.
-#' @param theta_hat_inter_m2_sd 'theta_hat_inter_m2_sd' as used by this function; see Examples.
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param snew Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+#'   the fractions are relative to the new total information and the last element must be 1
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based);
+#'   must be less than length(s)
+#' @param theta_hat_inter_m1 Numeric vector of treatment effect estimates observed at the interim
+#'   analysis for all M^(1) comparisons, e.g. the difference of the observed means or event rates
+#'   between a test arm and the common control arm, or minus the log of the observed hazard ratio
+#' @param theta_hat_inter_m1_sd Standard error of 'theta_hat_inter_m1'; must be > 0
+#' @param theta_hat_inter_m2 Numeric vector of treatment effect estimates at the interim analysis for
+#'   the M^(2) comparisons that remain after the comparisons (doses) dropped for lack of efficacy are
+#'   removed; each element must appear in 'theta_hat_inter_m1', which is used to map the remaining
+#'   comparisons back onto the original ones
+#' @param theta_hat_inter_m2_sd Standard error of 'theta_hat_inter_m2'; must be > 0
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample size
+#'   re-estimation
 #' @param n_control_inter Sample size of the control arm at the interim analysis
-#' @param dist Indicator of the endpoint / distribution type
+#' @param dist Distribution indicator: 1 = the comparisons (doses) share one common control arm and the
+#'   endpoint is normally distributed, so that the treatment effect estimates are correlated with
+#'   correlation 1/2; otherwise the comparisons are treated as independent
 #'
-#' @return A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics', 'Critical boundary',
-#' 'Assumed effect size: theta', 'remaining effect size', 'c_alpha', 'c_power_m1', 'c_power_m2', 'N_control_new', 'new information fraction',
-#' 'New critical boundary'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Interim analysis hypothesis test}{Character string giving the outcome of the interim
+#'     hypothesis test: whether the null hypothesis was rejected at the interim analysis, which is the
+#'     case if the largest Wald statistic reaches the planned critical boundary}
+#'   \item{Wald statistics}{Numeric vector of the Wald statistics of the treatment effects observed at
+#'     the interim analysis, one per original (M^(1)) comparison}
+#'   \item{Critical boundary}{Planned critical boundary at the interim analysis at which the sample
+#'     size is re-estimated}
+#'   \item{Assumed effect size: theta}{The assumed effect size theta entered by the user, one value per
+#'     original (M^(1)) comparison}
+#'   \item{remaining effect size}{The elements of the assumed effect size belonging to the M^(2)
+#'     comparisons that remain after the doses (comparisons) are dropped}
+#'   \item{c_alpha}{Conditional type I error at the interim analysis, calculated by setting theta = 0
+#'     for all comparisons}
+#'   \item{c_power_m1}{Conditional power at the interim analysis using all M^(1) comparisons, the
+#'     assumed effect size theta and the original critical boundaries}
+#'   \item{c_power_m2}{Conditional power for the remaining M^(2) comparisons using the new critical
+#'     boundary evaluated at the planned sample size (ratio of new to original sample size 1), or 'NA'
+#'     if the null hypothesis was rejected at the interim analysis or if max(theta) < 0.001}
+#'   \item{N_control_new}{New sample size for the control arm after the sample size re-estimation, or
+#'     'NA' if the null hypothesis was rejected at the interim analysis or if max(theta) < 0.001}
+#'   \item{new information fraction}{The new information fractions after the sample size change, i.e.
+#'     'snew'}
+#'   \item{New critical boundary}{Numeric vector of the new critical boundaries for the new interim
+#'     analyses (O'Brien-Fleming type), one per element of 'snew', or 'NA' if they were not calculated}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
-#' masd_new_samsz_theta(theta = c(0,0.2,0), s = c(1/3,2/3,1),
-#' c_bry = c(3.984298, 3.961146, 2.349682), snew = 1, inter_vt = 2,
-#' theta_hat_inter_m1 = c(1.2,1.5,1.1), theta_hat_inter_m1_sd = 0.2,
-#' theta_hat_inter_m2 = c(1.2,1.5), theta_hat_inter_m2_sd = 0.2,
-#' beta = 0.1, n_control_inter = 65, dist = 1)
+#' masd_new_samsz_theta( theta = c(0,0.2,0), s = c(1/3,2/3,1),
+#'   c_bry = c(3.984298, 3.961146, 2.349682), snew = 1, inter_vt = 2,
+#'   theta_hat_inter_m1 = c(0.2,0.5,0.8), theta_hat_inter_m1_sd = 0.5,
+#'   theta_hat_inter_m2 = c(0.5,0.8), theta_hat_inter_m2_sd = 0.2, beta = 0.1,
+#'   n_control_inter = 65, dist = 1)
 #'
 #' @export
 masd_new_samsz_theta<-function(theta,s,c_bry,snew,inter_vt,theta_hat_inter_m1,theta_hat_inter_m1_sd,theta_hat_inter_m2,theta_hat_inter_m2_sd,beta,n_control_inter,dist){
@@ -789,32 +840,76 @@ masd_new_samsz_theta<-function(theta,s,c_bry,snew,inter_vt,theta_hat_inter_m1,th
 
 #' Multiple comparisons Group sequential design: Interim analysis, Survival analysis, Input theta
 #'
-#' @param theta Assumed effect size
+#' @param theta Assumed effect size (minus the log of the hazard ratio) for each of the M^(1)
+#'   comparisons, i.e. a vector with length(theta) = length(theta_hat_inter_m1); different values can
+#'   be entered to check the sensitivity of the conditional power to the effect size
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param c_bry Vector of critical boundaries for each analysis
-#' @param snew Vector of new information fractions after the sample size is changed
-#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
-#' @param theta_hat_inter_m1 'theta_hat_inter_m1' as used by this function; see Examples.
-#' @param theta_hat_inter_m1_sd 'theta_hat_inter_m1_sd' as used by this function; see Examples.
-#' @param theta_hat_inter_m2 'theta_hat_inter_m2' as used by this function; see Examples.
-#' @param theta_hat_inter_m2_sd 'theta_hat_inter_m2_sd' as used by this function; see Examples.
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param tot_events_inter_m1 'tot_events_inter_m1' as used by this function; see Examples.
-#' @param dist Indicator of the endpoint / distribution type
+#' @param snew Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+#'   the fractions are relative to the new total information and the last element must be 1
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based);
+#'   must be less than length(s)
+#' @param theta_hat_inter_m1 Numeric vector of treatment effect estimates observed at the interim
+#'   analysis for all M^(1) comparisons, i.e. minus the log of the observed hazard ratio for each
+#'   comparison
+#' @param theta_hat_inter_m1_sd Standard error of 'theta_hat_inter_m1'; must be > 0
+#' @param theta_hat_inter_m2 Numeric vector of treatment effect estimates at the interim analysis for
+#'   the M^(2) comparisons that remain after the comparisons (doses) dropped for lack of efficacy are
+#'   removed; each element must appear in 'theta_hat_inter_m1', which is used to map the remaining
+#'   comparisons back onto the original ones
+#' @param theta_hat_inter_m2_sd Standard error of 'theta_hat_inter_m2'; must be > 0
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample size
+#'   re-estimation
+#' @param tot_events_inter_m1 Total number of events observed at the interim analysis across all
+#'   M^(1) test arms and the common control arm
+#' @param dist Distribution indicator: 1 = the comparisons (doses) share one common control arm and the
+#'   endpoint is normally distributed, so that the treatment effect estimates are correlated with
+#'   correlation 1/2; otherwise the comparisons are treated as independent
 #'
-#' @return A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics',
-#' 'Critical boundary', 'Assumed effect size: theta', 'remaining effect size', 'c_alpha', 'c_power_m1', 'c_power_m2', 'new events between a test arm and control', 'new total events', 'new information fraction', 'New critical boundary'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Interim analysis hypothesis test}{Character string giving the outcome of the interim
+#'     hypothesis test: whether the null hypothesis was rejected at the interim analysis, which is the
+#'     case if the largest Wald statistic reaches the planned critical boundary}
+#'   \item{Wald statistics}{Numeric vector of the Wald statistics of the treatment effects observed at
+#'     the interim analysis, one per original (M^(1)) comparison}
+#'   \item{Critical boundary}{Planned critical boundary at the interim analysis at which the sample
+#'     size is re-estimated}
+#'   \item{Assumed effect size: theta}{The assumed effect size theta entered by the user, one value per
+#'     original (M^(1)) comparison}
+#'   \item{remaining effect size}{The elements of the assumed effect size belonging to the M^(2)
+#'     comparisons that remain after the doses (comparisons) are dropped}
+#'   \item{c_alpha}{Conditional type I error at the interim analysis, calculated by setting theta = 0
+#'     for all comparisons}
+#'   \item{c_power_m1}{Conditional power at the interim analysis using all M^(1) comparisons, the
+#'     assumed effect size theta and the original critical boundaries}
+#'   \item{c_power_m2}{Conditional power for the remaining M^(2) comparisons using the new critical
+#'     boundary evaluated at the planned sample size (ratio of new to original sample size 1), or 'NA'
+#'     if the null hypothesis was rejected at the interim analysis or if max(theta) < 0.001}
+#'   \item{new events between a test arm and control}{Number of events between one test arm and the
+#'     common control arm available for the re-estimation, calculated from the interim total events as
+#'     2 * tot_events_inter_m1 / (M^(1) + 1), or 'NA' if the null hypothesis was rejected at the interim
+#'     analysis or if max(theta) < 0.001}
+#'   \item{new total events}{New total number of events after the sample size re-estimation, across
+#'     the M^(2) remaining test arms and the common control arm, or 'NA' if the null hypothesis was
+#'     rejected at the interim analysis or if max(theta) < 0.001}
+#'   \item{new information fraction}{The new information fractions after the sample size change, i.e.
+#'     'snew'}
+#'   \item{New critical boundary}{Numeric vector of the new critical boundaries for the new interim
+#'     analyses (O'Brien-Fleming type), one per element of 'snew', or 'NA' if they were not calculated}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
-#' masd_new_samsz_theta_survival(theta=c(0,0.2,0), s=c(1/3,2/3,1),
-#' c_bry=c(3.984298, 3.961146, 2.349682), snew=1, inter_vt=2,
-#' theta_hat_inter_m1=c(1.2,1.5,1.1), theta_hat_inter_m1_sd=0.2, theta_hat_inter_m2=c(1.2,1.5),
-#' theta_hat_inter_m2_sd=0.2, beta=0.1, tot_events_inter_m1=65, dist=1)
+#' masd_new_samsz_theta_survival( theta = c(0,0.2,0), s = c(1/3,2/3,1),
+#'   c_bry = c(3.984298, 3.961146, 2.349682), snew = 1, inter_vt = 2,
+#'   theta_hat_inter_m1 = c(1.2,1.5,1.1), theta_hat_inter_m1_sd = 1.2,
+#'   theta_hat_inter_m2 = c(1.2,1.5), theta_hat_inter_m2_sd = 1.2, beta = 0.1,
+#'   tot_events_inter_m1 = 65, dist = 1)
 #'
 #' @export
 masd_new_samsz_theta_survival<-function(theta,s,c_bry,snew,inter_vt,theta_hat_inter_m1,theta_hat_inter_m1_sd,theta_hat_inter_m2,theta_hat_inter_m2_sd,beta,tot_events_inter_m1,dist){
@@ -902,29 +997,68 @@ masd_new_samsz_theta_survival<-function(theta,s,c_bry,snew,inter_vt,theta_hat_in
 #'
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param c_bry Vector of critical boundaries for each analysis
-#' @param snew Vector of new information fractions after the sample size is changed
-#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
-#' @param theta_hat_inter_m1 'theta_hat_inter_m1' as used by this function; see Examples.
-#' @param theta_hat_inter_m1_sd 'theta_hat_inter_m1_sd' as used by this function; see Examples.
-#' @param theta_hat_inter_m2 'theta_hat_inter_m2' as used by this function; see Examples.
-#' @param theta_hat_inter_m2_sd 'theta_hat_inter_m2_sd' as used by this function; see Examples.
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param snew Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+#'   the fractions are relative to the new total information and the last element must be 1
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based);
+#'   must be less than length(s)
+#' @param theta_hat_inter_m1 Numeric vector of treatment effect estimates observed at the interim
+#'   analysis for all M^(1) comparisons, e.g. the difference of the observed means or event rates
+#'   between a test arm and the common control arm, or minus the log of the observed hazard ratio; it
+#'   is also used as the estimated effect size for the conditional power calculation
+#' @param theta_hat_inter_m1_sd Standard error of 'theta_hat_inter_m1'; must be > 0
+#' @param theta_hat_inter_m2 Numeric vector of treatment effect estimates at the interim analysis for
+#'   the M^(2) comparisons that remain after the comparisons (doses) dropped for lack of efficacy are
+#'   removed; each element must appear in 'theta_hat_inter_m1', which is used to map the remaining
+#'   comparisons back onto the original ones
+#' @param theta_hat_inter_m2_sd Standard error of 'theta_hat_inter_m2'; must be > 0
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample size
+#'   re-estimation
 #' @param n_control_inter Sample size of the control arm at the interim analysis
-#' @param dist Indicator of the endpoint / distribution type
+#' @param dist Distribution indicator: 1 = the comparisons (doses) share one common control arm and the
+#'   endpoint is normally distributed, so that the treatment effect estimates are correlated with
+#'   correlation 1/2; otherwise the comparisons are treated as independent
 #'
-#' @return A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics',
-#' 'Critical boundary', 'Estimated effect size: theta', 'remaining effect size', 'c_alpha', 'c_power_m1', 'c_power_m2',
-#' 'N_control_new', 'new information fraction', 'New critical boundary'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Interim analysis hypothesis test}{Character string giving the outcome of the interim
+#'     hypothesis test: whether the null hypothesis was rejected at the interim analysis, which is the
+#'     case if the largest Wald statistic reaches the planned critical boundary}
+#'   \item{Wald statistics}{Numeric vector of the Wald statistics of the treatment effects observed at
+#'     the interim analysis, one per original (M^(1)) comparison}
+#'   \item{Critical boundary}{Planned critical boundary at the interim analysis at which the sample
+#'     size is re-estimated}
+#'   \item{Estimated effect size: theta}{The effect size used for the conditional power calculation,
+#'     taken to be the treatment effect estimates observed at the interim analysis, one value per
+#'     original (M^(1)) comparison}
+#'   \item{remaining effect size}{The elements of the estimated effect size belonging to the M^(2)
+#'     comparisons that remain after the doses (comparisons) are dropped}
+#'   \item{c_alpha}{Conditional type I error at the interim analysis, calculated by setting theta = 0
+#'     for all comparisons}
+#'   \item{c_power_m1}{Conditional power at the interim analysis using all M^(1) comparisons, the
+#'     estimated effect size and the original critical boundaries}
+#'   \item{c_power_m2}{Conditional power for the remaining M^(2) comparisons using the new critical
+#'     boundary evaluated at the planned sample size (ratio of new to original sample size 1), or 'NA'
+#'     if the null hypothesis was rejected at the interim analysis or if the largest observed effect
+#'     estimate is < 0.001}
+#'   \item{N_control_new}{New sample size for the control arm after the sample size re-estimation, or
+#'     'NA' if the null hypothesis was rejected at the interim analysis or if the largest observed
+#'     effect estimate is < 0.001}
+#'   \item{new information fraction}{The new information fractions after the sample size change, i.e.
+#'     'snew'}
+#'   \item{New critical boundary}{Numeric vector of the new critical boundaries for the new interim
+#'     analyses (O'Brien-Fleming type), one per element of 'snew', or 'NA' if they were not calculated}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
-#' masd_new_samsz(s=c(1/3,2/3,1), c_bry=c(3.984298, 3.961146, 2.349682), snew=1, inter_vt=2,
-#' theta_hat_inter_m1=c(1.2,1.5,1.1), theta_hat_inter_m1_sd=0.2, theta_hat_inter_m2=c(1.2,1.5),
-#' theta_hat_inter_m2_sd=0.2, beta=0.1, n_control_inter=65, dist=1)
+#' masd_new_samsz( s = c(1/3,2/3,1), c_bry = c(3.984298, 3.961146, 2.349682), snew = 1,
+#'   inter_vt = 2, theta_hat_inter_m1 = c(0.2,0.5,0.8), theta_hat_inter_m1_sd = 0.5,
+#'   theta_hat_inter_m2 = c(0.5,0.8), theta_hat_inter_m2_sd = 0.2, beta = 0.1,
+#'   n_control_inter = 65, dist = 1)
 #'
 #' @export
 masd_new_samsz<-function(s,c_bry,snew,inter_vt,theta_hat_inter_m1,theta_hat_inter_m1_sd,theta_hat_inter_m2,theta_hat_inter_m2_sd,beta,n_control_inter,dist){
@@ -1004,23 +1138,64 @@ masd_new_samsz<-function(s,c_bry,snew,inter_vt,theta_hat_inter_m1,theta_hat_inte
 #'
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param c_bry Vector of critical boundaries for each analysis
-#' @param snew Vector of new information fractions after the sample size is changed
-#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
-#' @param theta_hat_inter_m1 'theta_hat_inter_m1' as used by this function; see Examples.
-#' @param theta_hat_inter_m1_sd 'theta_hat_inter_m1_sd' as used by this function; see Examples.
-#' @param theta_hat_inter_m2 'theta_hat_inter_m2' as used by this function; see Examples.
-#' @param theta_hat_inter_m2_sd 'theta_hat_inter_m2_sd' as used by this function; see Examples.
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param tot_events_inter_m1 'tot_events_inter_m1' as used by this function; see Examples.
-#' @param dist Indicator of the endpoint / distribution type
+#' @param snew Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+#'   the fractions are relative to the new total information and the last element must be 1
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based);
+#'   must be less than length(s)
+#' @param theta_hat_inter_m1 Numeric vector of treatment effect estimates observed at the interim
+#'   analysis for all M^(1) comparisons, i.e. minus the log of the observed hazard ratio for each
+#'   comparison; it is also used as the estimated effect size for the conditional power calculation
+#' @param theta_hat_inter_m1_sd Standard error of 'theta_hat_inter_m1'; must be > 0
+#' @param theta_hat_inter_m2 Numeric vector of treatment effect estimates at the interim analysis for
+#'   the M^(2) comparisons that remain after the comparisons (doses) dropped for lack of efficacy are
+#'   removed; each element must appear in 'theta_hat_inter_m1', which is used to map the remaining
+#'   comparisons back onto the original ones
+#' @param theta_hat_inter_m2_sd Standard error of 'theta_hat_inter_m2'; must be > 0
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample size
+#'   re-estimation
+#' @param tot_events_inter_m1 Total number of events observed at the interim analysis across all
+#'   M^(1) test arms and the common control arm
+#' @param dist Distribution indicator: 1 = the comparisons (doses) share one common control arm and the
+#'   endpoint is normally distributed, so that the treatment effect estimates are correlated with
+#'   correlation 1/2; otherwise the comparisons are treated as independent
 #'
-#' @return A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics', 'Critical boundary',
-#' 'Assumed effect size: theta', 'remaining effect size', 'c_alpha', 'c_power_m1', 'c_power_m2', 'new events between a test arm and control',
-#' 'new total events', 'new information fraction', 'New critical boundary'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Interim analysis hypothesis test}{Character string giving the outcome of the interim
+#'     hypothesis test: whether the null hypothesis was rejected at the interim analysis, which is the
+#'     case if the largest Wald statistic reaches the planned critical boundary}
+#'   \item{Wald statistics}{Numeric vector of the Wald statistics of the treatment effects observed at
+#'     the interim analysis, one per original (M^(1)) comparison}
+#'   \item{Critical boundary}{Planned critical boundary at the interim analysis at which the sample
+#'     size is re-estimated}
+#'   \item{Assumed effect size: theta}{The effect size used for the conditional power calculation,
+#'     taken to be the treatment effect estimates observed at the interim analysis (minus the log of
+#'     the observed hazard ratio), one value per original (M^(1)) comparison}
+#'   \item{remaining effect size}{The elements of the effect size belonging to the M^(2) comparisons
+#'     that remain after the doses (comparisons) are dropped}
+#'   \item{c_alpha}{Conditional type I error at the interim analysis, calculated by setting theta = 0
+#'     for all comparisons}
+#'   \item{c_power_m1}{Conditional power at the interim analysis using all M^(1) comparisons, the
+#'     observed effect size and the original critical boundaries}
+#'   \item{c_power_m2}{Conditional power for the remaining M^(2) comparisons using the new critical
+#'     boundary evaluated at the planned sample size (ratio of new to original sample size 1), or 'NA'
+#'     if the null hypothesis was rejected at the interim analysis or if max(theta) < 0.001}
+#'   \item{new events between a test arm and control}{Number of events between one test arm and the
+#'     common control arm required after the sample size re-estimation, derived from the interim total
+#'     events and the ratio of the new to the planned information, or 'NA' if the null hypothesis was
+#'     rejected at the interim analysis or if max(theta) < 0.001}
+#'   \item{new total events}{New total number of events after the sample size re-estimation, across
+#'     the M^(2) remaining test arms and the common control arm, or 'NA' if the null hypothesis was
+#'     rejected at the interim analysis or if max(theta) < 0.001}
+#'   \item{new information fraction}{The new information fractions after the sample size change, i.e.
+#'     'snew'}
+#'   \item{New critical boundary}{Numeric vector of the new critical boundaries for the new interim
+#'     analyses (O'Brien-Fleming type), one per element of 'snew', or 'NA' if they were not calculated}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
@@ -1259,22 +1434,44 @@ masd_bk_img_gen<-function(theta,s,c_bry,theta_hat_inter_m1,theta_hat_inter_m1_sd
 #'
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param c_bry Vector of critical boundaries for each analysis
-#' @param snew Vector of new information fractions after the sample size is changed
-#' @param c_bry_new Critical boundaries after the sample size is changed
-#' @param theta_hat_inter_m1 'theta_hat_inter_m1' as used by this function; see Examples.
-#' @param theta_hat_inter_m1_sd 'theta_hat_inter_m1_sd' as used by this function; see Examples.
-#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
-#' @param theta_hat_last_ad_m1 'theta_hat_last_ad_m1' as used by this function; see Examples.
-#' @param theta_hat_last_ad_m1_sd 'theta_hat_last_ad_m1_sd' as used by this function; see Examples.
-#' @param last_vt_ad Index of the last analysis after the sample size change
+#' @param snew Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+#'   the fractions are relative to the new total information and the last element must be 1
+#' @param c_bry_new Vector of new critical boundaries after the sample size is changed, one per
+#'   element of 'snew'
+#' @param theta_hat_inter_m1 Numeric vector of treatment effect estimates observed at the interim
+#'   analysis at which the sample size was changed, one per original comparison (dose), e.g. the
+#'   difference of the observed means or event rates between a test arm and the common control arm
+#' @param theta_hat_inter_m1_sd Standard error of 'theta_hat_inter_m1'; either a single value shared by
+#'   all comparisons or a vector with one value per comparison; must be > 0
+#' @param inter_vt Index of the interim analysis at which the sample size was changed (1-based); must
+#'   be less than length(s)
+#' @param theta_hat_last_ad_m1 Numeric vector of treatment effect estimates observed at the analysis
+#'   after the sample size change at which the trial was terminated, one per original comparison
+#'   (dose), so that no doses were dropped; the comparison with the largest estimate is the one for
+#'   which the point estimate and confidence interval are returned
+#' @param theta_hat_last_ad_m1_sd Standard error of 'theta_hat_last_ad_m1'; either a single value
+#'   shared by all comparisons or a vector with one value per comparison; must be > 0
+#' @param last_vt_ad Index of the interim or final analysis after the sample size change at which the
+#'   trial was terminated (1-based); it indexes 'snew'
 #' @param alpha_2 Type I error for the two-sided test
-#' @param dist Indicator of the endpoint / distribution type
+#' @param dist Distribution indicator: 1 = the comparisons (doses) share one common control arm and the
+#'   endpoint is normally distributed, so that the treatment effect estimates are correlated with
+#'   correlation 1/2; otherwise the comparisons are treated as independent
 #'
-#' @return A named list containing the following elements: 'p-value', 'confidence interval'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{p-value}{The p-value of the test of the null hypothesis that the treatment effect of the
+#'     comparison (dose) with the best efficacy is 0}
+#'   \item{confidence interval}{Numeric vector of length 3 giving the lower confidence limit, the
+#'     conservatively median unbiased point estimate and the upper confidence limit for the comparison
+#'     (dose) with the best efficacy; this is the two-sided (1 - alpha_2) * 100 percent confidence
+#'     interval, and its lower limit is consistent with the p-value, in the sense that the p-value <
+#'     alpha_2/2 if and only if the lower limit is greater than 0}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
@@ -1376,7 +1573,7 @@ masd_est_back_no_drop<-function(s,c_bry,snew,c_bry_new,theta_hat_inter_m1,theta_
 #masd_est_back_no_drop(s=c(0.3,0.7,1),c_bry=c(4.347011, 2.845787, 2.380956),snew=c(0.5,1),c_bry_new=c(3.310743,2.781890),theta_hat_inter_m1=c(1.2,1.3,1.5),theta_hat_inter_m1_sd=1,inter_vt=1,theta_hat_last_ad_m1=c(2.2,1.4,1.8),theta_hat_last_ad_m1_sd=1,last_vt_ad=2,alpha_2=0.05,dist=1)
 #masd_est_back_no_drop(s=c(0.3,0.7,1),c_bry=c(4.347011, 2.845787, 2.380956),snew=c(0.5,1),c_bry_new=c(7.512163,7.428292),theta_hat_inter_m1=c(1.2,1.5),theta_hat_inter_m1_sd=0.8,inter_vt=1,theta_hat_last_ad_m1=c(7.428292*0.7,7.428292*0.7),theta_hat_last_ad_m1_sd=0.7,last_vt_ad=2,alpha_2=0.05,dist=1)
 #masd_est_back_no_drop(s=c(0.3,0.7,1),c_bry=c(4.347011, 2.845787, 2.380956),snew=c(0.5,1),c_bry_new=c(3.310743,2.781890),theta_hat_inter_m1=c(1.2,1.5),theta_hat_inter_m1_sd=1,inter_vt=1,theta_hat_last_ad_m1=c(3.310743,2.781890),theta_hat_last_ad_m1_sd=0.8,last_vt_ad=2,alpha_2=0.05,dist=1)
-#输入masd_est_back_no_drop(s=c(0.3,0.7,1),c_bry=c(4.347011, 2.845787, 2.380956),snew=c(0.5,1),c_bry_new=c(3.310743,2.781890),theta_hat_inter_m1=c(1.2,1.3,1.5),theta_hat_inter_m1_sd=1,inter_vt=1,theta_hat_last_ad_m1=c(2.2,1.4,1.8),theta_hat_last_ad_m1_sd=1,last_vt_ad=2,alpha_2=0.05,dist=1)输出1.9982  ???3.7553,6.307???
+#masd_est_back_no_drop(s=c(0.3,0.7,1),c_bry=c(4.347011, 2.845787, 2.380956),snew=c(0.5,1),c_bry_new=c(3.310743,2.781890),theta_hat_inter_m1=c(1.2,1.3,1.5),theta_hat_inter_m1_sd=1,inter_vt=1,theta_hat_last_ad_m1=c(2.2,1.4,1.8),theta_hat_last_ad_m1_sd=1,last_vt_ad=2,alpha_2=0.05,dist=1)
 ##########################################################################
 ##############################################
 
@@ -1506,24 +1703,50 @@ masd_est_back_no_drop_com<-function(s,c_bry,theta_hat_inter_m1,theta_hat_inter_m
 #'
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param c_bry Vector of critical boundaries for each analysis
-#' @param snew Vector of new information fractions after the sample size is changed
-#' @param c_bry_new Critical boundaries after the sample size is changed
-#' @param theta_hat_inter_m1 'theta_hat_inter_m1' as used by this function; see Examples.
-#' @param theta_hat_inter_m1_sd 'theta_hat_inter_m1_sd' as used by this function; see Examples.
-#' @param theta_hat_inter_m2 'theta_hat_inter_m2' as used by this function; see Examples.
-#' @param theta_hat_inter_m2_sd 'theta_hat_inter_m2_sd' as used by this function; see Examples.
-#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
-#' @param theta_hat_last_ad_m2 'theta_hat_last_ad_m2' as used by this function; see Examples.
-#' @param theta_hat_last_ad_m2_sd 'theta_hat_last_ad_m2_sd' as used by this function; see Examples.
-#' @param last_vt_ad Index of the last analysis after the sample size change
+#' @param snew Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+#'   the fractions are relative to the new total information and the last element must be 1
+#' @param c_bry_new Vector of new critical boundaries after the sample size is changed, one per
+#'   element of 'snew'
+#' @param theta_hat_inter_m1 Numeric vector of treatment effect estimates observed at the interim
+#'   analysis at which the sample size was changed, one per original comparison (dose), e.g. the
+#'   difference of the observed means or event rates between a test arm and the common control arm
+#' @param theta_hat_inter_m1_sd Standard error of 'theta_hat_inter_m1'; either a single value shared by
+#'   all comparisons or a vector with one value per comparison; must be > 0
+#' @param theta_hat_inter_m2 Numeric vector of treatment effect estimates at the interim analysis for
+#'   the M^(2) comparisons that remain after the doses (comparisons) dropped for lack of efficacy are
+#'   removed; each element must appear in 'theta_hat_inter_m1', which is used to map the remaining
+#'   comparisons back onto the original ones
+#' @param theta_hat_inter_m2_sd Standard error of 'theta_hat_inter_m2'; either a single value shared by
+#'   all comparisons or a vector with one value per comparison; must be > 0
+#' @param inter_vt Index of the interim analysis at which the sample size was changed (1-based); must
+#'   be less than length(s)
+#' @param theta_hat_last_ad_m2 Numeric vector of treatment effect estimates observed at the analysis
+#'   after the sample size change at which the trial was terminated, one per remaining comparison
+#'   (dose); the remaining comparison with the largest estimate is the one for which the point estimate
+#'   and confidence interval are returned
+#' @param theta_hat_last_ad_m2_sd Standard error of 'theta_hat_last_ad_m2'; either a single value
+#'   shared by all comparisons or a vector with one value per comparison; must be > 0
+#' @param last_vt_ad Index of the interim or final analysis after the sample size change at which the
+#'   trial was terminated (1-based); it indexes 'snew'
 #' @param alpha_2 Type I error for the two-sided test
-#' @param dist Indicator of the endpoint / distribution type
+#' @param dist Distribution indicator: 1 = the comparisons (doses) share one common control arm and the
+#'   endpoint is normally distributed, so that the treatment effect estimates are correlated with
+#'   correlation 1/2; otherwise the comparisons are treated as independent
 #'
-#' @return A named list containing the following elements: 'p-value', 'confidence interval'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{p-value}{The p-value of the test of the null hypothesis that the treatment effect of the
+#'     remaining comparison (dose) with the best efficacy is 0}
+#'   \item{confidence interval}{Numeric vector of length 3 giving the lower confidence limit, the
+#'     conservatively median unbiased point estimate and the upper confidence limit for the remaining
+#'     comparison (dose) with the best efficacy; this is the two-sided (1 - alpha_2) * 100 percent
+#'     confidence interval, and its lower limit is consistent with the p-value, in the sense that the
+#'     p-value < alpha_2/2 if and only if the lower limit is greater than 0}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
@@ -1893,6 +2116,6 @@ masd_ucl_est_back<-function(s,c_bry,snew,c_bry_new,m_select,theta_hat_inter_m1,t
 #############################################
 #masd_ucl_est_back(s,c_bry,snew,c_bry_new,m_select,theta_hat_inter_m1,theta_hat_inter_m1_sd,inter_vt,theta_hat_last_ad_m2,theta_hat_last_ad_m2_sd,last_vt_ad,alpha_2)
 #masd_ucl_est_back(s=c(0.3,0.7,1),c_bry=c(4.347011, 2.845787, 2.380956),snew=c(0.5,1),c_bry_new=c(3.310743, 2.781890),m_select=2,theta_hat_inter_m1=c(1.2,1.3,1.5),theta_hat_inter_m1_sd=1,inter_vt=1,theta_hat_last_ad_m2=c(2.2,1.4),theta_hat_last_ad_m2_sd=0.5,last_vt_ad=2,alpha_2=0.05)
-#masd_ucl_est_back(s=c(0.3,0.7,1),c_bry=c(4.347011, 2.845787, 2.380956),snew=c(0.5,1),c_bry_new=c(3.310743,2.781890),theta_hat_inter_m1=c(1.2,1.3,1.5),theta_hat_inter_m1_sd=1,inter_vt=1,theta_hat_last_ad_m1=c(2.2,1.4,1.8),theta_hat_last_ad_m1_sd=1,last_vt_ad=2,alpha_2=0.05,dist=1)输出1.9982  ???3.7553,6.307???
+#masd_ucl_est_back(s=c(0.3,0.7,1),c_bry=c(4.347011, 2.845787, 2.380956),snew=c(0.5,1),c_bry_new=c(3.310743,2.781890),theta_hat_inter_m1=c(1.2,1.3,1.5),theta_hat_inter_m1_sd=1,inter_vt=1,theta_hat_last_ad_m1=c(2.2,1.4,1.8),theta_hat_last_ad_m1_sd=1,last_vt_ad=2,alpha_2=0.05,dist=1)
 
 ##########################################################################

@@ -17,26 +17,32 @@ power_two_sample_neg_binomial_NI(
 )
 }
 \arguments{
-\item{r_t}{The event rate of the test arm}
+\item{r_t}{Event rate of the test arm for the negative binomial endpoint; must be > 0}
 
-\item{r_c}{The event rate of the control arm}
+\item{r_c}{Event rate of the control arm for the negative binomial endpoint; must be > 0}
 
-\item{margin}{The non-inferiority margin}
+\item{margin}{Non-inferiority margin; set to 0 for a superiority trial}
 
-\item{direction}{Test direction: 1 = larger r_t,r_c are better, 0 = smaller r_t,r_c are better}
+\item{direction}{Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better}
 
-\item{alpha}{The type I error for the one-sided test}
+\item{alpha}{Type I error for the one-sided test; 0 < alpha < 1}
 
 \item{n_control}{Sample size of the control arm}
 
-\item{rand_ratio}{The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
-\item{nu_t}{The exposure time}
+\item{nu_t}{Exposure time of the test arm; the Poisson part of the variance of the log rate ratio is
+(1 / nu_t) * (1 / r_c + 1 / (rand_ratio * r_t)), so nu_t must be > 0}
 
-\item{kappa}{The dispersion parameter}
+\item{kappa}{Dispersion parameter of the negative binomial model; adds the over-dispersion term
+(1 + rand_ratio) * kappa / rand_ratio to the variance of the log rate ratio; must be > 0}
 }
 \value{
-The output will show the power
+A named list with the following components:
+\describe{
+  \item{power}{Power of the non-inferiority test comparing the event rates with the margin}
+  \item{Reference}{Character string giving the reference for the Zhu and Lakkis sample size formula}
+}
 }
 \description{
 Fixed sample designs: Negative binomial distribution, Non-inferiority trial, Power calculation

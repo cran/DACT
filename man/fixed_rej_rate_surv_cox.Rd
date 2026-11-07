@@ -7,23 +7,26 @@
 fixed_rej_rate_surv_cox(HR, evt_num, alpha_2, sim_num)
 }
 \arguments{
-\item{HR}{The hazards ratio of test arm vs. the control arm}
+\item{HR}{Hazard ratio of the test arm vs. the control arm; the null hypothesis is HR >= 1 and the
+alternative hypothesis is HR < 1; must be > 0}
 
-\item{evt_num}{Total number of events at the final analysis}
+\item{evt_num}{Total number of events at the final analysis; the simulated data are truncated at the
+first observation at which this number of events is reached}
 
-\item{alpha_2}{The type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test}
 
 \item{sim_num}{Number of simulation replicates}
 }
 \value{
-The output is the simulated power, which can be used to verify if the calculated sample size provided intended power
+A named numeric value with the following component:
+\describe{
+  \item{rejection CPH}{Simulated rejection rate of the two-sided Wald test from the Cox proportional hazards model; this is the simulated power, and the type I error rate when HR = 1}
+}
 }
 \description{
 Fixed sample designs: Survival analysis, Simulations
 }
 \examples{
-\donttest{
 fixed_rej_rate_surv_cox(HR = 0.8, evt_num = 845, alpha_2 = 0.05, sim_num = 20)
-}
 
 }

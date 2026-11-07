@@ -7,20 +7,32 @@
 power_OF_boundary_binary_diff(p_t, p_c, s, alpha_2, sampsz_control, rand_ratio)
 }
 \arguments{
-\item{p_t}{Mean of the test arm}
+\item{p_t}{Response rate (probability of response) in the test arm; 0 < p_t < 1}
 
-\item{p_c}{Mean of the control arm}
+\item{p_c}{Response rate (probability of response) in the control arm; 0 < p_c < 1}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{alpha_2}{Type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; 0 < alpha_2 < 1}
 
-\item{sampsz_control}{Control arm sample size}
+\item{sampsz_control}{Sample size of the control arm}
 
-\item{rand_ratio}{Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 }
 \value{
-The output will display the power
+A named list with the following components:
+\describe{
+  \item{power}{The achieved power}
+  \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+  \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+  \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+  \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+  \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+  \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+  \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+  \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+  \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+}
 }
 \description{
 Group sequential designs / Adaptive sequential designs: Binary distribution, Superiority trial, Power calculation, O'Brien-Fleming boundary

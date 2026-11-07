@@ -20,42 +20,86 @@ masd_new_samsz_theta_survival(
 )
 }
 \arguments{
-\item{theta}{Assumed effect size}
+\item{theta}{Assumed effect size (minus the log of the hazard ratio) for each of the M^(1)
+comparisons, i.e. a vector with length(theta) = length(theta_hat_inter_m1); different values can
+be entered to check the sensitivity of the conditional power to the effect size}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
 \item{c_bry}{Vector of critical boundaries for each analysis}
 
-\item{snew}{Vector of new information fractions after the sample size is changed}
+\item{snew}{Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+the fractions are relative to the new total information and the last element must be 1}
 
-\item{inter_vt}{Index of the interim analysis at which the sample size is re-estimated (1-based)}
+\item{inter_vt}{Index of the interim analysis at which the sample size is re-estimated (1-based);
+must be less than length(s)}
 
-\item{theta_hat_inter_m1}{'theta_hat_inter_m1' as used by this function; see Examples.}
+\item{theta_hat_inter_m1}{Numeric vector of treatment effect estimates observed at the interim
+analysis for all M^(1) comparisons, i.e. minus the log of the observed hazard ratio for each
+comparison}
 
-\item{theta_hat_inter_m1_sd}{'theta_hat_inter_m1_sd' as used by this function; see Examples.}
+\item{theta_hat_inter_m1_sd}{Standard error of 'theta_hat_inter_m1'; must be > 0}
 
-\item{theta_hat_inter_m2}{'theta_hat_inter_m2' as used by this function; see Examples.}
+\item{theta_hat_inter_m2}{Numeric vector of treatment effect estimates at the interim analysis for
+the M^(2) comparisons that remain after the comparisons (doses) dropped for lack of efficacy are
+removed; each element must appear in 'theta_hat_inter_m1', which is used to map the remaining
+comparisons back onto the original ones}
 
-\item{theta_hat_inter_m2_sd}{'theta_hat_inter_m2_sd' as used by this function; see Examples.}
+\item{theta_hat_inter_m2_sd}{Standard error of 'theta_hat_inter_m2'; must be > 0}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Conditional type II error; 1 - beta is the target conditional power for the sample size
+re-estimation}
 
-\item{tot_events_inter_m1}{'tot_events_inter_m1' as used by this function; see Examples.}
+\item{tot_events_inter_m1}{Total number of events observed at the interim analysis across all
+M^(1) test arms and the common control arm}
 
-\item{dist}{Indicator of the endpoint / distribution type}
+\item{dist}{Distribution indicator: 1 = the comparisons (doses) share one common control arm and the
+endpoint is normally distributed, so that the treatment effect estimates are correlated with
+correlation 1/2; otherwise the comparisons are treated as independent}
 }
 \value{
-A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics',
-'Critical boundary', 'Assumed effect size: theta', 'remaining effect size', 'c_alpha', 'c_power_m1', 'c_power_m2', 'new events between a test arm and control', 'new total events', 'new information fraction', 'New critical boundary'.
+A named list with the following components:
+\describe{
+  \item{Interim analysis hypothesis test}{Character string giving the outcome of the interim
+    hypothesis test: whether the null hypothesis was rejected at the interim analysis, which is the
+    case if the largest Wald statistic reaches the planned critical boundary}
+  \item{Wald statistics}{Numeric vector of the Wald statistics of the treatment effects observed at
+    the interim analysis, one per original (M^(1)) comparison}
+  \item{Critical boundary}{Planned critical boundary at the interim analysis at which the sample
+    size is re-estimated}
+  \item{Assumed effect size: theta}{The assumed effect size theta entered by the user, one value per
+    original (M^(1)) comparison}
+  \item{remaining effect size}{The elements of the assumed effect size belonging to the M^(2)
+    comparisons that remain after the doses (comparisons) are dropped}
+  \item{c_alpha}{Conditional type I error at the interim analysis, calculated by setting theta = 0
+    for all comparisons}
+  \item{c_power_m1}{Conditional power at the interim analysis using all M^(1) comparisons, the
+    assumed effect size theta and the original critical boundaries}
+  \item{c_power_m2}{Conditional power for the remaining M^(2) comparisons using the new critical
+    boundary evaluated at the planned sample size (ratio of new to original sample size 1), or 'NA'
+    if the null hypothesis was rejected at the interim analysis or if max(theta) < 0.001}
+  \item{new events between a test arm and control}{Number of events between one test arm and the
+    common control arm available for the re-estimation, calculated from the interim total events as
+    2 * tot_events_inter_m1 / (M^(1) + 1), or 'NA' if the null hypothesis was rejected at the interim
+    analysis or if max(theta) < 0.001}
+  \item{new total events}{New total number of events after the sample size re-estimation, across
+    the M^(2) remaining test arms and the common control arm, or 'NA' if the null hypothesis was
+    rejected at the interim analysis or if max(theta) < 0.001}
+  \item{new information fraction}{The new information fractions after the sample size change, i.e.
+    'snew'}
+  \item{New critical boundary}{Numeric vector of the new critical boundaries for the new interim
+    analyses (O'Brien-Fleming type), one per element of 'snew', or 'NA' if they were not calculated}
+}
 }
 \description{
 Multiple comparisons Group sequential design: Interim analysis, Survival analysis, Input theta
 }
 \examples{
-masd_new_samsz_theta_survival(theta=c(0,0.2,0), s=c(1/3,2/3,1),
-c_bry=c(3.984298, 3.961146, 2.349682), snew=1, inter_vt=2,
-theta_hat_inter_m1=c(1.2,1.5,1.1), theta_hat_inter_m1_sd=0.2, theta_hat_inter_m2=c(1.2,1.5),
-theta_hat_inter_m2_sd=0.2, beta=0.1, tot_events_inter_m1=65, dist=1)
+masd_new_samsz_theta_survival( theta = c(0,0.2,0), s = c(1/3,2/3,1),
+  c_bry = c(3.984298, 3.961146, 2.349682), snew = 1, inter_vt = 2,
+  theta_hat_inter_m1 = c(1.2,1.5,1.1), theta_hat_inter_m1_sd = 1.2,
+  theta_hat_inter_m2 = c(1.2,1.5), theta_hat_inter_m2_sd = 1.2, beta = 0.1,
+  tot_events_inter_m1 = 65, dist = 1)
 
 }
 \references{
@@ -63,7 +107,7 @@ P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

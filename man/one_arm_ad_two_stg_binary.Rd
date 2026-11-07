@@ -2,7 +2,7 @@
 % Please edit documentation in R/one_arm_asd_simulations.R
 \name{one_arm_ad_two_stg_binary}
 \alias{one_arm_ad_two_stg_binary}
-\title{Simulations: adaptive two stage design}
+\title{Single arm phase 2 oncology trial, Simulations: adaptive two stage design}
 \usage{
 one_arm_ad_two_stg_binary(
   p_1,
@@ -18,44 +18,44 @@ one_arm_ad_two_stg_binary(
 )
 }
 \arguments{
-\item{p_1}{The assumed response rate.}
+\item{p_1}{Assumed response rate}
 
-\item{p_0}{Response rate indicating low activity with insufficient clinical benefit.}
+\item{p_0}{Response rate indicating low activity with insufficient clinical benefit, i.e. the response rate under the null hypothesis}
 
-\item{n_1}{Number of patients at first look.}
+\item{n_1}{Number of patients at first look}
 
-\item{r_1}{If no more than r_1 responses are observed at the first look, then the trial would be stopped for futility.}
+\item{r_1}{If no more than r_1 responses are observed at the first look, then the trial would be stopped for futility}
 
-\item{r_1_e}{The trial would be stopped for superiority if at least r_1_e responses are observed at the first look.
-If r_1_e is not used in the design, enter NA.}
+\item{r_1_e}{If at least r_1_e responses are observed at the first look, the trial would be
+stopped early for superiority; if r_1_e is not used in the design, enter NA}
 
-\item{n_2}{Number of patients at second look.}
+\item{n_2}{Number of patients at second look}
 
-\item{r_2}{If no more than r_2 responses are observed at the second look, then the null hypothesis will be rejected.}
+\item{r_2}{If more than r_2 responses are observed at the second look, then the null hypothesis will be rejected}
 
-\item{N_max}{Maximum sample size for the trial.}
+\item{N_max}{Maximum sample size for the trial}
 
-\item{beta}{Type II error. The target power is 1-beta.}
+\item{beta}{Type II error rate, i.e. 1 - power}
 
-\item{sim_num}{Purpose of simulation: To verify type I error control by setting p_1=p_0,
-To evaluate the operating characteristics of the adaptive design and to determine if continuity correction is necessary.}
+\item{sim_num}{Number of simulation replicates}
 }
 \value{
-Average sample size is EN(p_1).
-
-Rate of termination is PET(p_1)
-
-If rejection rate without continuity correction does not exceed alpha, the continuity correction is not needed for this group of
-parameters p_0,n_1,r_1,r_1_e,n_2,r_2. Otherwise, continuity correction should be applied.
+A named list with the following components:
+\describe{
+  \item{rate of rejection-- without continity correction}{Rate of rejection of the null hypothesis over the simulation replicates, using the response-count boundary without continuity correction}
+  \item{rejection rate with continuity correction}{Rate of rejection of the null hypothesis over the simulation replicates when the continuity correction is applied to the response-count boundary}
+  \item{Average sample size}{Average sample size over the simulation replicates, EN(p_1)}
+  \item{Rate of early termination for futility}{Rate of early termination for futility over the simulation replicates, PET(p_1)}
+  \item{summary by case}{Matrix summarising the simulation results by case, with one column per case and one row per statistic: case rate, mean sample size, rejection rate, conditional power, proportion of replicates with p_hat > p_1, rejection rate using the critical boundary and corrected rejection rate}
+}
 }
 \description{
-Simulations: adaptive two stage design
+Single arm phase 2 oncology trial, Simulations: adaptive two stage design
 }
 \examples{
-\donttest{
-one_arm_ad_two_stg_binary(p_1=0.2,p_0=0.2,n_1=37,r_1=9,r_1_e=NA,n_2=53,r_2=16,
-N_max=140,beta=0.1,sim_num=20)
-}
+set.seed(1)
+one_arm_ad_two_stg_binary(p_1 = 0.33, p_0 = 0.2, n_1 = 75, r_1 = 18, r_1_e = 26, n_2 = 80,
+r_2 = 23, N_max = 140, beta = 0.1, sim_num = 20)
 
 }
 \references{

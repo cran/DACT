@@ -2,39 +2,53 @@
 % Please edit documentation in R/one_arm_analysis.R
 \name{gsd_ci_est_2_stage}
 \alias{gsd_ci_est_2_stage}
-\title{Final analysis: two stage design, no sample size change}
+\title{Single arm phase 2 oncology trial: Final analysis: two stage design, no sample size change}
 \usage{
 gsd_ci_est_2_stage(p_0, n_1, n_2, r_1_e, r_2, x_last, last_vt, alpha)
 }
 \arguments{
-\item{p_0}{Response rate indicating low activity with insufficient clinical benefit.}
+\item{p_0}{Response rate indicating low activity with insufficient clinical benefit}
 
-\item{n_1}{Number of patients at first look.}
+\item{n_1}{Number of patients at first look}
 
-\item{n_2}{Number of patients at second look.}
+\item{n_2}{Number of patients at second look}
 
-\item{r_1_e}{The trial would be stopped for superiority if at least r2e responses are observed
-at the second look.}
+\item{r_1_e}{Superiority-stopping threshold at the first look: the trial would be stopped for
+superiority if at least r_1_e responses are observed at the first look. Enter NA when the
+design uses no efficacy boundary at the first look; the function then substitutes a
+boundary that cannot be crossed}
 
-\item{r_2}{If no more than r_2 responses are observed at the second look, then the null hypothesis will not be rejected.}
+\item{r_2}{If no more than r_2 responses are observed at the second look, then the null
+hypothesis will not be rejected}
 
-\item{x_last}{Number of responses at the final visit.}
+\item{x_last}{Number of responses at the final visit}
 
-\item{last_vt}{1.}
+\item{last_vt}{Index of the analysis at which the trial stopped: 1 = first look, 2 = second
+(final) look}
 
-\item{alpha}{One-sided type I error.}
+\item{alpha}{Type I error for the one-sided test}
 }
 \value{
-UL: upper limit of confidence interval.
-
-LL: lower limit of confidence interval.
-
-The results with continuity correction are not necessarily different from those with continuity correction.
-
-The need for continuity correction can be determined through simulations on type I error (see Gao, Zhang, 2004).
+A named list with the following components:
+\describe{
+  \item{p_no_correction}{P-value of the test of the null hypothesis that the response rate
+    equals p_0, calculated at the analysis at which the trial stopped without continuity
+    correction}
+  \item{p_correction}{The same p-value calculated with the 0.5 continuity correction}
+  \item{CI_without_correction}{Numeric vector of length 3 holding the lower limit, the point
+    estimate and the upper limit of the two-sided (1 - 2*alpha) confidence interval for the
+    response rate, computed without continuity correction}
+  \item{CI_with_correction}{The same confidence interval computed with the 0.5 continuity
+    correction}
+}
 }
 \description{
-Final analysis: two stage design, no sample size change
+Single arm phase 2 oncology trial: Final analysis: two stage design, no sample size change
+}
+\details{
+The results with continuity correction are not necessarily different from those
+without continuity correction. The need for continuity correction can be determined through
+simulations on the type I error (see Gao and Zhang, 2004).
 }
 \examples{
 gsd_ci_est_2_stage(p_0=0.2,n_1=100,n_2=105,r_1_e=NA,r_2=29,x_last=31,last_vt=1,alpha=0.025)

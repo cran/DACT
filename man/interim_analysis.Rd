@@ -2,33 +2,44 @@
 % Please edit documentation in R/one_arm_analysis.R
 \name{interim_analysis}
 \alias{interim_analysis}
-\title{The interim analysis can be conducted for both two-stage and three-stage designs}
+\title{Single arm phase 2 oncology trial: The interim analysis can be conducted for both two-stage and three-stage designs}
 \usage{
 interim_analysis(p_0, r_final, n_inter, n_final, x_inter, beta, N_max)
 }
 \arguments{
-\item{p_0}{Response rate indicating low activity with insufficient clinical benefit.}
+\item{p_0}{Response rate indicating low activity with insufficient clinical benefit}
 
-\item{r_final}{For two-stage designs, r_final=r2. For the three-stage design, r_final=r3.}
+\item{r_final}{Rejection threshold of the original design in terms of the number of
+responses: r_final = r_2 for a two-stage design and r_final = r_3 for a three-stage design}
 
-\item{n_inter}{Number of patients at the interim look. For two-stage designs, n_inter=n1. For the three-stage design, n_inter=n2.}
+\item{n_inter}{Number of patients at the interim look: n_inter = n_1 for a two-stage design
+and n_inter = n_2 for a three-stage design}
 
-\item{n_final}{For two-stage designs, n_inter=n2. For the three-stage design, n_inter=n3.}
+\item{n_final}{Number of patients at the final look: n_final = n_2 for a two-stage design and
+n_final = n_3 for a three-stage design; must be greater than n_inter}
 
-\item{x_inter}{Number of responses observed at the interim look.}
+\item{x_inter}{Number of responses observed at the interim look}
 
-\item{beta}{The conditional type II error. 1-beta is the desired conditional power.}
+\item{beta}{Conditional type II error rate: 1 - beta is the desired conditional power, which
+drives the re-estimated sample size}
 
-\item{N_max}{Pre-selected maximum sample size.}
+\item{N_max}{Pre-selected maximum sample size for the trial; the new sample size is truncated
+at N_max}
 }
 \value{
-n_new: is the new sample size.
-
-r_new (without continuity correction) and r_new (with continuity correction) are thresholds such that the null hypothesis will be
-rejected at n_new if at least r_new responses are observed. Simulations on type I error will help to determine if continuity correction is needed.
+A named list with the following components:
+\describe{
+  \item{new sample size}{Re-estimated total sample size N_new, obtained by converting the
+    required information time into a number of patients and truncating at N_max}
+  \item{new discrete rejection boundary without continuity correction}{Threshold r_new such
+    that the null hypothesis is rejected at the new sample size if at least r_new responses
+    are observed; no continuity correction}
+  \item{new discrete rejection boundary with continuity correction}{The same rejection
+    threshold computed with the 0.5 continuity correction applied to the response count}
+}
 }
 \description{
-The interim analysis can be conducted for both two-stage and three-stage designs
+Single arm phase 2 oncology trial: The interim analysis can be conducted for both two-stage and three-stage designs
 }
 \examples{
 interim_analysis(p_0=0.2,r_final=17,n_inter=22,n_final=56,x_inter=7,beta=0.1,N_max=120)

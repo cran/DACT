@@ -15,22 +15,22 @@ power_two_sample_Poisson_NI(
 )
 }
 \arguments{
-\item{lambda_t}{The event rate of the test arm}
+\item{lambda_t}{Event rate of the test arm under the Poisson model; must be > 0}
 
-\item{lambda_c}{The event rate of the control arm}
+\item{lambda_c}{Event rate of the control arm under the Poisson model; must be > 0}
 
-\item{margin}{The non-inferiority margin}
+\item{margin}{Non-inferiority margin; set to 0 for a superiority trial}
 
-\item{direction}{Test direction: 1 = smaller lambda is better, 0 = larger lambda is better}
+\item{direction}{Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better}
 
-\item{alpha}{The type I error for the one-sided test}
+\item{alpha}{Type I error for the one-sided test; 0 < alpha < 1}
 
 \item{n_control}{Sample size of the control arm}
 
-\item{rand_ratio}{The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 }
 \value{
-the output will show the power
+A numeric value giving the power.
 }
 \description{
 Fixed sample designs: Poisson distribution, Non-inferiority trial, Power calculation

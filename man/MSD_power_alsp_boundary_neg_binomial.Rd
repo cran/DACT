@@ -19,30 +19,37 @@ MSD_power_alsp_boundary_neg_binomial(
 )
 }
 \arguments{
-\item{r_t}{Rate parameter of the test arm (negative binomial endpoint)}
+\item{r_t}{Vector of mean rates of the test arms, one entry per dose or endpoint}
 
-\item{r_c}{Rate parameter of the control arm (negative binomial endpoint)}
+\item{r_c}{Mean rate of the common control arm}
 
-\item{margin}{Non-inferiority / superiority margin}
+\item{margin}{Non-inferiority margin; must be >= 0, set to 0 for a superiority trial and > 0 for a non-inferiority trial}
 
-\item{direction}{Test direction: 1 = larger r is better, 0 = smaller r is better}
+\item{direction}{Test direction: 1 = larger r is better, otherwise smaller r is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{alpha}{One-sided significance level (type I error rate)}
+\item{alpha}{Vector of alpha-spending values for the one-sided test, one per analysis and of the same
+length as s, summing to the overall one-sided type I error; each value must satisfy 0 < alpha < 1}
 
-\item{sampsz_control}{Control arm sample size}
+\item{sampsz_control}{Sample size of the control arm}
 
-\item{rand_ratio}{Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
-\item{nu_t}{exposure time}
+\item{nu_t}{Exposure time; must be > 0}
 
-\item{kappa}{dispersion parameter}
+\item{kappa}{Dispersion parameter of the negative binomial model; must be > 0}
 
-\item{dist}{Indicator of the endpoint / distribution type}
+\item{dist}{Distribution indicator kept for consistency with the sibling functions; it is not used here,
+because the function always sets dist1 = 2 for the boundary calculation and dist2 = 1 for the information time calculation}
 }
 \value{
-A named list containing the following elements: 'power', 'Type I error control', 'Reference'.
+A named list with the following components:
+\describe{
+  \item{power}{Power of the trial for the given control arm sample size}
+  \item{Type I error control}{Boundary output of the closed testing procedure: a list with one element per comparison level (the M-level boundary first, down to the 1-level boundary), each element a list containing the vectors 'critical bounadry', 'alpha spent at each interim analysis', 'cumulative alpha' and 'nominal p-value' for the analyses}
+  \item{Reference}{Reference for the negative binomial sample size formula}
+}
 }
 \description{
 Multiple comparisons Group sequential design: Negative binomial distribution, Power calculation, Alpha-spending boundary
@@ -58,7 +65,7 @@ P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

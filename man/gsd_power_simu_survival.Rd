@@ -7,37 +7,45 @@
 gsd_power_simu_survival(HR, s, bry_type, alpha_2, surv_rate, evt_num, sim_num)
 }
 \arguments{
-\item{HR}{Hazard ratio (test vs control)}
+\item{HR}{Hazards ratio of the test arm vs. the control arm; HR < 1 favours the test arm}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
 \item{bry_type}{Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending}
 
-\item{alpha_2}{Type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+one-sided type I error used for the critical boundaries}
 
-\item{surv_rate}{Survival rate used to translate the number of events into a sample size}
+\item{surv_rate}{Survival rate at the end of the trial, used together with the number of events
+to derive the sample size; must be between 0 and 1}
 
-\item{evt_num}{Total number of events at the final analysis}
+\item{evt_num}{Planned total number of events at the final analysis; must be > 0}
 
-\item{sim_num}{Number of simulation replicates}
+\item{sim_num}{Number of simulation replicates; must be > 0}
 }
 \value{
-A named list containing the following elements: 'Planned sample size', 'Rejection rate', 'Mean sample size'.
+A named list with the following components:
+\describe{
+  \item{Sequential design and rejection by look}{Data frame with one row per analysis and the
+    columns Looks, Information fraction, Critical boundaries and Rejection by look (the
+    rejection rate at each interim analysis)}
+  \item{Power and sample size}{Named vector with the components Rejection rate (the simulated
+    power, i.e. the type I error rate when HR = 1), Planned sample size (the planned number of
+    events) and Mean sample size (the mean simulated number of events)}
+}
 }
 \description{
 Group sequential designs / Adaptive sequential designs: Simulations, Survival analysis, Type I error and power
 }
 \examples{
-\donttest{
 gsd_power_simu_survival(HR = 0.8, s = c(1/3,2/3,1), bry_type = 1, alpha_2 = 0.05,
 surv_rate = 0.5, evt_num = 845, sim_num = 20)
-}
 
 }
 \references{
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 

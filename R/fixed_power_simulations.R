@@ -13,22 +13,24 @@
 
 #' Fixed sample designs: Normal distribution, Simulations
 #'
-#' @param mu_t Mean of the test arm
+#' @param mu_t Mean of the test arm; the null hypothesis is mu_t <= mu_c and the alternative
+#'   hypothesis is mu_t > mu_c
 #' @param mu_c Mean of the control arm
 #' @param sigma_t Standard deviation of the test arm
 #' @param sigma_c Standard deviation of the control arm
-#' @param alpha_2 The type I error for the two-sided test
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param samsz Planned sample size of the control arm used in the simulation
+#' @param alpha_2 Type I error for the two-sided test
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param samsz Sample size of the control arm used in the simulation
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The output is the simulated power, which can be used to verify if the calculated sample size provided intended power
+#' @return A named numeric value with the following component:
+#' \describe{
+#'   \item{rejection rate}{Simulated rejection rate of the two-sided fixed-sample Wald test of mu_t = mu_c; this is the simulated power, and the type I error rate when mu_t = mu_c}
+#' }
 #'
 #' @examples
-#' \donttest{
 #' fixed_rej_rate_normal(mu_t = 0, mu_c = 0, sigma_t = 1, sigma_c = 1, alpha_2 = 0.05,
 #' rand_ratio = 1, samsz = 82, sim_num = 20)
-#' }
 #'
 #' @export
 fixed_rej_rate_normal<-function(mu_t,mu_c,sigma_t,sigma_c,alpha_2,rand_ratio,samsz,sim_num){
@@ -117,17 +119,20 @@ fixed_rej_rate_normal<-function(mu_t,mu_c,sigma_t,sigma_c,alpha_2,rand_ratio,sam
 #####################################################
 #' Fixed sample designs: Survival analysis, Simulations
 #'
-#' @param HR The hazards ratio of test arm vs. the control arm
-#' @param evt_num Total number of events at the final analysis
-#' @param alpha_2 The type I error for the two-sided test
+#' @param HR Hazard ratio of the test arm vs. the control arm; the null hypothesis is HR >= 1 and the
+#'   alternative hypothesis is HR < 1; must be > 0
+#' @param evt_num Total number of events at the final analysis; the simulated data are truncated at the
+#'   first observation at which this number of events is reached
+#' @param alpha_2 Type I error for the two-sided test
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The output is the simulated power, which can be used to verify if the calculated sample size provided intended power
+#' @return A named numeric value with the following component:
+#' \describe{
+#'   \item{rejection CPH}{Simulated rejection rate of the two-sided Wald test from the Cox proportional hazards model; this is the simulated power, and the type I error rate when HR = 1}
+#' }
 #'
 #' @examples
-#' \donttest{
 #' fixed_rej_rate_surv_cox(HR = 0.8, evt_num = 845, alpha_2 = 0.05, sim_num = 20)
-#' }
 #'
 #' @export
 fixed_rej_rate_surv_cox<-function(HR,evt_num,alpha_2,sim_num){
@@ -287,20 +292,22 @@ fixed_rej_rate_surv_cox<-function(HR,evt_num,alpha_2,sim_num){
 ################################################
 #' Fixed sample designs: Binary distribution, Simulations
 #'
-#' @param p_t The event rate of the test arm
-#' @param p_c The event rate of the control arm
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param alpha_2 The type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
+#' @param p_t Event rate (probability of an event) of the test arm; the null hypothesis is p_t <= p_c
+#'   and the alternative hypothesis is p_t > p_c; 0 < p_t < 1
+#' @param p_c Event rate (probability of an event) of the control arm; 0 < p_c < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param alpha_2 Type I error for the two-sided test
+#' @param samsz Sample size of the control arm used in the simulation
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The output is the simulated power, which can be used to verify if the calculated sample size provided intended power
+#' @return A named numeric value with the following component:
+#' \describe{
+#'   \item{rejection rate}{Simulated rejection rate of the two-sided fixed-sample Wald test of p_t = p_c; this is the simulated power, and the type I error rate when p_t = p_c}
+#' }
 #'
 #' @examples
-#' \donttest{
 #' fixed_rej_rate_binary(p_t = 0.4, p_c = 0.2, rand_ratio = 1, alpha_2 = 0.05,
 #' samsz = 106, sim_num = 20)
-#' }
 #'
 #' @export
 fixed_rej_rate_binary<-function(p_t,p_c,rand_ratio,alpha_2,samsz,sim_num){
@@ -386,20 +393,22 @@ fixed_rej_rate_binary<-function(p_t,p_c,rand_ratio,alpha_2,samsz,sim_num){
 ################################################
 #' Fixed sample designs: Poisson distribution, Simulations
 #'
-#' @param lambda_t The event rate of the test arm
-#' @param lambda_c The event rate of the control arm
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param alpha_2 The type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
+#' @param lambda_t Event rate of the test arm; the null hypothesis is lambda_t <= lambda_c and the
+#'   alternative hypothesis is lambda_t > lambda_c; must be > 0
+#' @param lambda_c Event rate of the control arm; must be > 0
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param alpha_2 Type I error for the two-sided test
+#' @param samsz Sample size of the control arm used in the simulation
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The output is the simulated power, which can be used to verify if the calculated sample size provided intended power
+#' @return A named numeric value with the following component:
+#' \describe{
+#'   \item{rejection rate}{Simulated rejection rate of the two-sided fixed-sample Wald test of lambda_t = lambda_c; this is the simulated power, and the type I error rate when lambda_t = lambda_c}
+#' }
 #'
 #' @examples
-#' \donttest{
 #' fixed_rej_rate_poisson(lambda_t = 11, lambda_c = 10, rand_ratio = 2, alpha_2 = 0.05,
 #' samsz = 163, sim_num = 20)
-#' }
 #'
 #' @export
 fixed_rej_rate_poisson<-function(lambda_t,lambda_c,rand_ratio,alpha_2,samsz,sim_num){
@@ -481,21 +490,25 @@ fixed_rej_rate_poisson<-function(lambda_t,lambda_c,rand_ratio,alpha_2,samsz,sim_
 ####################################################################
 #' Fixed sample designs: Negative binomial distribution, Simulations
 #'
-#' @param alpha_2 The type I error for the two-sided test
-#' @param r_c The event rate of the test arm
-#' @param r_t The event rate of the control arm
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param kappa Dispersion (size) parameter of the negative binomial distribution
-#' @param samsz Planned sample size of the control arm used in the simulation
+#' @param alpha_2 Type I error for the two-sided test
+#' @param r_c Event rate of the control arm; must be > 0
+#' @param r_t Event rate of the test arm; the null hypothesis is r_t >= r_c and the alternative
+#'   hypothesis is r_t < r_c; must be > 0
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial distribution; the negative binomial size
+#'   parameter used in the simulation is 1/kappa, so kappa must be > 0 and a larger kappa means more overdispersion
+#' @param samsz Sample size of the control arm used in the simulation
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The output is the simulated power, which can be used to verify if the calculated sample size provided intended power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rejection rate}{Simulated rejection rate of the two-sided Wald test from the negative binomial log-link GLM; this is the simulated power, and the type I error rate when r_t = r_c}
+#'   \item{mean size}{Mean over the simulation replicates of the estimated negative binomial size (dispersion) parameter theta of the fitted GLM}
+#' }
 #'
 #' @examples
-#' \donttest{
 #' fixed_rej_nbglm_simu(alpha_2 = 0.05, r_c = 1, r_t = 1*0.6, rand_ratio = 1, kappa = 1,
 #' samsz = 188, sim_num = 20)
-#' }
 #'
 #' @export
 fixed_rej_nbglm_simu<-function(alpha_2,r_c,r_t,rand_ratio,kappa,samsz,sim_num){

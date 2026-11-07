@@ -22,46 +22,55 @@ Two_stage_asd_simu_OC_survival(
 )
 }
 \arguments{
-\item{groups}{Vector of group labels used in the simulation}
+\item{groups}{Matrix of assumed hazard ratios for the test arms under study: one row per candidate test-arm scenario and one column per dose, so that the number of doses is the number of columns; each hazard ratio is relative to the control arm, must be > 0, with HR < 1 indicating a beneficial effect and HR = 1 the null hypothesis}
 
-\item{s1}{Information fractions for the first stage / first group}
+\item{s1}{Vector of information fractions of the first interim analysis schedule; the last element must be 1}
 
-\item{s2}{Information fractions for the second stage / second group}
+\item{s2}{Vector of information fractions of the second interim analysis schedule; the last element must be 1}
 
-\item{alpha_2}{Type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; 0 < alpha_2 < 1}
 
-\item{alpha_2_alps_s1}{Type I error spent up to the interim analysis (stage 1 / group 1)}
+\item{alpha_2_alps_s1}{Vector of two-sided alpha to be spent at each analysis of the alpha-spending schedule s1; each element must be > 0 and the elements must sum to alpha_2}
 
-\item{alpha_2_alps_s2}{Cumulative type I error spent at the final analysis (stage 2 / group 2)}
+\item{alpha_2_alps_s2}{Vector of two-sided alpha to be spent at each analysis of the alpha-spending schedule s2; each element must be > 0 and the elements must sum to alpha_2}
 
-\item{surv_rate}{Survival rate used to translate the number of events into a sample size}
+\item{surv_rate}{Survival rate at the end of follow-up, used to translate the number of events into a sample size}
 
-\item{evt_num_1}{Number of events for the first stage / group}
+\item{evt_num_1}{Planned number of events between a test arm and the control arm for the first event number scenario}
 
-\item{evt_num_2}{Number of events for the second stage / group}
+\item{evt_num_2}{Planned number of events between a test arm and the control arm for the second event number scenario}
 
-\item{evt_max_1}{Maximum number of events for the first stage / group}
+\item{evt_max_1}{Maximum number of events between a test arm and the control arm allowed after sample size re-estimation for the first maximum event number scenario}
 
-\item{evt_max_2}{Maximum number of events for the second stage / group}
+\item{evt_max_2}{Maximum number of events between a test arm and the control arm allowed after sample size re-estimation for the second maximum event number scenario}
 
-\item{HR_cut}{Hazard-ratio cut-off for early stopping at the interim analysis}
+\item{HR_cut}{Hazard-ratio cut-off for lack of efficacy at the interim analysis: the test drug is not considered to provide clinically meaningful efficacy when the observed hazard ratio is greater than HR_cut}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Conditional type II error; 1 - beta is the target conditional power for the sample size re-estimation; 0 < beta < 1}
 
 \item{sim_num}{Number of simulation replicates}
 }
 \value{
-A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+A named list with the following components:
+\describe{
+  \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{List holding the group sequential design and the operating characteristics simulated under the schedule s1 with O'Brien-Fleming boundaries}
+  \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{List holding the group sequential design and the operating characteristics simulated under the schedule s2 with O'Brien-Fleming boundaries}
+  \item{Alpha-spending boundaries, interim analysis schedule=s1}{List holding the group sequential design and the operating characteristics simulated under the schedule s1 with alpha-spending boundaries}
+  \item{Alpha-spending boundaries, interim analysis schedule=s2}{List holding the group sequential design and the operating characteristics simulated under the schedule s2 with alpha-spending boundaries}
+}
+Each of these four lists has the components "Group sequential design" (data frame with the columns "Looks", "Information fractions" and the critical boundaries, plus "Alpha-spending" and "Alpha-spending boundaries" for the alpha-spending schedules) and the "Simulation results: Information fractions ..., Sample size ..., evt_max ..." operating characteristics of the corresponding adaptive design, one data frame per combination of interim analysis schedule, planned event number and maximum number of events, with one row per assumed hazard-ratio scenario.
 }
 \description{
 Phase 2/3 seamless combination Group sequential design: Simulations, Survival analysis, Optimizing adaptive sequential design
 }
 \examples{
 \donttest{
-Two_stage_asd_simu_OC_survival(groups = rbind(c(0.75,0.8,0.85),c(0.7,0.75,0.8),c(0.65,0.7,0.75)),
-s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05, alpha_2_alps_s1 = c(0.001,0.001,0.048),
+set.seed(1)
+Two_stage_asd_simu_OC_survival(
+groups = rbind(c(0.8, 0.83, 0.85), c(0.78, 0.8, 0.82), c(0.75, 0.78, 0.8)), s1 = c(1/3,2/3,1),
+s2 = c(0.5,1), alpha_2 = 0.05, alpha_2_alps_s1 = c(0.001,0.001,0.048),
 alpha_2_alps_s2 = c(0.01,0.04), surv_rate = 0.5, evt_num_1 = 200, evt_num_2 = 300,
-evt_max_1 = 500, evt_max_2 = 600, HR_cut = 0.95, beta = 0.1, sim_num = 2)
+evt_max_1 = 2000, evt_max_2 = 3000, HR_cut = 0.95, beta = 0.1, sim_num = 2)
 }
 
 }
@@ -70,7 +79,7 @@ P. Gao, Y. Li (05 May 2024): Adaptive two-stage seamless sequential design for c
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

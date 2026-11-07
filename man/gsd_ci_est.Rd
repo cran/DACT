@@ -11,16 +11,24 @@ gsd_ci_est(s, c_bry, theta_hat_last, theta_hat_last_sd, last_vt, alpha_2)
 
 \item{c_bry}{Vector of critical boundaries for each analysis}
 
-\item{theta_hat_last}{Treatment effect estimate observed at the final analysis}
+\item{theta_hat_last}{Treatment effect estimate observed at the final analysis, i.e. the naive
+point estimate of the parameter of interest at the analysis at which the trial terminated}
 
 \item{theta_hat_last_sd}{Standard error of 'theta_hat_last'}
 
-\item{last_vt}{Index of the analysis at which the trial stopped}
+\item{last_vt}{Index of the analysis at which the trial stopped (1-based); this can be the final
+analysis, at which s = 1, or an interim analysis, and it must not exceed length(s)}
 
 \item{alpha_2}{Type I error for the two-sided test}
 }
 \value{
-A named list containing the following elements: 'p-value', 'confidence interval'.
+A named list with the following components:
+\describe{
+  \item{p-value}{The p-value of the test of the null hypothesis that the treatment effect is 0}
+  \item{confidence interval}{Numeric vector of length 3 giving the lower confidence limit, the
+    median-unbiased point estimate and the upper confidence limit of the two-sided
+    (1 - alpha_2) confidence interval}
+}
 }
 \description{
 Group sequential designs / Adaptive sequential designs: Final analysis, Without sample size change

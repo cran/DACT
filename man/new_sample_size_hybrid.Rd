@@ -17,26 +17,40 @@ new_sample_size_hybrid(
 )
 }
 \arguments{
-\item{N_planned}{Planned sample size at the final analysis}
+\item{N_planned}{Planned sample size: the planned sample size at the final analysis}
 
-\item{c_bry}{Vector of critical boundaries for each analysis}
+\item{c_bry}{Critical boundary or threshold for rejecting the null hypothesis at the final analysis}
 
-\item{t_prior}{The prior is assumed to have a normal distribution. This is the mean of the prior distribution}
+\item{t_prior}{Prior information time: the prior distribution of theta is assumed to have a
+normal distribution, and the Fisher's information time is the reciprocal of the variance of
+the prior distribution; set t_prior = 0 for a non-informative prior}
 
-\item{theta_prior}{The prior distribution of theta is assumed to have a normal distribution. The Fisher’s information time is the reciprocal of the variance from the prior distribution}
+\item{theta_prior}{Mean effect size of prior: the mean of the normal prior distribution of
+theta; set theta_prior = 0 for a non-informative prior}
 
-\item{N_inter}{Sample size at interim analysis}
+\item{N_inter}{Sample size at interim analysis: the number of subjects with data at the
+interim analysis}
 
-\item{t_inter}{Information time at interim analysis}
+\item{t_inter}{Information time at interim analysis: the Fisher information at the interim
+analysis, the reciprocal of the variance of the unbiased maximum likelihood estimate
+theta_hat_inter}
 
-\item{theta_hat_inter}{Treatment effect estimate observed at the interim analysis}
+\item{theta_hat_inter}{Estimated effect size at interim analysis: the maximum likelihood
+estimate of theta at the interim analysis}
 
-\item{gamma}{Parameter chosen for the credible interval modified predictive power (CI_MPP)}
+\item{gamma}{Parameter chosen for the credible interval modified predictive power (CI_MPP);
+it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+gives a 50 percent interval}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Conditional type II error; 1 - beta is the target conditional power used for the
+sample size re-estimation}
 }
 \value{
-The new sample sizes are calculated with both non-informative prior and informative prior
+A named list with the following components:
+\describe{
+  \item{New sample sizes}{A data frame with the columns "prior type", "SSR method" and "new sample size", giving the new sample size for every combination of prior type and sample size re-estimation (SSR) method. The prior types are the non-informative prior (mean of the prior zero and information time zero) and the informative prior entered by the user. Within each prior type the four SSR methods are the conditional power (cp), the predictive power (pp), the modified predictive power (mpp) and the credible interval modified predictive power (ci_mpp), each being the sample size that provides 1 - beta of that power; the sample size is NA when the target conditional power cannot be reached. For the informative prior the cp entry is based on the Bayesian posterior mean of theta}
+  \item{Reference}{References for the methods}
+}
 }
 \description{
 Hybrid: New sample size estimation

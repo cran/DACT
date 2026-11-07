@@ -25,52 +25,66 @@ hybrid_random_prior_rej_negbinom_simu(
 )
 }
 \arguments{
-\item{r_t_0}{Event rate for test arm - previous trial}
+\item{r_t_0}{Event rate in the test arm of the previous trial, r_t0; the previous-trial
+effect size is theta_0 = -log(r_t_0/r_c_0)}
 
-\item{r_c_0}{Event rate for control arm - previous trial}
+\item{r_c_0}{Event rate in the control arm of the previous trial, r_c0}
 
-\item{sampsz_0}{Sample size from previous trial}
+\item{sampsz_0}{Sample size per arm from the previous trial, N_0; random samples of this size are drawn from the previous trial to form the random prior}
 
-\item{r_t}{Event rate for test arm - current trial}
+\item{r_t}{Event rate in the test arm of the current trial; the effect size is
+theta = -log(r_t/r_c) and a smaller event rate is assumed to be associated with better
+efficacy. Enter r_t = r_c to verify type I error control and r_t < r_c for the power
+simulation}
 
-\item{r_c}{Event rate for control arm - current trial}
+\item{r_c}{Event rate in the control arm of the current trial; the effect size is theta = -log(r_t/r_c)}
 
-\item{kappa}{dispersion parameter}
+\item{kappa}{Dispersion parameter of the negative binomial distribution; must be > 0}
 
-\item{nu_t}{exposure time}
+\item{nu_t}{Exposure time for the negative binomial distribution; must be > 0}
 
-\item{rand_ratio}{Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
 \item{sampsz}{Planned sample size: the planned sample size at the final analysis}
 
-\item{N_max}{Maximum sample size: a user chosen , maximum allowable sample size for sample size modification}
+\item{N_max}{Maximum sample size: a user chosen, maximum allowable sample size for sample size modification}
 
-\item{theta_cut}{Efficacy cut-off on the effect-size scale applied at the interim analysis}
+\item{theta_cut}{Futility threshold: a cut-off for theta_hat. In the simulations, if
+theta_hat at the interim analysis is at or below theta_cut the trial is considered futile
+and proceeds to the planned sample size without any change}
 
-\item{cp_min}{Promising zone cp_min}
+\item{cp_min}{Promising zone cp_min: CP_min in the promising zone sample size re-estimation;
+a conditional power below cp_min is the unfavorable zone. The user should select this
+value from Mehta, Pocock (2011)}
 
-\item{gamma}{Parameter chosen for the credible interval modified predictive power (CI_MPP)}
+\item{gamma}{Parameter chosen for the credible interval modified predictive power (CI_MPP);
+it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+gives a 50 percent interval}
 
 \item{alpha_2}{Type I error for the two-sided test}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Conditional type II error; 1 - beta is the target conditional power used for the
+sample size re-estimation}
 
 \item{sim_num}{Number of simulation replicates}
 }
 \value{
-The simulations are conducted with both non-informative prior and informative prior
+A named list with the following components:
+\describe{
+  \item{rejection rate and mean sample size}{A data frame with the columns "Prior type", "SSR method", "Rejection rate" and "Mean sample size", with one row per sample size re-estimation (SSR) method. The methods compared are the planned sample size with no SSR, the promising zone SSR, the SSR using the true effect size with conditional power, and, for both the non-informative prior and the informative prior, the cp SSR, pp SSR, mpp SSR and ci_mpp SSR methods}
+  \item{futility rate}{The rate at which the observed theta_hat at the interim analysis is at or below theta_cut, so that the trial proceeds without any sample size change}
+  \item{References}{A data frame of the references for the methods compared}
+}
 }
 \description{
 Hybrid: Simulations, Negative binomial distribution, Using random informative prior from previous trial
 }
 \examples{
-\donttest{
 hybrid_random_prior_rej_negbinom_simu(r_t_0 = 1.2, r_c_0 = 1, sampsz_0 = 50, r_t = 1, r_c = 1,
 kappa = 1, nu_t = 1, rand_ratio = 1, s = c(0.5,1), sampsz = 100, N_max = 150,
 theta_cut = 0.001, cp_min = 0.27, gamma = 0.5, alpha_2 = 0.05, beta = 0.1, sim_num = 20)
-}
 
 }
 \references{

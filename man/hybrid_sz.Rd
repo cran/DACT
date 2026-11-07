@@ -2,54 +2,42 @@
 % Please edit documentation in R/one_arm_asd.R
 \name{hybrid_sz}
 \alias{hybrid_sz}
-\title{Two-stage design: the hybrid design}
+\title{Single arm phase 2 oncology trial: Two-stage design, the hybrid design}
 \usage{
 hybrid_sz(alpha, beta, p_0, p_low, p_1, d_12_cut)
 }
 \arguments{
-\item{alpha}{One-sided type I error.}
+\item{alpha}{Type I error for the one-sided test}
 
-\item{beta}{Type II error.}
+\item{beta}{Type II error rate, i.e. 1 - power}
 
-\item{p_0}{Response rate indicating low activity with insufficient clinical benefit.}
+\item{p_0}{Response rate indicating low activity with insufficient clinical benefit}
 
-\item{p_low}{Minimally clinically beneficial response rate.}
+\item{p_low}{Minimally clinically beneficial response rate}
 
-\item{p_1}{Assumed response rate.}
+\item{p_1}{Assumed response rate}
 
-\item{d_12_cut}{Min(n2-n1) sets the minimal difference between n2 and n1 for the design.}
+\item{d_12_cut}{Sets the minimal difference between n_2 and n_1 for the design; min(n_2 - n_1)}
 }
 \value{
-n1: Number of patients at first look.
-
-n_2: Number of patients at second look. n_2 is also the total sample size.
-
-r1: If no more than r1 responses are observed at the first look, then the trial would be stopped for futility.
-
-r_2: The null hypothesis will be rejected if at least r_2 responses are observed at the end of the trial.
-
-EN(p0) is the expected sample size under the null hypothesis.
-
-PET(p0) is the probability of early termination under the null hypothesis.
-
-PET_p is the probability of early termination under p=p_1.
-
-PET_p_low is the probability of early termination under p=p_low.
-
-power_p is the power under p=p_1.
-
-power_p_low is the power under p=p_low.
-
-Type I error is the probability of rejecting the null hypothesis under p<=p_0.
-
-The minimax design has the smallest n2 among all possible choices of (n1,r1,n_2,r_2).
-
-The optimal design has the smallest EN(p0) ) among all possible choices of (n1,r1,n_2,r_2).
-
-The n1  for the average design is the average of n1's from the minimax and the optimal designs.
+A named list with the following components:
+\describe{
+  \item{Simon's design: p=p_1}{A matrix with one row per design (minimax, optimal and
+    average) for Simon's design using p_1 as the target response rate, with columns r1,
+    n1, r_2, n_2, EN(p0) (expected sample size under p_0), PET(p0) (probability of early
+    termination under p_0), t1_err, PET_p (PET under p_1), PET_p_low (PET under p_low),
+    power_p (power under p_1) and power_p_low (power under p_low)}
+  \item{Simon's design: p=p_low}{The corresponding matrix for Simon's design using p_low
+    as the target response rate}
+  \item{Hybrid design}{A matrix with one row per design (minimax, optimal and average)
+    and columns n_1, r_1, r_1_e (the trial is stopped for superiority if at least r_1_e
+    responses are observed at the first look), r_2, n_2, t1_err, power (power under p_1),
+    PET_p1, PET_p_low, PET_p0, En_p0 (expected sample size under p_0) and PW_p_low (power
+    under p_low)}
+}
 }
 \description{
-Two-stage design: the hybrid design
+Single arm phase 2 oncology trial: Two-stage design, the hybrid design
 }
 \examples{
 hybrid_sz(alpha=c(0.001,0.024),beta=0.1,p_0=0.2,p_low=0.4,p_1=0.55,d_12_cut=0)
@@ -59,6 +47,6 @@ hybrid_sz(alpha=c(0.001,0.024),beta=0.1,p_0=0.2,p_low=0.4,p_1=0.55,d_12_cut=0)
 R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 
 P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials:
-an expansion of Simon’s design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
+an expansion of Simon's design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
 To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2341673}.
 }

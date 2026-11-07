@@ -14,19 +14,22 @@
 ####              Two stage design  simulations                       ####
 ##########################################################################
 
-#' Simulations: two stage fixed Simon's design
+#' Single arm phase 2 oncology trial: Simulations: two stage fixed Simon's design
 #'
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param p_1   The assumed response rate.
-#' @param n_1   Number of patients at first look.
-#' @param r_1   If no more than r_1 responses are observed at the first look, then the trial would be stopped for futility.
-#' @param n_2   Number of patients at second look.
-#' @param r_2   If no more than r_2 responses are observed at the second look, then the null hypothesis will be rejected.
-#' @param sim_num Purpose of simulation: To verify type I error control by setting p_1=p_0, To verify the parameters n_1,r_1,n_2,r_2
-#' are correctly chosen, such that the trial has 1-beta power if the true response rate is p_1.
+#' @param p_1   Assumed response rate
+#' @param p_0   Response rate indicating low activity with insufficient clinical benefit, i.e. the response rate under the null hypothesis
+#' @param n_1   Number of patients at first look
+#' @param r_1   If no more than r_1 responses are observed at the first look, then the trial would be stopped for futility
+#' @param n_2   Number of patients at second look
+#' @param r_2   If more than r_2 responses are observed at the second look, then the null hypothesis will be rejected
+#' @param sim_num Number of simulation replicates
 #'
-#' @return Average sample size is EN(p_1).
-#' @return Rate of termination is PET(p_1)
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Rate of rejection}{Rate of rejection of the null hypothesis over the simulation replicates, i.e. the power when p_1 > p_0 and the type I error rate when p_1 = p_0}
+#'   \item{Average sample size}{Average sample size over the simulation replicates, EN(p_1)}
+#'   \item{Rate of early termination for futility}{Rate of early termination for futility over the simulation replicates, PET(p_1)}
+#' }
 #'
 #' @references R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials: an expansion of Simon’s design,
@@ -36,9 +39,7 @@
 #' Journal of Biopharmaceutical Statistics, 18: 1184–1196, 2008.
 #'
 #' @examples
-#' \donttest{
 #' one_arm_rej_simon_binary(p_1=0.4,p_0=0.2,n_1=37,r_1=9,n_2=53,r_2=16,sim_num=20)
-#' }
 #'
 #' @export
 one_arm_rej_simon_binary<-function(p_1,p_0,n_1,r_1,n_2,r_2,sim_num){
@@ -134,22 +135,24 @@ one_arm_rej_simon_binary<-function(p_1,p_0,n_1,r_1,n_2,r_2,sim_num){
 ############################################
 #######################################
 
-#' Simulations: Two stage fixed expanded Simon's design: either hybrid or mid-point design
+#' Single arm phase 2 oncology trial: Simulations, Two stage fixed expanded Simon's design: either hybrid or mid-point design
 #'
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param p_1   The assumed response rate.
-#' @param n_1   Number of patients at first look.
-#' @param r_1_f   If no more than r_1 responses are observed at the first look, then the trial would be stopped for futility.
-#' @param r_1_e   The trial would be stopped for superiority if at least r_1_e responses are observed at the first look.
-#' If r_1_e is not used in the design, enter NA.
-#' @param n_2   Number of patients at second look.
-#' @param r_2   If no more than r_2 responses are observed at the second look, then the null hypothesis will be rejected.
-#' @param sim_num Purpose of simulation: To verify type I error control by setting p_1=p_0,
-#' To verify the parameters n_1,r_1_f,r_1_e,n_2,r_2 are correctly chosen, such that the rejection rate matches that
-#' from the design table from either the hybrid design or the mid-point design.
+#' @param p_1   Assumed response rate
+#' @param p_0   Response rate indicating low activity with insufficient clinical benefit, i.e. the response rate under the null hypothesis
+#' @param n_1   Number of patients at first look
+#' @param r_1_f   If no more than r_1_f responses are observed at the first look, then the trial would be stopped for futility
+#' @param r_1_e   If at least r_1_e responses are observed at the first look, the trial would be
+#'   stopped early for superiority; if r_1_e is not used in the design, enter NA
+#' @param n_2   Number of patients at second look
+#' @param r_2   If more than r_2 responses are observed at the second look, then the null hypothesis will be rejected
+#' @param sim_num Number of simulation replicates
 #'
-#' @return Average sample size is EN(p_1).
-#' @return Rate of termination is PET(p_1)
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Rate of rejection}{Rate of rejection of the null hypothesis over the simulation replicates}
+#'   \item{Average sample size}{Average sample size over the simulation replicates, EN(p_1)}
+#'   \item{Rate of early termination for futility}{Rate of early termination for futility over the simulation replicates, PET(p_1)}
+#' }
 #'
 #' @references R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials: an expansion of Simon’s design,
@@ -159,10 +162,8 @@ one_arm_rej_simon_binary<-function(p_1,p_0,n_1,r_1,n_2,r_2,sim_num){
 #' Journal of Biopharmaceutical Statistics, 18: 1184–1196, 2008.
 #'
 #' @examples
-#' \donttest{
 #' one_arm_rej_2_stg_binary(p_1=0.2,p_0=0.2,n_1=100,r_1_f=25,r_1_e=33,
 #' n_2=105,r_2=29,sim_num=20)
-#' }
 #'
 #' @export
 one_arm_rej_2_stg_binary<-function(p_1,p_0,n_1,r_1_f,r_1_e=NA,n_2,r_2,sim_num){
@@ -284,25 +285,28 @@ one_arm_rej_2_stg_binary<-function(p_1,p_0,n_1,r_1_f,r_1_e=NA,n_2,r_2,sim_num){
 
 ############################
 
-#' Simulations: adaptive two stage design
+#' Single arm phase 2 oncology trial, Simulations: adaptive two stage design
 #'
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param p_1   The assumed response rate.
-#' @param n_1   Number of patients at first look.
-#' @param r_1   If no more than r_1 responses are observed at the first look, then the trial would be stopped for futility.
-#' @param r_1_e   The trial would be stopped for superiority if at least r_1_e responses are observed at the first look.
-#' If r_1_e is not used in the design, enter NA.
-#' @param n_2   Number of patients at second look.
-#' @param r_2   If no more than r_2 responses are observed at the second look, then the null hypothesis will be rejected.
-#' @param N_max Maximum sample size for the trial.
-#' @param beta  Type II error. The target power is 1-beta.
-#' @param sim_num Purpose of simulation: To verify type I error control by setting p_1=p_0,
-#' To evaluate the operating characteristics of the adaptive design and to determine if continuity correction is necessary.
+#' @param p_1   Assumed response rate
+#' @param p_0   Response rate indicating low activity with insufficient clinical benefit, i.e. the response rate under the null hypothesis
+#' @param n_1   Number of patients at first look
+#' @param r_1   If no more than r_1 responses are observed at the first look, then the trial would be stopped for futility
+#' @param r_1_e   If at least r_1_e responses are observed at the first look, the trial would be
+#'   stopped early for superiority; if r_1_e is not used in the design, enter NA
+#' @param n_2   Number of patients at second look
+#' @param r_2   If more than r_2 responses are observed at the second look, then the null hypothesis will be rejected
+#' @param N_max Maximum sample size for the trial
+#' @param beta Type II error rate, i.e. 1 - power
+#' @param sim_num Number of simulation replicates
 #'
-#' @return Average sample size is EN(p_1).
-#' @return Rate of termination is PET(p_1)
-#' @return If rejection rate without continuity correction does not exceed alpha, the continuity correction is not needed for this group of
-#' parameters p_0,n_1,r_1,r_1_e,n_2,r_2. Otherwise, continuity correction should be applied.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rate of rejection-- without continity correction}{Rate of rejection of the null hypothesis over the simulation replicates, using the response-count boundary without continuity correction}
+#'   \item{rejection rate with continuity correction}{Rate of rejection of the null hypothesis over the simulation replicates when the continuity correction is applied to the response-count boundary}
+#'   \item{Average sample size}{Average sample size over the simulation replicates, EN(p_1)}
+#'   \item{Rate of early termination for futility}{Rate of early termination for futility over the simulation replicates, PET(p_1)}
+#'   \item{summary by case}{Matrix summarising the simulation results by case, with one column per case and one row per statistic: case rate, mean sample size, rejection rate, conditional power, proportion of replicates with p_hat > p_1, rejection rate using the critical boundary and corrected rejection rate}
+#' }
 #'
 #' @references R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials: an expansion of Simon’s design,
@@ -312,10 +316,9 @@ one_arm_rej_2_stg_binary<-function(p_1,p_0,n_1,r_1_f,r_1_e=NA,n_2,r_2,sim_num){
 #' Journal of Biopharmaceutical Statistics, 18: 1184–1196, 2008.
 #'
 #' @examples
-#' \donttest{
-#' one_arm_ad_two_stg_binary(p_1=0.2,p_0=0.2,n_1=37,r_1=9,r_1_e=NA,n_2=53,r_2=16,
-#' N_max=140,beta=0.1,sim_num=20)
-#' }
+#' set.seed(1)
+#' one_arm_ad_two_stg_binary(p_1 = 0.33, p_0 = 0.2, n_1 = 75, r_1 = 18, r_1_e = 26, n_2 = 80,
+#' r_2 = 23, N_max = 140, beta = 0.1, sim_num = 20)
 #'
 #' @export
 one_arm_ad_two_stg_binary<-function(p_1,p_0,n_1,r_1,r_1_e=NA,n_2,r_2,N_max,beta,sim_num){
@@ -613,24 +616,26 @@ one_arm_ad_two_stg_binary<-function(p_1,p_0,n_1,r_1,r_1_e=NA,n_2,r_2,N_max,beta,
 
 #######################################
 
-#' Simulations: Expanded Simon's design: the three stage design, no sample size change
+#' Single arm phase 2 oncology trial: Simulations, Expanded Simon's design: the three stage design, no sample size change
 #'
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param p_1   The assumed response rate.
-#' @param n_1   Number of patients at first look.
-#' @param r_1   If no more than r_1 responses are observed at the first look, then the trial would be stopped for futility.
-#' @param n_2   Number of patients at second look.
-#' @param r_2_f   If no more than responses are observed at the second look, then the trial would be stopped for futility.
-#' @param r_2_e The trial would be stopped for superiority if at least r_2_e responses are observed at the first look.
-#' If r_2_e is not used in the design, enter NA.
-#' @param n_3   Number of patients at third look.
-#' @param r_3   If at least r_2 responses are observed at the third look, then the null hypothesis will be rejected.
-#' @param sim_num Purpose of simulation: To verify type I error control by setting p_1=p_0,
-#' To verify the parameters n_1,r_1,n_2,r_2_f,r_2_e,n_3,r_3 are correctly chosen, such that the rejection rate matches that
-#' from the design table of the three-stage design.
+#' @param p_1   Assumed response rate
+#' @param p_0   Response rate indicating low activity with insufficient clinical benefit, i.e. the response rate under the null hypothesis
+#' @param n_1   Number of patients at first look
+#' @param r_1   If no more than r_1 responses are observed at the first look, then the trial would be stopped for futility
+#' @param n_2   Number of patients at second look
+#' @param r_2_f   If no more than r_2_f responses are observed at the second look, then the trial would be stopped for futility
+#' @param r_2_e   If at least r_2_e responses are observed at the second look, the trial would be
+#'   stopped early for superiority; if r_2_e is not used in the design, enter NA
+#' @param n_3   Number of patients at third look
+#' @param r_3   If more than r_3 responses are observed at the third look, then the null hypothesis will be rejected
+#' @param sim_num Number of simulation replicates
 #'
-#' @return Average sample size is EN(p_1).
-#' @return Rate of termination is PET(p_1)
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Rate of rejection}{Rate of rejection of the null hypothesis over the simulation replicates}
+#'   \item{Average sample size}{Average sample size over the simulation replicates, EN(p_1)}
+#'   \item{Rate of early termination for futility}{Rate of early termination for futility over the simulation replicates, PET(p_1)}
+#' }
 #'
 #' @references R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials: an expansion of Simon’s design,
@@ -640,10 +645,8 @@ one_arm_ad_two_stg_binary<-function(p_1,p_0,n_1,r_1,r_1_e=NA,n_2,r_2,N_max,beta,
 #' Journal of Biopharmaceutical Statistics, 18: 1184–1196, 2008.
 #'
 #' @examples
-#' \donttest{
 #' one_arm_rej_3_stg_binary(p_1=0.2,p_0=0.2,n_1=37,r_1=8,n_2=100,r_2_f=22,r_2_e=33,
 #' n_3=105,r_3=29,sim_num=20)
-#' }
 #'
 #' @export
 one_arm_rej_3_stg_binary<-function(p_1,p_0,n_1,r_1,n_2,r_2_f,r_2_e=NA,n_3,r_3,sim_num){
@@ -798,27 +801,29 @@ one_arm_rej_3_stg_binary<-function(p_1,p_0,n_1,r_1,n_2,r_2_f,r_2_e=NA,n_3,r_3,si
 
 ##########################################
 
-#' Simulations: adaptive three stage design
+#' Single arm phase 2 oncology trial: Simulations: adaptive three stage design
 #'
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param p_1   The assumed response rate.
-#' @param n_1   Number of patients at first look.
-#' @param r_1   If no more than r_1 responses are observed at the first look, then the trial would be stopped for futility.
-#' @param n_2   Number of patients at second look.
-#' @param r_2   If no more than r_2 responses are observed at the second look, then the trial would be stopped for futility.
-#' @param r_2_e   The trial would be stopped for superiority if at least r_2_e responses are observed at the second look.
-#' If r_2_e is not used in the design, enter NA.
-#' @param n_3   Number of patients at third look.
-#' @param r_3   If no more than r_3 responses are observed at the third look, then the null hypothesis will not be rejected.
-#' @param N_max Maximum sample size for the trial.
-#' @param beta  Type II error. The target power is 1-beta.
-#' @param sim_num Purpose of simulation: To verify type I error control by setting p_1=p_0,
-#' To evaluate the operating characteristics of the adaptive design and to determine if continuity correction is necessary.
+#' @param p_1   Assumed response rate
+#' @param p_0   Response rate indicating low activity with insufficient clinical benefit, i.e. the response rate under the null hypothesis
+#' @param n_1   Number of patients at first look
+#' @param r_1   If no more than r_1 responses are observed at the first look, then the trial would be stopped for futility
+#' @param n_2   Number of patients at second look
+#' @param r_2   If no more than r_2 responses are observed at the second look, then the trial would be stopped for futility
+#' @param r_2_e   If at least r_2_e responses are observed at the second look, the trial would be
+#'   stopped early for superiority; if r_2_e is not used in the design, enter NA
+#' @param n_3   Number of patients at third look
+#' @param r_3   If more than r_3 responses are observed at the third look, then the null hypothesis will be rejected
+#' @param N_max Maximum sample size for the trial
+#' @param beta Type II error rate, i.e. 1 - power
+#' @param sim_num Number of simulation replicates
 #'
-#' @return Average sample size is EN(p_1).
-#' @return Rate of termination is PET(p_1)
-#' @return If rejection rate without continuity correction does not exceed alpha, the continuity correction is not needed for this group of
-#' parameters p_0,n_1,r_1,n_2,r_2,r_2_e,n_3,r_3. Otherwise, continuity correction should be applied.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rate of rejection-- without continity correction}{Rate of rejection of the null hypothesis over the simulation replicates, using the response-count boundary without continuity correction}
+#'   \item{rejection rate with continuity correction}{Rate of rejection of the null hypothesis over the simulation replicates when the continuity correction is applied to the response-count boundary}
+#'   \item{Average sample size}{Average sample size over the simulation replicates, EN(p_1)}
+#'   \item{Rate of early termination for futility}{Rate of early termination for futility over the simulation replicates, PET(p_1)}
+#' }
 #'
 #' @references R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials: an expansion of Simon’s design,
@@ -828,10 +833,8 @@ one_arm_rej_3_stg_binary<-function(p_1,p_0,n_1,r_1,n_2,r_2_f,r_2_e=NA,n_3,r_3,si
 #' Journal of Biopharmaceutical Statistics, 18: 1184–1196, 2008.
 #'
 #' @examples
-#' \donttest{
 #' one_arm_ad_3_stg_binary(p_1=0.2,p_0=0.2,n_1=37,r_1=8,n_2=100,r_2=22,r_2_e=33,
 #' n_3=105,r_3=29,N_max=150,beta=0.1,sim_num=20)
-#' }
 #'
 #' @export
 one_arm_ad_3_stg_binary<-function(p_1,p_0,n_1,r_1,n_2,r_2,r_2_e=NA,n_3,r_3,N_max,beta,sim_num){

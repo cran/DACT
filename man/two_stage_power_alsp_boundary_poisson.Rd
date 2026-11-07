@@ -18,28 +18,37 @@ two_stage_power_alsp_boundary_poisson(
 )
 }
 \arguments{
-\item{lambda_t}{Event rate in the test arm (Poisson / negative binomial endpoint)}
+\item{lambda_t}{Mean event rates of the test arms; a vector of length >= 2}
 
-\item{lambda_c}{Event rate in the control arm (Poisson / negative binomial endpoint)}
+\item{lambda_c}{Mean event rate of the common control arm}
 
-\item{margin}{Non-inferiority / superiority margin}
+\item{margin}{Non-inferiority margin; margin >= 0, with margin = 0 for a superiority trial and
+margin > 0 for a non-inferiority trial}
 
-\item{direction}{Test direction: 1 = larger lambda is better, 0 = smaller lambda is better}
+\item{direction}{Test direction: 1 = larger lambda is better, otherwise smaller lambda is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{alpha}{One-sided significance level (type I error rate)}
+\item{alpha}{Type I error for the one-sided test; for the alpha-spending boundary this is the vector
+of alpha-spending values at each analysis, with one value per element of s and the values summing
+to the overall one-sided type I error, e.g. c(0.001, 0.001, 0.023)}
 
-\item{sampsz_control}{Control arm sample size}
+\item{sampsz_control}{Sample size of the control arm}
 
-\item{rand_ratio}{Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
-\item{dist1}{Endpoint / distribution indicator for the first stage}
+\item{dist1}{First-stage distribution indicator: 1 = the sample size calculation is for multiple dose
+vs. a common control, with normal distributions, 2 = otherwise}
 
-\item{dist2}{Endpoint / distribution indicator for the second stage}
+\item{dist2}{Second-stage distribution indicator: 1 = the sample size calculation is for multiple dose
+vs. a common control, with normal distributions, 2 = otherwise}
 }
 \value{
-A named list containing the following elements: 'power', 'type I error control'.
+A named list with the following components:
+\describe{
+  \item{power}{Nested list with the total power, the selection probability for each mu, the exit probability for each mu, the total phase 2 probability, the total exit probability and the conditional exit probability given the selected mu}
+  \item{type I error control}{Nested list with the two-stage critical boundaries, the one-sided alpha spending, nominal alpha and cumulative alpha at each interim analysis, and the phase 3 information fraction, phase 3 critical boundary and nominal p-value for phase 3}
+}
 }
 \description{
 Phase 2/3 seamless combination Group sequential design: Poisson distribution, Power calculation, Alpha-spending boundary
@@ -55,7 +64,7 @@ P. Gao, Y. Li (05 May 2024): Adaptive two-stage seamless sequential design for c
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

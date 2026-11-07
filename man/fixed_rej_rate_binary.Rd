@@ -7,28 +7,30 @@
 fixed_rej_rate_binary(p_t, p_c, rand_ratio, alpha_2, samsz, sim_num)
 }
 \arguments{
-\item{p_t}{The event rate of the test arm}
+\item{p_t}{Event rate (probability of an event) of the test arm; the null hypothesis is p_t <= p_c
+and the alternative hypothesis is p_t > p_c; 0 < p_t < 1}
 
-\item{p_c}{The event rate of the control arm}
+\item{p_c}{Event rate (probability of an event) of the control arm; 0 < p_c < 1}
 
-\item{rand_ratio}{The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
-\item{alpha_2}{The type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test}
 
-\item{samsz}{Planned sample size of the control arm used in the simulation}
+\item{samsz}{Sample size of the control arm used in the simulation}
 
 \item{sim_num}{Number of simulation replicates}
 }
 \value{
-The output is the simulated power, which can be used to verify if the calculated sample size provided intended power
+A named numeric value with the following component:
+\describe{
+  \item{rejection rate}{Simulated rejection rate of the two-sided fixed-sample Wald test of p_t = p_c; this is the simulated power, and the type I error rate when p_t = p_c}
+}
 }
 \description{
 Fixed sample designs: Binary distribution, Simulations
 }
 \examples{
-\donttest{
 fixed_rej_rate_binary(p_t = 0.4, p_c = 0.2, rand_ratio = 1, alpha_2 = 0.05,
 samsz = 106, sim_num = 20)
-}
 
 }

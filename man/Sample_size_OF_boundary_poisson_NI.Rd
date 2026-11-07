@@ -16,30 +16,44 @@ Sample_size_OF_boundary_poisson_NI(
 )
 }
 \arguments{
-\item{lambda_t}{Mean of the test arm}
+\item{lambda_t}{Event rate (mean number of events) in the test arm; must be > 0}
 
-\item{lambda_c}{Mean of the control arm}
+\item{lambda_c}{Event rate (mean number of events) in the control arm; must be > 0}
 
-\item{margin}{Non-inferiority margin}
+\item{margin}{Non-inferiority margin; must be > 0}
 
-\item{direction}{Test direction: 1 = larger lambda is better, 0 = smaller lambda is better}
+\item{direction}{Test direction: 1 = larger lambda is better, otherwise smaller lambda is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{alpha}{One-sided significance level (type I error rate)}
+\item{alpha}{Type I error for the one-sided test; 0 < alpha < 1}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Type II error rate, i.e. 1 - power; 0 < beta < 1}
 
-\item{rand_ratio}{Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 }
 \value{
-The output will show the sample size for the control arm and the test arm
+A named list with the following components:
+\describe{
+  \item{test arm sample size}{Sample size required for the test arm}
+  \item{control arm sample size}{Sample size required for the control arm}
+  \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+  \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+  \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+  \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+  \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+  \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+  \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+  \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+  \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+}
+Returns NA when the implied effect size is not positive.
 }
 \description{
 Group sequential designs / Adaptive sequential designs: Poisson distribution, Non-inferiority trial, Sample size calculation, O'Brien-Fleming boundary
 }
 \examples{
-Sample_size_OF_boundary_poisson_NI(lambda_t = 1.1, lambda_c = 1.0, margin = 0.1, direction = 0,
-s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+Sample_size_OF_boundary_poisson_NI( lambda_t = 1.1, lambda_c = 1.0, margin = 0.1, direction = 1,
+  s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
 
 }

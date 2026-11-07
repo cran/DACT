@@ -20,35 +20,40 @@ two_stage_power_OF_boundary_neg_binomial(
 )
 }
 \arguments{
-\item{r_t}{Rate parameter of the test arm (negative binomial endpoint)}
+\item{r_t}{Mean event rates of the test arms; a vector of length >= 2}
 
-\item{r_c}{Rate parameter of the control arm (negative binomial endpoint)}
+\item{r_c}{Mean event rate of the common control arm}
 
-\item{margin}{Non-inferiority / superiority margin}
+\item{margin}{Non-inferiority margin; margin >= 0, with margin = 0 for a superiority trial and
+margin > 0 for a non-inferiority trial}
 
-\item{direction}{Test direction: 1 = larger r is better, 0 = smaller r is better}
+\item{direction}{Test direction: 1 = larger r is better, otherwise smaller r is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{alpha}{One-sided significance level (type I error rate)}
+\item{alpha}{Type I error for the one-sided test; 0 < alpha < 1, typically 0.025}
 
-\item{sampsz_control}{Control arm sample size}
+\item{sampsz_control}{Sample size of the control arm}
 
-\item{rand_ratio}{Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
-\item{nu_t}{Follow-up duration of the test arm (negative binomial endpoint)}
+\item{nu_t}{Exposure time; must be > 0}
 
-\item{kappa}{Dispersion (size) parameter of the negative binomial distribution}
+\item{kappa}{Dispersion parameter of the negative binomial model; must be > 0}
 
-\item{dist1}{Endpoint / distribution indicator for the first stage}
+\item{dist1}{First-stage distribution indicator: 1 = the sample size calculation is for multiple dose
+vs. a common control, 2 = otherwise}
 
-\item{dist2}{Endpoint / distribution indicator for the second stage}
+\item{dist2}{Second-stage distribution indicator: 1 = the sample size calculation is for multiple dose
+vs. a common control, 2 = otherwise}
 }
 \value{
-A named list containing the following elements: 'power', 'Critical boundaries', 'Critical boundaries for phase 3 only',
-'1-sided alpha spending', '1-sided cummulative alpha', '2-sided alpha spending', '2-sided cummulative alpha',
-'selecting prob at end of phase 2', 'total selection prob at end of phase 2', 'Rejection rate for ech dose', 'total rejection rate',
-'conditional rejection rate for each selected dose', 'critical boundary for phase 3 stage', 'Nomimal p-value for phase 3 stage'.
+A named list with the following components:
+\describe{
+  \item{power}{Nested list with the total power, the selection probability for each mu, the exit probability for each mu, the total phase 2 probability, the total exit probability and the conditional exit probability given the selected mu}
+  \item{type I error control}{Nested list with the two-stage critical boundaries, the one-sided alpha spending, nominal alpha and cumulative alpha at each interim analysis, and the phase 3 information fraction, phase 3 critical boundary and nominal p-value for phase 3}
+  \item{Reference}{Reference for the negative binomial sample size formula used}
+}
 }
 \description{
 Phase 2/3 seamless combination Group sequential design: Negative binomial distribution, Power calculation, O'Brien-Fleming boundary
@@ -64,7 +69,7 @@ P. Gao, Y. Li (05 May 2024): Adaptive two-stage seamless sequential design for c
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

@@ -415,17 +415,31 @@ new_time_ci_mpp=function(T_planned,c_bry,t_prior,theta_prior,t_inter,theta_hat_i
 #################
 #' Hybrid: New sample size estimation
 #'
-#' @param N_planned Planned sample size at the final analysis
-#' @param c_bry Vector of critical boundaries for each analysis
-#' @param t_prior The prior is assumed to have a normal distribution. This is the mean of the prior distribution
-#' @param theta_prior The prior distribution of theta is assumed to have a normal distribution. The Fisher’s information time is the reciprocal of the variance from the prior distribution
-#' @param N_inter Sample size at interim analysis
-#' @param t_inter Information time at interim analysis
-#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis
-#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP)
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param N_planned Planned sample size: the planned sample size at the final analysis
+#' @param c_bry Critical boundary or threshold for rejecting the null hypothesis at the final analysis
+#' @param t_prior Prior information time: the prior distribution of theta is assumed to have a
+#'   normal distribution, and the Fisher's information time is the reciprocal of the variance of
+#'   the prior distribution; set t_prior = 0 for a non-informative prior
+#' @param theta_prior Mean effect size of prior: the mean of the normal prior distribution of
+#'   theta; set theta_prior = 0 for a non-informative prior
+#' @param N_inter Sample size at interim analysis: the number of subjects with data at the
+#'   interim analysis
+#' @param t_inter Information time at interim analysis: the Fisher information at the interim
+#'   analysis, the reciprocal of the variance of the unbiased maximum likelihood estimate
+#'   theta_hat_inter
+#' @param theta_hat_inter Estimated effect size at interim analysis: the maximum likelihood
+#'   estimate of theta at the interim analysis
+#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP);
+#'   it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+#'   gives a 50 percent interval
+#' @param beta Conditional type II error; 1 - beta is the target conditional power used for the
+#'   sample size re-estimation
 #'
-#' @return The new sample sizes are calculated with both non-informative prior and informative prior
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{New sample sizes}{A data frame with the columns "prior type", "SSR method" and "new sample size", giving the new sample size for every combination of prior type and sample size re-estimation (SSR) method. The prior types are the non-informative prior (mean of the prior zero and information time zero) and the informative prior entered by the user. Within each prior type the four SSR methods are the conditional power (cp), the predictive power (pp), the modified predictive power (mpp) and the credible interval modified predictive power (ci_mpp), each being the sample size that provides 1 - beta of that power; the sample size is NA when the target conditional power cannot be reached. For the informative prior the cp entry is based on the Bayesian posterior mean of theta}
+#'   \item{Reference}{References for the methods}
+#' }
 #'
 #' @references Gao, P. Improving the effectiveness of sample size re-estimation: an operating characteristic focused, hybrid frequentist-Bayesian approach, Statistics in Medicine, 2025; 44:e10310. To link to this article: \url{https://onlinelibrary.wiley.com/doi/10.1002/sim.10310}.
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
@@ -724,35 +738,50 @@ new_samsz_test_negbinom=function(x_c,x_t,t_inter,score_inter,T_planned,t_last,nu
 
 #' Hybrid: Simulations, Negative binomial distribution, Using given estimates of informative prior
 #'
-#' @param t_prior The prior is assumed to have a normal distribution. This is the mean of the prior distribution
-#' @param theta_prior The prior distribution of theta is assumed to have a normal distribution. The Fisher’s information time is the reciprocal of the variance from the prior distribution
-#' @param r_t Event rate for test arm
-#' @param r_c Event rate for control arm
-#' @param kappa dispersion parameter
-#' @param nu_t exposure time
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param t_prior Prior information time: the prior distribution of theta = -log(r_t/r_c) is
+#'   assumed to have a normal distribution, and the Fisher's information time is the reciprocal
+#'   of the variance of the prior distribution; set t_prior = 0 for a non-informative prior
+#' @param theta_prior Mean effect size of prior: the mean of the normal prior distribution of
+#'   theta = -log(r_t/r_c); set theta_prior = 0 for a non-informative prior
+#' @param r_t Event rate in the test arm; the effect size is theta = -log(r_t/r_c) and a smaller
+#'   event rate is assumed to be associated with better efficacy. Enter r_t = r_c to verify type
+#'   I error control and r_t < r_c for the power simulation
+#' @param r_c Event rate in the control arm; the effect size is theta = -log(r_t/r_c)
+#' @param kappa Dispersion parameter of the negative binomial distribution; must be > 0
+#' @param nu_t Exposure time for the negative binomial distribution; must be > 0
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param sampsz Planned sample size: the planned sample size at the final analysis
-#' @param N_max Maximum sample size: a user chosen , maximum allowable sample size for sample size modification
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param cp_min Promising zone cp_min
-#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP)
+#' @param N_max Maximum sample size: a user chosen, maximum allowable sample size for sample size modification
+#' @param theta_cut Futility threshold: a cut-off for theta_hat. In the simulations, if
+#'   theta_hat at the interim analysis is at or below theta_cut the trial is considered futile
+#'   and proceeds to the planned sample size without any change
+#' @param cp_min Promising zone cp_min: CP_min in the promising zone sample size re-estimation;
+#'   a conditional power below cp_min is the unfavorable zone. The user should select this
+#'   value from Mehta, Pocock (2011)
+#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP);
+#'   it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+#'   gives a 50 percent interval
 #' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param beta Conditional type II error; 1 - beta is the target conditional power used for the
+#'   sample size re-estimation
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The simulations are conducted with both non-informative prior and informative prior.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rejection rate and mean sample size}{A data frame with the columns "Prior type", "SSR method", "Rejection rate" and "Mean sample size", with one row per sample size re-estimation (SSR) method. The methods compared are the planned sample size with no SSR, the promising zone SSR, the SSR using the true effect size with conditional power, and, for both the non-informative prior and the informative prior, the cp SSR, pp SSR, mpp SSR and ci_mpp SSR methods}
+#'   \item{futility rate}{The rate at which the observed theta_hat at the interim analysis is at or below theta_cut, so that the trial proceeds without any sample size change}
+#'   \item{References}{A data frame of the references for the methods compared}
+#' }
 #'
 #' @references Gao, P. Improving the effectiveness of sample size re-estimation: an operating characteristic focused, hybrid frequentist-Bayesian approach, Statistics in Medicine, 2025; 44:e10310. To link to this article: \url{https://onlinelibrary.wiley.com/doi/10.1002/sim.10310}.
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 #' @references C. R. Mehta, S. J. Pocock. Adaptive increase in sample size when interim results are promising: A practical guide with examples. Statistics in Medicine. Volume30, Issue28, 10 December 2011, Pages 3267-3284
 #'
 #' @examples
-#' \donttest{
 #' hybrid_fixed_prior_rej_negbinom_simu(t_prior = 5, theta_prior = 0.2, r_t = 1, r_c = 1,
 #' kappa = 1, nu_t = 1, rand_ratio = 1, s = c(0.5,1), sampsz = 100, N_max = 150,
 #' theta_cut = 0.001, cp_min = 0.27, gamma = 0.5, alpha_2 = 0.05, beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 hybrid_fixed_prior_rej_negbinom_simu<-function(t_prior,theta_prior,r_t,r_c,kappa,nu_t,rand_ratio,s,sampsz,N_max,theta_cut,cp_min, gamma,alpha_2,beta,sim_num){
@@ -1384,36 +1413,50 @@ hybrid_fixed_prior_rej_negbinom_simu<-function(t_prior,theta_prior,r_t,r_c,kappa
 #################
 #' Hybrid: Simulations, Negative binomial distribution, Using random informative prior from previous trial
 #'
-#' @param r_t_0 Event rate for test arm - previous trial
-#' @param r_c_0 Event rate for control arm - previous trial
-#' @param sampsz_0 Sample size from previous trial
-#' @param r_t Event rate for test arm - current trial
-#' @param r_c Event rate for control arm - current trial
-#' @param kappa dispersion parameter
-#' @param nu_t exposure time
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param r_t_0 Event rate in the test arm of the previous trial, r_t0; the previous-trial
+#'   effect size is theta_0 = -log(r_t_0/r_c_0)
+#' @param r_c_0 Event rate in the control arm of the previous trial, r_c0
+#' @param sampsz_0 Sample size per arm from the previous trial, N_0; random samples of this size are drawn from the previous trial to form the random prior
+#' @param r_t Event rate in the test arm of the current trial; the effect size is
+#'   theta = -log(r_t/r_c) and a smaller event rate is assumed to be associated with better
+#'   efficacy. Enter r_t = r_c to verify type I error control and r_t < r_c for the power
+#'   simulation
+#' @param r_c Event rate in the control arm of the current trial; the effect size is theta = -log(r_t/r_c)
+#' @param kappa Dispersion parameter of the negative binomial distribution; must be > 0
+#' @param nu_t Exposure time for the negative binomial distribution; must be > 0
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param sampsz Planned sample size: the planned sample size at the final analysis
-#' @param N_max Maximum sample size: a user chosen , maximum allowable sample size for sample size modification
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param cp_min Promising zone cp_min
-#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP)
+#' @param N_max Maximum sample size: a user chosen, maximum allowable sample size for sample size modification
+#' @param theta_cut Futility threshold: a cut-off for theta_hat. In the simulations, if
+#'   theta_hat at the interim analysis is at or below theta_cut the trial is considered futile
+#'   and proceeds to the planned sample size without any change
+#' @param cp_min Promising zone cp_min: CP_min in the promising zone sample size re-estimation;
+#'   a conditional power below cp_min is the unfavorable zone. The user should select this
+#'   value from Mehta, Pocock (2011)
+#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP);
+#'   it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+#'   gives a 50 percent interval
 #' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param beta Conditional type II error; 1 - beta is the target conditional power used for the
+#'   sample size re-estimation
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The simulations are conducted with both non-informative prior and informative prior
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rejection rate and mean sample size}{A data frame with the columns "Prior type", "SSR method", "Rejection rate" and "Mean sample size", with one row per sample size re-estimation (SSR) method. The methods compared are the planned sample size with no SSR, the promising zone SSR, the SSR using the true effect size with conditional power, and, for both the non-informative prior and the informative prior, the cp SSR, pp SSR, mpp SSR and ci_mpp SSR methods}
+#'   \item{futility rate}{The rate at which the observed theta_hat at the interim analysis is at or below theta_cut, so that the trial proceeds without any sample size change}
+#'   \item{References}{A data frame of the references for the methods compared}
+#' }
 #'
 #' @references Gao, P. Improving the effectiveness of sample size re-estimation: an operating characteristic focused, hybrid frequentist-Bayesian approach, Statistics in Medicine, 2025; 44:e10310. To link to this article: \url{https://onlinelibrary.wiley.com/doi/10.1002/sim.10310}.
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 #' @references C. R. Mehta, S. J. Pocock. Adaptive increase in sample size when interim results are promising: A practical guide with examples. Statistics in Medicine. Volume30, Issue28, 10 December 2011, Pages 3267-3284
 #'
 #' @examples
-#' \donttest{
 #' hybrid_random_prior_rej_negbinom_simu(r_t_0 = 1.2, r_c_0 = 1, sampsz_0 = 50, r_t = 1, r_c = 1,
 #' kappa = 1, nu_t = 1, rand_ratio = 1, s = c(0.5,1), sampsz = 100, N_max = 150,
 #' theta_cut = 0.001, cp_min = 0.27, gamma = 0.5, alpha_2 = 0.05, beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 hybrid_random_prior_rej_negbinom_simu<-function(r_t_0,r_c_0,sampsz_0,r_t,r_c,kappa,nu_t,rand_ratio,s,sampsz,N_max,theta_cut,cp_min, gamma,alpha_2,beta,sim_num){
@@ -2077,32 +2120,48 @@ hybrid_random_prior_rej_negbinom_simu<-function(r_t_0,r_c_0,sampsz_0,r_t,r_c,kap
 
 #' Hybrid: Simulations, Binary distribution, Using given estimates of informative prior
 #'
-#' @param t_prior The prior is assumed to have a normal distribution. This is the mean of the prior distribution
-#' @param theta_prior The prior distribution of theta is assumed to have a normal distribution. The Fisher’s information time is the reciprocal of the variance from the prior distribution
-#' @param p_t Event (response) proportion in the test arm
-#' @param p_c Event (response) proportion in the control arm
+#' @param t_prior Prior information time: the prior distribution of theta = p_t - p_c is assumed
+#'   to have a normal distribution, and the Fisher's information time is the reciprocal of the
+#'   variance of the prior distribution; set t_prior = 0 for a non-informative prior
+#' @param theta_prior Mean effect size of prior: the mean of the normal prior distribution of
+#'   theta = p_t - p_c; set theta_prior = 0 for a non-informative prior
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1. The effect
+#'   size is theta = p_t - p_c. Enter p_t = p_c to verify type I error control and p_t > p_c for
+#'   the power simulation
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1. The
+#'   effect size is theta = p_t - p_c
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param sampsz Planned sample size: the planned sample size at the final analysis
-#' @param N_max Maximum sample size: a user chosen , maximum allowable sample size for sample size modification
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param cp_min Promising zone cp_min
-#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP)
+#' @param N_max Maximum sample size: a user chosen, maximum allowable sample size for sample size modification
+#' @param theta_cut Futility threshold: a cut-off for theta_hat. In the simulations, if
+#'   theta_hat at the interim analysis is at or below theta_cut the trial is considered futile
+#'   and proceeds to the planned sample size without any change
+#' @param cp_min Promising zone cp_min: CP_min in the promising zone sample size re-estimation;
+#'   a conditional power below cp_min is the unfavorable zone. The user should select this
+#'   value from Mehta, Pocock (2011)
+#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP);
+#'   it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+#'   gives a 50 percent interval
 #' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param beta Conditional type II error; 1 - beta is the target conditional power used for the
+#'   sample size re-estimation
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The simulations are conducted with both non-informative prior and informative prior
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rejection rate and mean sample size}{A data frame with the columns "Prior type", "SSR method", "Rejection rate" and "Mean sample size", with one row per sample size re-estimation (SSR) method. The methods compared are the planned sample size with no SSR, the promising zone SSR, the SSR using the true effect size with conditional power, and, for both the non-informative prior and the informative prior, the cp SSR, pp SSR, mpp SSR and ci_mpp SSR methods}
+#'   \item{futility rate}{The rate at which the observed theta_hat at the interim analysis is at or below theta_cut, so that the trial proceeds without any sample size change}
+#'   \item{References}{A data frame of the references for the methods compared}
+#' }
 #'
 #' @references Gao, P. Improving the effectiveness of sample size re-estimation: an operating characteristic focused, hybrid frequentist-Bayesian approach, Statistics in Medicine, 2025; 44:e10310. To link to this article: \url{https://onlinelibrary.wiley.com/doi/10.1002/sim.10310}.
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 #' @references C. R. Mehta, S. J. Pocock. Adaptive increase in sample size when interim results are promising: A practical guide with examples. Statistics in Medicine. Volume30, Issue28, 10 December 2011, Pages 3267-3284
 #'
 #' @examples
-#' \donttest{
 #' hybrid_fixed_prior_rej_binary_simu(t_prior = 5, theta_prior = 0.2, p_t = 0.3, p_c = 0.3,
 #' s = c(0.5,1), sampsz = 100, N_max = 150, theta_cut = 0.001, cp_min = 0.27, gamma = 0.5,
 #' alpha_2 = 0.05, beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 hybrid_fixed_prior_rej_binary_simu<-function(t_prior,theta_prior,p_t,p_c,s,sampsz,N_max,theta_cut,cp_min, gamma,alpha_2,beta,sim_num){
@@ -2677,33 +2736,47 @@ hybrid_fixed_prior_rej_binary_simu<-function(t_prior,theta_prior,p_t,p_c,s,samps
 ##################### Random Prior ####
 #' Hybrid: Simulations, Binary distribution, Using random informative prior from previous trial
 #'
-#' @param p_t_0 Event rate for test arm - previous trial
-#' @param p_c_0 Event rate for control arm - previous trial
-#' @param sampsz_0 Sample size from previous trial
-#' @param p_t Event rate for test arm
-#' @param p_c Event rate for control arm
+#' @param p_t_0 Response rate (probability of response) in the test arm of the previous trial,
+#'   p_t0; the previous-trial effect size is theta_0 = p_t_0 - p_c_0
+#' @param p_c_0 Response rate (probability of response) in the control arm of the previous trial
+#' @param sampsz_0 Sample size per arm from the previous trial, N_0; random samples of this size are drawn from the previous trial to form the random prior
+#' @param p_t Response rate (probability of response) in the test arm of the current trial;
+#'   0 < p_t < 1. The effect size is theta = p_t - p_c. Enter p_t = p_c to verify type I error
+#'   control and p_t > p_c for the power simulation
+#' @param p_c Response rate (probability of response) in the control arm of the current trial;
+#'   0 < p_c < 1. The effect size is theta = p_t - p_c
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param sampsz Planned sample size: the planned sample size at the final analysis
-#' @param N_max Maximum sample size: a user chosen , maximum allowable sample size for sample size modification
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param cp_min Promising zone cp_min
-#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP)
+#' @param N_max Maximum sample size: a user chosen, maximum allowable sample size for sample size modification
+#' @param theta_cut Futility threshold: a cut-off for theta_hat. In the simulations, if
+#'   theta_hat at the interim analysis is at or below theta_cut the trial is considered futile
+#'   and proceeds to the planned sample size without any change
+#' @param cp_min Promising zone cp_min: CP_min in the promising zone sample size re-estimation;
+#'   a conditional power below cp_min is the unfavorable zone. The user should select this
+#'   value from Mehta, Pocock (2011)
+#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP);
+#'   it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+#'   gives a 50 percent interval
 #' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param beta Conditional type II error; 1 - beta is the target conditional power used for the
+#'   sample size re-estimation
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The simulations are conducted with both non-informative prior and informative prior
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rejection rate and mean sample size}{A data frame with the columns "Prior type", "SSR method", "Rejection rate" and "Mean sample size", with one row per sample size re-estimation (SSR) method. The methods compared are the planned sample size with no SSR, the promising zone SSR, the SSR using the true effect size with conditional power, and, for both the non-informative prior and the informative prior, the cp SSR, pp SSR, mpp SSR and ci_mpp SSR methods}
+#'   \item{futility rate}{The rate at which the observed theta_hat at the interim analysis is at or below theta_cut, so that the trial proceeds without any sample size change}
+#'   \item{References}{A data frame of the references for the methods compared}
+#' }
 #'
 #' @references Gao, P. Improving the effectiveness of sample size re-estimation: an operating characteristic focused, hybrid frequentist-Bayesian approach, Statistics in Medicine, 2025; 44:e10310. To link to this article: \url{https://onlinelibrary.wiley.com/doi/10.1002/sim.10310}.
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 #' @references C. R. Mehta, S. J. Pocock. Adaptive increase in sample size when interim results are promising: A practical guide with examples. Statistics in Medicine. Volume30, Issue28, 10 December 2011, Pages 3267-3284
 #'
 #' @examples
-#' \donttest{
 #' hybrid_random_prior_rej_binary_simu(p_t_0 = 0.4, p_c_0 = 0.3, sampsz_0 = 60, p_t = 0.3,
 #' p_c = 0.3, s = c(0.5,1), sampsz = 100, N_max = 150, theta_cut = 0.001, cp_min = 0.27,
 #' gamma = 0.5, alpha_2 = 0.05, beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 hybrid_random_prior_rej_binary_simu<-function(p_t_0,p_c_0,sampsz_0,p_t,p_c,s,sampsz,N_max,theta_cut,cp_min, gamma,alpha_2,beta,sim_num){
@@ -3368,32 +3441,49 @@ hybrid_random_prior_rej_binary_simu<-function(p_t_0,p_c_0,sampsz_0,p_t,p_c,s,sam
 ########################
 #' Hybrid: Simulations, Normal distribution, Using given estimates of informative prior
 #'
-#' @param t_prior The prior is assumed to have a normal distribution. This is the mean of the prior distribution
-#' @param theta_prior The prior distribution of theta is assumed to have a normal distribution. The Fisher’s information time is the reciprocal of the variance from the prior distribution
-#' @param mu Effect size used when calibrating the boundaries
-#' @param sigma Futility threshold
+#' @param t_prior Prior information time: the prior distribution of theta = mu_t - mu_c is
+#'   assumed to have a normal distribution, and the Fisher's information time is the reciprocal
+#'   of the variance of the prior distribution; set t_prior = 0 for a non-informative prior
+#' @param theta_prior Mean effect size of prior: the mean of the normal prior distribution of
+#'   theta = mu_t - mu_c; set theta_prior = 0 for a non-informative prior
+#' @param mu Effect size (difference in means) of the current trial: theta = mu_t - mu_c, where
+#'   mu_t is the mean of the treatment arm and mu_c is the mean of the control arm. In the
+#'   simulations the test arm is generated from a normal distribution with mean mu and the
+#'   control arm from a normal distribution with mean 0, both with standard deviation sigma.
+#'   Enter mu = 0 to verify type I error control and mu > 0 for the power simulation
+#' @param sigma Common standard deviation shared by the test and control arms; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param sampsz Planned sample size: the planned sample size at the final analysis
-#' @param N_max Maximum sample size: a user chosen , maximum allowable sample size for sample size modification
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param cp_min Promising zone cp_min
-#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP)
+#' @param N_max Maximum sample size: a user chosen, maximum allowable sample size for sample size modification
+#' @param theta_cut Futility threshold: a cut-off for theta_hat. In the simulations, if
+#'   theta_hat at the interim analysis is at or below theta_cut the trial is considered futile
+#'   and proceeds to the planned sample size without any change
+#' @param cp_min Promising zone cp_min: CP_min in the promising zone sample size re-estimation;
+#'   a conditional power below cp_min is the unfavorable zone. The user should select this
+#'   value from Mehta, Pocock (2011)
+#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP);
+#'   it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+#'   gives a 50 percent interval
 #' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param beta Conditional type II error; 1 - beta is the target conditional power used for the
+#'   sample size re-estimation
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The simulations are conducted with both non-informative prior and informative prior
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rejection rate and mean sample size}{A data frame with the columns "Prior type", "SSR method", "Rejection rate" and "Mean sample size", with one row per sample size re-estimation (SSR) method. The methods compared are the planned sample size with no SSR, the promising zone SSR, the SSR using the true effect size with conditional power, and, for both the non-informative prior and the informative prior, the cp SSR, pp SSR, mpp SSR and ci_mpp SSR methods}
+#'   \item{futility rate}{The rate at which the observed theta_hat at the interim analysis is at or below theta_cut, so that the trial proceeds without any sample size change}
+#'   \item{References}{A data frame of the references for the methods compared}
+#' }
 #'
 #' @references Gao, P. Improving the effectiveness of sample size re-estimation: an operating characteristic focused, hybrid frequentist-Bayesian approach, Statistics in Medicine, 2025; 44:e10310. To link to this article: \url{https://onlinelibrary.wiley.com/doi/10.1002/sim.10310}.
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 #' @references C. R. Mehta, S. J. Pocock. Adaptive increase in sample size when interim results are promising: A practical guide with examples. Statistics in Medicine. Volume30, Issue28, 10 December 2011, Pages 3267-3284
 #'
 #' @examples
-#' \donttest{
 #' hybrid_fixed_prior_rej_normal_simu(t_prior = 5, theta_prior = 0.2, mu = 0, sigma = 1,
 #' s = c(0.5,1), sampsz = 100, N_max = 150, theta_cut = 0.001, cp_min = 0.27, gamma = 0.5,
 #' alpha_2 = 0.05, beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 hybrid_fixed_prior_rej_normal_simu<-function(t_prior,theta_prior,mu,sigma,s,sampsz,N_max,theta_cut,cp_min, gamma,alpha_2,beta,sim_num){
@@ -3970,33 +4060,51 @@ hybrid_fixed_prior_rej_normal_simu<-function(t_prior,theta_prior,mu,sigma,s,samp
 
 #' Hybrid: Simulations, Normal distribution, Using random informative prior from previous trial
 #'
-#' @param mu_0 Effect size from previous trial
-#' @param sigma_0 Common standard deviation from previous trial
-#' @param sampsz_0 Sample size from previous trial
-#' @param mu Effect size used when calibrating the boundaries
-#' @param sigma Futility threshold
+#' @param mu_0 Effect size (difference in means) of the previous trial: theta_0 = mu_t0 - mu_c0;
+#'   in the simulations the previous-trial test arm is generated from a normal distribution with
+#'   mean mu_0 and the previous-trial control arm from a normal distribution with mean 0, both
+#'   with standard deviation sigma_0
+#' @param sigma_0 Common standard deviation of the test and control arms in the previous trial;
+#'   must be > 0
+#' @param sampsz_0 Sample size per arm from the previous trial, N_0; random samples of this size are drawn from the previous trial to form the random prior
+#' @param mu Effect size (difference in means) of the current trial: theta = mu_t - mu_c, where
+#'   mu_t is the mean of the treatment arm and mu_c is the mean of the control arm. In the
+#'   simulations the test arm is generated from a normal distribution with mean mu and the
+#'   control arm from a normal distribution with mean 0, both with standard deviation sigma.
+#'   Enter mu = 0 to verify type I error control and mu > 0 for the power simulation
+#' @param sigma Common standard deviation shared by the test and control arms; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param sampsz Planned sample size: the planned sample size at the final analysis
-#' @param N_max Maximum sample size: a user chosen , maximum allowable sample size for sample size modification
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param cp_min Promising zone cp_min
-#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP)
+#' @param N_max Maximum sample size: a user chosen, maximum allowable sample size for sample size modification
+#' @param theta_cut Futility threshold: a cut-off for theta_hat. In the simulations, if
+#'   theta_hat at the interim analysis is at or below theta_cut the trial is considered futile
+#'   and proceeds to the planned sample size without any change
+#' @param cp_min Promising zone cp_min: CP_min in the promising zone sample size re-estimation;
+#'   a conditional power below cp_min is the unfavorable zone. The user should select this
+#'   value from Mehta, Pocock (2011)
+#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP);
+#'   it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+#'   gives a 50 percent interval
 #' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param beta Conditional type II error; 1 - beta is the target conditional power used for the
+#'   sample size re-estimation
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The simulations are conducted with both non-informative prior and informative prior
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rejection rate and mean sample size}{A data frame with the columns "Prior type", "SSR method", "Rejection rate" and "Mean sample size", with one row per sample size re-estimation (SSR) method. The methods compared are the planned sample size with no SSR, the promising zone SSR, the SSR using the true effect size with conditional power, and, for both the non-informative prior and the informative prior, the cp SSR, pp SSR, mpp SSR and ci_mpp SSR methods}
+#'   \item{futility rate}{The rate at which the observed theta_hat at the interim analysis is at or below theta_cut, so that the trial proceeds without any sample size change}
+#'   \item{References}{A data frame of the references for the methods compared}
+#' }
 #'
 #' @references Gao, P. Improving the effectiveness of sample size re-estimation: an operating characteristic focused, hybrid frequentist-Bayesian approach, Statistics in Medicine, 2025; 44:e10310. To link to this article: \url{https://onlinelibrary.wiley.com/doi/10.1002/sim.10310}.
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 #' @references C. R. Mehta, S. J. Pocock. Adaptive increase in sample size when interim results are promising: A practical guide with examples. Statistics in Medicine. Volume30, Issue28, 10 December 2011, Pages 3267-3284
 #'
 #' @examples
-#' \donttest{
 #' hybrid_random_prior_rej_normal_simu(mu_0 = 0.3, sigma_0 = 1, sampsz_0 = 60, mu = 0, sigma = 1,
 #' s = c(0.5,1), sampsz = 100, N_max = 250, theta_cut = 0.01, cp_min = 0.27, gamma = 0.5,
 #' alpha_2 = 0.05, beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 hybrid_random_prior_rej_normal_simu<-function(mu_0,sigma_0,sampsz_0, mu,sigma,s,sampsz,N_max,theta_cut,cp_min, gamma,alpha_2,beta,sim_num){
@@ -4596,34 +4704,57 @@ hybrid_random_prior_rej_normal_simu<-function(mu_0,sigma_0,sampsz_0, mu,sigma,s,
 ###################
 #' Hybrid: Simulations, Survival analysis, Using given estimates of informative prior
 #'
-#' @param t_prior The prior is assumed to have a normal distribution. This is the mean of the prior distribution
-#' @param theta_prior The prior distribution of theta is assumed to have a normal distribution. The Fisher’s information time is the reciprocal of the variance from the prior distribution
-#' @param HR Hazard ratio (test vs control)
-#' @param lambda 'lambda' as used by this function; see Examples.
+#' @param t_prior Prior information time: the prior distribution of theta = -log(HR) is assumed
+#'   to have a normal distribution, and the Fisher's information time is the reciprocal of the
+#'   variance of the prior distribution; set t_prior = 0 for a non-informative prior
+#' @param theta_prior Mean effect size of prior: the mean of the normal prior distribution of
+#'   theta = -log(HR); set theta_prior = 0 for a non-informative prior
+#' @param HR Hazards ratio of test arm vs. the control arm. The effect size is theta = -log(HR)
+#'   and a smaller HR indicates better efficacy. Enter HR = 1 to verify type I error control and
+#'   HR < 1 for the power simulation
+#' @param lambda Baseline hazard rate of the control arm for the exponential survival times: the
+#'   control arm is generated as rexp(lambda) and the test arm as rexp(HR * lambda), so lambda
+#'   is a rate (not a log-hazard) and must be > 0. It also sets the censoring time
+#'   T = -log(surv_rate)/lambda
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param alpha_2 Type I error for the two-sided test
-#' @param surv_rate Survival rate used to translate the number of events into a sample size
-#' @param evt_num Total number of events at the final analysis
-#' @param evt_max Maximum number of events
-#' @param HR_cut Hazard-ratio cut-off for early stopping at the interim analysis
-#' @param cp_min Promising zone cp_min
-#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP)
-#' @param samp_multip Multiplication factor applied to the sample size when it is increased
+#' @param surv_rate Survival rate used to translate the number of events into a sample size; it
+#'   is the survival probability at the (administrative) censoring time T = -log(surv_rate)/lambda, 0 < surv_rate < 1
+#' @param evt_num Planned number of events: the planned number of events at the final analysis
+#' @param evt_max Maximum number of events: a user chosen, maximum allowable number of events for sample size modification
+#' @param HR_cut Futility hazards ratio threshold: a cut-off for HR_hat. In the simulations, if
+#'   the estimated hazards ratio at the interim analysis is at or above HR_cut the trial is
+#'   considered futile and proceeds to the planned number of events without any change; it is
+#'   converted internally to theta_cut = -log(HR_cut)
+#' @param cp_min Promising zone cp_min: CP_min in the promising zone sample size re-estimation;
+#'   a conditional power below cp_min is the unfavorable zone. The user should select this
+#'   value from Mehta, Pocock (2011)
+#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP);
+#'   it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+#'   gives a 50 percent interval
+#' @param samp_multip Multiplication factor applied when translating the maximum number of
+#'   events into the sample size used in the simulations,
+#'   sampsz = ceiling(samp_multip * evt_max / surv_rate); it must be large enough for the
+#'   required number of events to be observed
 #' @param sim_num Number of simulation replicates
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param beta Conditional type II error; 1 - beta is the target conditional power used for the
+#'   sample size re-estimation
 #'
-#' @return The simulations are conducted with both non-informative prior and informative prior
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rejection rate and mean sample size}{A data frame with the columns "Prior type", "SSR method", "Rejection rate" and "Mean sample size", with one row per sample size re-estimation (SSR) method. The methods compared are the planned sample size with no SSR, the promising zone SSR, the SSR using the true effect size with conditional power, and, for both the non-informative prior and the informative prior, the cp SSR, pp SSR, mpp SSR and ci_mpp SSR methods. For this survival design the mean sample size is the mean number of events}
+#'   \item{futility rate}{The rate at which the estimated hazards ratio at the interim analysis is at or above HR_cut, so that the trial proceeds without any change to the number of events}
+#'   \item{References}{A data frame of the references for the methods compared}
+#' }
 #'
 #' @references Gao, P. Improving the effectiveness of sample size re-estimation: an operating characteristic focused, hybrid frequentist-Bayesian approach, Statistics in Medicine, 2025; 44:e10310. To link to this article: \url{https://onlinelibrary.wiley.com/doi/10.1002/sim.10310}.
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 #' @references C. R. Mehta, S. J. Pocock. Adaptive increase in sample size when interim results are promising: A practical guide with examples. Statistics in Medicine. Volume30, Issue28, 10 December 2011, Pages 3267-3284
 #'
 #' @examples
-#' \donttest{
 #' hybrid_fixed_prior_rej_survival_simu(t_prior = 10, theta_prior = 0.8, HR = 1, lambda = 1,
 #' s = c(0.5,1), alpha_2 = 0.05, surv_rate = 0.5, evt_num = 88, evt_max = 331, HR_cut = 0.95,
 #' cp_min = 0.27, gamma = 0.5, samp_multip = 5, beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 hybrid_fixed_prior_rej_survival_simu<-function(t_prior,theta_prior,HR,lambda,s,alpha_2,surv_rate,evt_num,evt_max,HR_cut,cp_min, gamma,samp_multip,sim_num,beta){
@@ -5493,23 +5624,47 @@ hybrid_fixed_prior_rej_survival_simu<-function(t_prior,theta_prior,HR,lambda,s,a
 
 #' Hybrid: Simulations, Survival analysis, Using random informative prior from previous trial
 #'
-#' @param HR_0 Hazards ratio from previous trial
-#' @param evt_num_0 Number of events from previous trial
-#' @param HR Hazard ratio (test vs control)
-#' @param lambda 'lambda' as used by this function; see Examples.
+#' @param HR_0 Hazards ratio of test vs. control in the previous trial, HR_0; the
+#'   previous-trial effect size is theta_0 = -log(HR_0)
+#' @param evt_num_0 Number of events from the previous trial, N_0; random samples are drawn from
+#'   the previous trial up to this number of events to form the random prior
+#' @param HR Hazards ratio of test arm vs. the control arm for the current trial. The effect size
+#'   is theta = -log(HR) and a smaller HR indicates better efficacy. Enter HR = 1 to verify type
+#'   I error control and HR < 1 for the power simulation
+#' @param lambda Baseline hazard rate of the control arm for the exponential survival times: the
+#'   control arm is generated as rexp(lambda) and the test arm as rexp(HR * lambda), so lambda
+#'   is a rate (not a log-hazard) and must be > 0. It also sets the censoring time
+#'   T = -log(surv_rate)/lambda for both the previous and the current trial
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param alpha_2 Type I error for the two-sided test
-#' @param surv_rate Survival rate used to translate the number of events into a sample size
-#' @param evt_num Total number of events at the final analysis
-#' @param evt_max Maximum number of events
-#' @param HR_cut Hazard-ratio cut-off for early stopping at the interim analysis
-#' @param cp_min Promising zone cp_min
-#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP)
-#' @param samp_multip Multiplication factor applied to the sample size when it is increased
+#' @param surv_rate Survival rate used to translate the number of events into a sample size; it
+#'   is the survival probability at the (administrative) censoring time T = -log(surv_rate)/lambda, 0 < surv_rate < 1
+#' @param evt_num Planned number of events: the planned number of events at the final analysis of the current trial
+#' @param evt_max Maximum number of events: a user chosen, maximum allowable number of events for sample size modification
+#' @param HR_cut Futility hazards ratio threshold: a cut-off for HR_hat. In the simulations, if
+#'   the estimated hazards ratio at the interim analysis is at or above HR_cut the trial is
+#'   considered futile and proceeds to the planned number of events without any change; it is
+#'   converted internally to theta_cut = -log(HR_cut)
+#' @param cp_min Promising zone cp_min: CP_min in the promising zone sample size re-estimation;
+#'   a conditional power below cp_min is the unfavorable zone. The user should select this
+#'   value from Mehta, Pocock (2011)
+#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP);
+#'   it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+#'   gives a 50 percent interval
+#' @param samp_multip Multiplication factor applied when translating the number of events of
+#'   the previous and the current trial into sample sizes, for example
+#'   sampsz = ceiling(samp_multip * evt_max / surv_rate); it must be large enough for the
+#'   required number of events to be observed
 #' @param sim_num Number of simulation replicates
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param beta Conditional type II error; 1 - beta is the target conditional power used for the
+#'   sample size re-estimation
 #'
-#' @return The simulations are conducted with both non-informative prior and informative prior
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rejection rate and mean sample size}{A data frame with the columns "Prior type", "SSR method", "Rejection rate" and "Mean sample size", with one row per sample size re-estimation (SSR) method. The methods compared are the planned sample size with no SSR, the promising zone SSR, the SSR using the true effect size with conditional power, and, for both the non-informative prior and the informative prior, the cp SSR, pp SSR, mpp SSR and ci_mpp SSR methods. For this survival design the mean sample size is the mean number of events}
+#'   \item{futility rate}{The rate at which the estimated hazards ratio at the interim analysis is at or above HR_cut, so that the trial proceeds without any change to the number of events}
+#'   \item{References}{A data frame of the references for the methods compared}
+#' }
 #'
 #' @references Gao, P. Improving the effectiveness of sample size re-estimation: an operating characteristic focused, hybrid frequentist-Bayesian approach, Statistics in Medicine, 2025; 44:e10310. To link to this article: \url{https://onlinelibrary.wiley.com/doi/10.1002/sim.10310}.
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
@@ -6463,32 +6618,50 @@ hybrid_random_prior_rej_survival_simu<-function(HR_0,evt_num_0,HR,lambda,s,alpha
 #####################
 #' Hybrid: Simulations, Poisson distribution, Using given estimates of informative prior
 #'
-#' @param t_prior The prior is assumed to have a normal distribution. This is the mean of the prior distribution
-#' @param theta_prior The prior distribution of theta is assumed to have a normal distribution. The Fisher’s information time is the reciprocal of the variance from the prior distribution
-#' @param lambda_t Event rate in the test arm (Poisson / negative binomial endpoint)
-#' @param lambda_c Event rate in the control arm (Poisson / negative binomial endpoint)
+#' @param t_prior Prior information time: the prior distribution of
+#'   theta = lambda_t - lambda_c is assumed to have a normal distribution, and the Fisher's
+#'   information time is the reciprocal of the variance of the prior distribution; set
+#'   t_prior = 0 for a non-informative prior
+#' @param theta_prior Mean effect size of prior: the mean of the normal prior distribution of
+#'   theta = lambda_t - lambda_c; set theta_prior = 0 for a non-informative prior
+#' @param lambda_t Event rate in the test arm of the current trial: the number of events per
+#'   subject, generated as rpois(lambda_t). The effect size is theta = lambda_t - lambda_c.
+#'   Enter lambda_t = lambda_c to verify type I error control and lambda_t > lambda_c for the
+#'   power simulation
+#' @param lambda_c Event rate in the control arm of the current trial, generated as
+#'   rpois(lambda_c); the effect size is theta = lambda_t - lambda_c
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param sampsz Planned sample size: the planned sample size at the final analysis
-#' @param N_max Maximum sample size: a user chosen , maximum allowable sample size for sample size modification
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param cp_min Promising zone cp_min
-#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP)
+#' @param N_max Maximum sample size: a user chosen, maximum allowable sample size for sample size modification
+#' @param theta_cut Futility threshold: a cut-off for theta_hat. In the simulations, if
+#'   theta_hat at the interim analysis is at or below theta_cut the trial is considered futile
+#'   and proceeds to the planned sample size without any change
+#' @param cp_min Promising zone cp_min: CP_min in the promising zone sample size re-estimation;
+#'   a conditional power below cp_min is the unfavorable zone. The user should select this
+#'   value from Mehta, Pocock (2011)
+#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP);
+#'   it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+#'   gives a 50 percent interval
 #' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param beta Conditional type II error; 1 - beta is the target conditional power used for the
+#'   sample size re-estimation
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The simulations are conducted with both non-informative prior and informative prior
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rejection rate and mean sample size}{A data frame with the columns "Prior type", "SSR method", "Rejection rate" and "Mean sample size", with one row per sample size re-estimation (SSR) method. The methods compared are the planned sample size with no SSR, the promising zone SSR, the SSR using the true effect size with conditional power, and, for both the non-informative prior and the informative prior, the cp SSR, pp SSR, mpp SSR and ci_mpp SSR methods}
+#'   \item{futility rate}{The rate at which the observed theta_hat at the interim analysis is at or below theta_cut, so that the trial proceeds without any sample size change}
+#'   \item{References}{A data frame of the references for the methods compared}
+#' }
 #'
 #' @references Gao, P. Improving the effectiveness of sample size re-estimation: an operating characteristic focused, hybrid frequentist-Bayesian approach, Statistics in Medicine, 2025; 44:e10310. To link to this article: \url{https://onlinelibrary.wiley.com/doi/10.1002/sim.10310}.
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 #' @references C. R. Mehta, S. J. Pocock. Adaptive increase in sample size when interim results are promising: A practical guide with examples. Statistics in Medicine. Volume30, Issue28, 10 December 2011, Pages 3267-3284
 #'
 #' @examples
-#' \donttest{
 #' hybrid_fixed_prior_rej_poisson_simu(t_prior = 5, theta_prior = 0.2, lambda_t = 0.5,
 #' lambda_c = 0.5, s = c(0.5,1), sampsz = 100, N_max = 150, theta_cut = 0.001, cp_min = 0.27,
 #' gamma = 0.5, alpha_2 = 0.05, beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 hybrid_fixed_prior_rej_poisson_simu<-function(t_prior,theta_prior,lambda_t,lambda_c,s,sampsz,N_max,theta_cut,cp_min, gamma,alpha_2,beta,sim_num){
@@ -7073,33 +7246,49 @@ hybrid_fixed_prior_rej_poisson_simu<-function(t_prior,theta_prior,lambda_t,lambd
 
 #' Hybrid: Simulations, Poisson distribution, Using random informative prior from previous trial
 #'
-#' @param lambda_t_0 Event rate for test arm - previous trial
-#' @param lambda_c_0 Event rate for control arm - previous trial
-#' @param sampsz_0 Sample size from previous trial
-#' @param lambda_t Event rate for test arm - current trial
-#' @param lambda_c Event rate for control arm - current trial
+#' @param lambda_t_0 Event rate in the test arm of the previous trial, generated as
+#'   rpois(lambda_t_0); the previous-trial effect size is theta_0 = lambda_t_0 - lambda_c_0
+#' @param lambda_c_0 Event rate in the control arm of the previous trial, generated as
+#'   rpois(lambda_c_0)
+#' @param sampsz_0 Sample size per arm from the previous trial, N_0; random samples of this size are drawn from the previous trial to form the random prior
+#' @param lambda_t Event rate in the test arm of the current trial: the number of events per
+#'   subject, generated as rpois(lambda_t). The effect size is theta = lambda_t - lambda_c.
+#'   Enter lambda_t = lambda_c to verify type I error control and lambda_t > lambda_c for the
+#'   power simulation
+#' @param lambda_c Event rate in the control arm of the current trial, generated as
+#'   rpois(lambda_c); the effect size is theta = lambda_t - lambda_c
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param sampsz Planned sample size: the planned sample size at the final analysis
-#' @param N_max Maximum sample size: a user chosen , maximum allowable sample size for sample size modification
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param cp_min Promising zone cp_min
-#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP)
+#' @param N_max Maximum sample size: a user chosen, maximum allowable sample size for sample size modification
+#' @param theta_cut Futility threshold: a cut-off for theta_hat. In the simulations, if
+#'   theta_hat at the interim analysis is at or below theta_cut the trial is considered futile
+#'   and proceeds to the planned sample size without any change
+#' @param cp_min Promising zone cp_min: CP_min in the promising zone sample size re-estimation;
+#'   a conditional power below cp_min is the unfavorable zone. The user should select this
+#'   value from Mehta, Pocock (2011)
+#' @param gamma Parameter chosen for the credible interval modified predictive power (CI_MPP);
+#'   it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+#'   gives a 50 percent interval
 #' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param beta Conditional type II error; 1 - beta is the target conditional power used for the
+#'   sample size re-estimation
 #' @param sim_num Number of simulation replicates
 #'
-#' @return The simulations are conducted with both non-informative prior and informative prior
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{rejection rate and mean sample size}{A data frame with the columns "Prior type", "SSR method", "Rejection rate" and "Mean sample size", with one row per sample size re-estimation (SSR) method. The methods compared are the planned sample size with no SSR, the promising zone SSR, the SSR using the true effect size with conditional power, and, for both the non-informative prior and the informative prior, the cp SSR, pp SSR, mpp SSR and ci_mpp SSR methods}
+#'   \item{futility rate}{The rate at which the observed theta_hat at the interim analysis is at or below theta_cut, so that the trial proceeds without any sample size change}
+#'   \item{References}{A data frame of the references for the methods compared}
+#' }
 #'
 #' @references Gao, P. Improving the effectiveness of sample size re-estimation: an operating characteristic focused, hybrid frequentist-Bayesian approach, Statistics in Medicine, 2025; 44:e10310. To link to this article: \url{https://onlinelibrary.wiley.com/doi/10.1002/sim.10310}.
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 #' @references C. R. Mehta, S. J. Pocock. Adaptive increase in sample size when interim results are promising: A practical guide with examples. Statistics in Medicine. Volume30, Issue28, 10 December 2011, Pages 3267-3284
 #'
 #' @examples
-#' \donttest{
 #' hybrid_random_prior_rej_poisson_simu(lambda_t_0 = 0.5, lambda_c_0 = 0.3, sampsz_0 = 60,
 #' lambda_t = 0.5, lambda_c = 0.5, s = c(0.5,1), sampsz = 100, N_max = 150, theta_cut = 0.001,
 #' cp_min = 0.27, gamma = 0.5, alpha_2 = 0.05, beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 hybrid_random_prior_rej_poisson_simu<-function(lambda_t_0,lambda_c_0,sampsz_0,lambda_t,lambda_c,s,sampsz,N_max,theta_cut,cp_min, gamma,alpha_2,beta,sim_num){

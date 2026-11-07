@@ -17,36 +17,38 @@ two_stg_power_simu_neg_binomial(
 )
 }
 \arguments{
-\item{r_t}{Rate parameter of the test arm (negative binomial endpoint)}
+\item{r_t}{Mean event rates of the test arms; each element must be > 0}
 
-\item{r_c}{Rate parameter of the control arm (negative binomial endpoint)}
+\item{r_c}{Mean event rate of the control arm; must be > 0}
 
-\item{kappa}{Dispersion (size) parameter of the negative binomial distribution}
+\item{kappa}{Dispersion parameter of the negative binomial model; must be > 0}
 
-\item{direction}{Test direction: 1 = larger r is better, 0 = smaller r is better}
+\item{direction}{Test direction: 1 = larger r is better, otherwise smaller r is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{bry_type}{Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending}
+\item{bry_type}{Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock; any other value leaves the boundaries undefined}
 
-\item{alpha_2}{Type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; 0 < alpha_2 < 1}
 
 \item{samsz}{Planned sample size of the control arm used in the simulation}
 
 \item{sim_num}{Number of simulation replicates}
 }
 \value{
-A matrix in which each row corresponds to one simulation replicate and the columns hold the simulated operating characteristics
-(e.g. rejection indicators, sample sizes and stopping stages).
+A named list with the following components:
+\describe{
+  \item{Sequential design}{Matrix of the planned group sequential design, with one row per analysis and the columns "Look", "Information fraction", "Critical boundaries" and "rejection by look"}
+  \item{Results by arm}{Matrix with one row per dose and the columns "r<sub>t1</sub>,...", "r<sub>c</sub>", "selection rate", "rejection rate by each r_t" and "conditional rejection rate"; the selection rate is the probability that the dose is selected to proceed to phase 3, the rejection rate is the probability that the dose is selected and the null hypothesis is rejected, and the conditional rejection rate is the rejection rate divided by the selection rate}
+  \item{Simulation results}{Named vector of the overall "rejection rate", the "Type I error", the "Non-Type I error rejection rate", the "Planned control sample size", the "Mean control sample size", the "Planned total sample size" and the "Mean total sample size"}
+}
 }
 \description{
 Phase 2/3 seamless combination Group sequential design: Simulations, Negative binomial distribution, Type I error and power
 }
 \examples{
-\donttest{
 two_stg_power_simu_neg_binomial(r_t = c(1.1,1.1,1.1), r_c = 1.1, kappa = 1, direction = 1,
 s = c(1/3,1), bry_type = 1, alpha_2 = 0.05, samsz = 100, sim_num = 20)
-}
 
 }
 \references{
@@ -54,7 +56,7 @@ P. Gao, Y. Li (05 May 2024): Adaptive two-stage seamless sequential design for c
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

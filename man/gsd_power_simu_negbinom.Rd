@@ -17,41 +17,49 @@ gsd_power_simu_negbinom(
 )
 }
 \arguments{
-\item{r_t}{Rate parameter of the test arm (negative binomial endpoint)}
+\item{r_t}{Mean of the test arm; must be > 0}
 
-\item{r_c}{Rate parameter of the control arm (negative binomial endpoint)}
+\item{r_c}{Mean of the control arm; must be > 0}
 
-\item{kappa}{Dispersion (size) parameter of the negative binomial distribution}
+\item{kappa}{Dispersion parameter of the negative binomial model; must be > 0}
 
-\item{direction}{Test direction: 1 = larger r is better, 0 = smaller r is better}
+\item{direction}{Test direction: 1 = larger r is better, otherwise smaller r is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
 \item{bry_type}{Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending}
 
-\item{alpha_2}{Type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+one-sided type I error used for the critical boundaries}
 
-\item{samsz}{Planned sample size of the control arm used in the simulation}
+\item{samsz}{Planned sample size of the control arm used in the simulation; must be > 0}
 
-\item{sim_num}{Number of simulation replicates}
+\item{sim_num}{Number of simulation replicates; must be > 0}
 }
 \value{
-A named list containing the following elements: 'Planned sample size', 'rejection rate', 'Mean sample size'.
+A named list with the following components:
+\describe{
+  \item{Sequential design and rejection by look}{Data frame with one row per analysis and the
+    columns Looks, Information fraction, Critical boundaries and Rejection by look (the
+    rejection rate at each interim analysis)}
+  \item{Power and sample size}{Named vector with the components Planned  control sample size
+    (the sample size used in the simulation), Rejection rate (the simulated power, i.e. the
+    type I error rate when r_t = r_c) and Mean control sample size (the mean simulated sample
+    size)}
+}
 }
 \description{
 Group sequential designs / Adaptive sequential designs: Simulations, Negative binomial distribution, Type I error and power
 }
 \examples{
-\donttest{
 gsd_power_simu_negbinom(r_t = 1.1, r_c = 1.1, kappa = 1, direction = 1, s = c(1/3,2/3,1),
 bry_type = 1, alpha_2 = 0.05, samsz = 100, sim_num = 20)
-}
 
 }
 \references{
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 

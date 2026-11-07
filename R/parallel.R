@@ -141,7 +141,7 @@ getParCount <- function(sim_num)
 simuloop <- function(sim_num, type, func)
 {
   if (debug_simu) {
-    simuloop_debug(sim_num, type, func)
+    return(simuloop_debug(sim_num, type, func))
   }
   return(simuloop_success(sim_num, type, func))
 }
@@ -154,26 +154,34 @@ simuloop_nopar <- function(sim_num, type, func)
       out = func()
     }
   }#(end of q loop)
+  if (is.null(dim(simr))) simr = rbind(simr)
   return(simr)
 }
 
-clusterObj = NULL
+.parallel_state = new.env(parent = emptyenv())
+.parallel_state$clusterObj = NULL
 
 parallelStart <- function(sim_num)
 {
+  parallelStop()
   parloop = getParLoopNum(sim_num)
   if (isWindow()) {
-    clusterObj = makePSOCKcluster(parloop$cores)
+    .parallel_state$clusterObj <- makePSOCKcluster(parloop$cores)
   } else {
-    clusterObj = makeForkCluster(nnodes = parloop$cores)
-    #clusterObj = makeCluster(getOption("cl.cores", parloop$cores))
+    .parallel_state$clusterObj <- makeForkCluster(nnodes = parloop$cores)
   }
-  registerDoParallel(clusterObj)
+  tryCatch(registerDoParallel(.parallel_state$clusterObj), error = function(e) {
+    parallelStop()
+    stop(e)
+  })
 }
 
 parallelStop <- function()
 {
-  stopCluster(clusterObj)
+  if (!is.null(.parallel_state$clusterObj)) {
+    on.exit({.parallel_state$clusterObj <- NULL; foreach::registerDoSEQ()}, add = TRUE)
+    stopCluster(.parallel_state$clusterObj)
+  }
 }
 
 simuloop_windows2 <- function(sim_num, type, func)
@@ -186,6 +194,7 @@ simuloop_windows2 <- function(sim_num, type, func)
     cores = 1
   }
   cl = makeCluster(cores)
+  on.exit({stopCluster(cl); foreach::registerDoSEQ()}, add = TRUE)
   if (type=="ASD") {
     clusterExport(cl, "coxph")
     clusterExport(cl, "last")
@@ -227,7 +236,7 @@ simuloop_windows2 <- function(sim_num, type, func)
     out = func()
   }#(end of q loop)
 
-  stopCluster(cl)
+  if (is.null(dim(simr))) simr = rbind(simr)
   return(simr)
 }
 
@@ -239,6 +248,7 @@ simuloop_windows <- function(sim_num, type, func)
       out = func()
     }
   }#(end of q loop)
+  if (is.null(dim(simr))) simr = rbind(simr)
   return(simr)
 }
 
@@ -250,6 +260,7 @@ simuloop_linux_dopar <- function(sim_num, type, func)
       out = func()
     }
   }#(end of q loop)
+  if (is.null(dim(simr))) simr = rbind(simr)
   return(simr)
 }
 
@@ -260,6 +271,7 @@ simuloop_success <- function(sim_num, type, func)
   } else {
     simr = simuloop_linux_dopar(sim_num, type, func)
   }
+  if (is.null(dim(simr))) simr = rbind(simr)
   return(simr)
 }
 
@@ -306,29 +318,25 @@ simuloop_debug <- function(sim_num, type, func)
     out = c(-199, "simuE", e$call, e$message)
   }
 
-  parloop = getParLoop(sim_num)
-  simr = foreach(q = 1:parloop$cores) %dopar% {
-    foreach(m = 1:parloop$loop[q]) %do% {
-      tryCatch({
-        out = func()
-      }, warning = function(w) {
-        out = warn_func(w)
-      }, error = function(e) {
-        out = error_func(e)
-      }, finally = {
-
-      })
-    }
-  }#(end of q loop)
-
-  mylist = unlist(simr)
+  diagnostics = list()
+  results = vector("list", sim_num)
+  for (i in seq_len(sim_num)) {
+    results[i] = list(tryCatch(withCallingHandlers(func(), warning = function(w) {
+      diagnostics[[length(diagnostics) + 1L]] <<- warn_func(w)
+      invokeRestart("muffleWarning")
+    }), error = function(e) {
+      diagnostics[[length(diagnostics) + 1L]] <<- error_func(e)
+      NULL
+    }))
+  }
+  mylist = unlist(diagnostics)
   rowE_max = 20
   rowW_max = 20
   infoE = array(data="", dim=c(rowE_max, 2))
   infoW = array(data="", dim=c(rowW_max, 2))
   rowE = 1
   rowW = 1
-  for (m in 1:length(mylist)) {
+  for (m in seq_along(mylist)) {
     if (is.numeric(mylist[[m]]) && ((mylist[[m]]==-99  && mylist[[m + 1]]=="simuW") ||
                                     (mylist[[m]]==-199 && mylist[[m + 1]]=="simuE"))) {
       call = call2str_info(mylist[[m + 2]])
@@ -354,6 +362,7 @@ simuloop_debug <- function(sim_num, type, func)
                 "\nMessage: ", infoE[1,2],
                 "\n<<== Debug info end\n"))
   }
+  return(do.call(rbind, results))
 }
 
 call_uniroot <- function(func, interval, extendInt, maxiter=1000L, tol=1e-6) {

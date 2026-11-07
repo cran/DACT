@@ -29,44 +29,62 @@ two_stage_est_back(
 \arguments{
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{c_bry_two_stg}{Critical boundaries of the two-stage design}
+\item{c_bry_two_stg}{Vector of critical boundaries of the two-stage design for the overall test, one per
+analysis; must have the same length as 's'}
 
-\item{c_bry_p3}{Critical boundaries of the prior (phase 3) study}
+\item{c_bry_p3}{Vector of critical boundaries of the prior (phase 3) study, one per phase 3 analysis;
+must have 'length(s) - 1' elements}
 
-\item{comp}{Type of comparison between arms}
+\item{comp}{Number of comparisons in the phase 2 stage, e.g. the number of doses or the number of
+endpoints; must be at least 2}
 
-\item{snew}{Vector of new information fractions after the sample size is changed}
+\item{snew}{Vector of new information fractions after the sample size is changed, one per analysis after
+the change; must have at least 'last_vt_ad' elements}
 
-\item{c_bry_new}{Critical boundaries after the sample size is changed}
+\item{c_bry_new}{Vector of critical boundaries after the sample size is changed, one per analysis after
+the change; must have the same length as 'snew'}
 
-\item{c_bry_new_p3}{Critical boundaries after the sample size is changed (prior study scale)}
+\item{c_bry_new_p3}{Vector of critical boundaries after the sample size is changed on the prior
+(phase 3) study scale, one per analysis after the change; must have the same length as 'snew'}
 
-\item{theta_hat_inter}{Treatment effect estimate observed at the interim analysis}
+\item{theta_hat_inter}{Treatment effect estimate observed at the interim analysis at which the sample
+size is changed}
 
-\item{theta_hat_inter_sd}{Standard error of 'theta_hat_inter'}
+\item{theta_hat_inter_sd}{Standard error of 'theta_hat_inter'; must be > 0}
 
-\item{inter_vt}{Index of the interim analysis at which the sample size is re-estimated (1-based)}
+\item{inter_vt}{Index of the interim analysis at which the sample size is re-estimated (1-based); must be
+less than 'length(s)', so that at least one further analysis remains}
 
-\item{theta_hat_last_ad}{Treatment effect estimate observed at the last analysis after the sample size change}
+\item{theta_hat_last_ad}{Treatment effect estimate observed at the last analysis after the sample size
+change}
 
-\item{theta_hat_last_ad_sd}{Standard error of 'theta_hat_last_ad'}
+\item{theta_hat_last_ad_sd}{Standard error of 'theta_hat_last_ad'; must be > 0}
 
 \item{last_vt_ad}{Index of the last analysis after the sample size change}
 
-\item{theta_hat_inter_p3}{'theta_hat_inter_p3' as used by this function; see Examples.}
+\item{theta_hat_inter_p3}{Treatment effect estimate observed at the interim analysis at which the sample
+size is changed, using phase 3 data only}
 
-\item{theta_hat_inter_p3_sd}{'theta_hat_inter_p3_sd' as used by this function; see Examples.}
+\item{theta_hat_inter_p3_sd}{Standard error of 'theta_hat_inter_p3'; must be > 0}
 
-\item{theta_hat_last_ad_p3}{'theta_hat_last_ad_p3' as used by this function; see Examples.}
+\item{theta_hat_last_ad_p3}{Treatment effect estimate observed at the last analysis after the sample size
+change, using phase 3 data only}
 
-\item{theta_hat_last_ad_p3_sd}{'theta_hat_last_ad_p3_sd' as used by this function; see Examples.}
+\item{theta_hat_last_ad_p3_sd}{Standard error of 'theta_hat_last_ad_p3'; must be > 0}
 
 \item{alpha_2}{Type I error for the two-sided test}
 
-\item{dist}{Indicator of the endpoint / distribution type}
+\item{dist}{Distribution indicator of the endpoint: 1 = the endpoint is normally distributed and the
+comparison is between multiple doses and a common control, otherwise the non-normal branch is used}
 }
 \value{
-A named list containing the following elements: 'p-value', 'confidence interval'.
+A named list with the following components:
+\describe{
+  \item{p-value}{The p-value for the hypothesis test}
+  \item{confidence interval}{Numeric vector of length 3 giving the lower confidence limit, the median
+    unbiased point estimate and the upper confidence limit; the lower limit is consistent with the
+    p-value, while the point estimate and the upper limit use phase 3 data only}
+}
 }
 \description{
 Phase 2/3 seamless combination Group sequential design: Final analysis, With one sample size change
@@ -85,7 +103,7 @@ P. Gao, Y. Li (05 May 2024): Adaptive two-stage seamless sequential design for c
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

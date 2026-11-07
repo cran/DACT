@@ -26,32 +26,58 @@ masd_est_back_with_drop(
 
 \item{c_bry}{Vector of critical boundaries for each analysis}
 
-\item{snew}{Vector of new information fractions after the sample size is changed}
+\item{snew}{Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+the fractions are relative to the new total information and the last element must be 1}
 
-\item{c_bry_new}{Critical boundaries after the sample size is changed}
+\item{c_bry_new}{Vector of new critical boundaries after the sample size is changed, one per
+element of 'snew'}
 
-\item{theta_hat_inter_m1}{'theta_hat_inter_m1' as used by this function; see Examples.}
+\item{theta_hat_inter_m1}{Numeric vector of treatment effect estimates observed at the interim
+analysis at which the sample size was changed, one per original comparison (dose), e.g. the
+difference of the observed means or event rates between a test arm and the common control arm}
 
-\item{theta_hat_inter_m1_sd}{'theta_hat_inter_m1_sd' as used by this function; see Examples.}
+\item{theta_hat_inter_m1_sd}{Standard error of 'theta_hat_inter_m1'; either a single value shared by
+all comparisons or a vector with one value per comparison; must be > 0}
 
-\item{theta_hat_inter_m2}{'theta_hat_inter_m2' as used by this function; see Examples.}
+\item{theta_hat_inter_m2}{Numeric vector of treatment effect estimates at the interim analysis for
+the M^(2) comparisons that remain after the doses (comparisons) dropped for lack of efficacy are
+removed; each element must appear in 'theta_hat_inter_m1', which is used to map the remaining
+comparisons back onto the original ones}
 
-\item{theta_hat_inter_m2_sd}{'theta_hat_inter_m2_sd' as used by this function; see Examples.}
+\item{theta_hat_inter_m2_sd}{Standard error of 'theta_hat_inter_m2'; either a single value shared by
+all comparisons or a vector with one value per comparison; must be > 0}
 
-\item{inter_vt}{Index of the interim analysis at which the sample size is re-estimated (1-based)}
+\item{inter_vt}{Index of the interim analysis at which the sample size was changed (1-based); must
+be less than length(s)}
 
-\item{theta_hat_last_ad_m2}{'theta_hat_last_ad_m2' as used by this function; see Examples.}
+\item{theta_hat_last_ad_m2}{Numeric vector of treatment effect estimates observed at the analysis
+after the sample size change at which the trial was terminated, one per remaining comparison
+(dose); the remaining comparison with the largest estimate is the one for which the point estimate
+and confidence interval are returned}
 
-\item{theta_hat_last_ad_m2_sd}{'theta_hat_last_ad_m2_sd' as used by this function; see Examples.}
+\item{theta_hat_last_ad_m2_sd}{Standard error of 'theta_hat_last_ad_m2'; either a single value
+shared by all comparisons or a vector with one value per comparison; must be > 0}
 
-\item{last_vt_ad}{Index of the last analysis after the sample size change}
+\item{last_vt_ad}{Index of the interim or final analysis after the sample size change at which the
+trial was terminated (1-based); it indexes 'snew'}
 
 \item{alpha_2}{Type I error for the two-sided test}
 
-\item{dist}{Indicator of the endpoint / distribution type}
+\item{dist}{Distribution indicator: 1 = the comparisons (doses) share one common control arm and the
+endpoint is normally distributed, so that the treatment effect estimates are correlated with
+correlation 1/2; otherwise the comparisons are treated as independent}
 }
 \value{
-A named list containing the following elements: 'p-value', 'confidence interval'.
+A named list with the following components:
+\describe{
+  \item{p-value}{The p-value of the test of the null hypothesis that the treatment effect of the
+    remaining comparison (dose) with the best efficacy is 0}
+  \item{confidence interval}{Numeric vector of length 3 giving the lower confidence limit, the
+    conservatively median unbiased point estimate and the upper confidence limit for the remaining
+    comparison (dose) with the best efficacy; this is the two-sided (1 - alpha_2) * 100 percent
+    confidence interval, and its lower limit is consistent with the p-value, in the sense that the
+    p-value < alpha_2/2 if and only if the lower limit is greater than 0}
+}
 }
 \description{
 Multiple comparisons Group sequential design: Final analysis, With one sample size change, orgin_comp>comp2
@@ -69,7 +95,7 @@ P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

@@ -18,16 +18,25 @@
 #' Phase 2/3 seamless combination Group sequential design: Final analysis, Without sample size change, last_vt == 1
 #'
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param theta_hat_0 'theta_hat_0' as used by this function; see Examples.
-#' @param theta_hat_0_sd 'theta_hat_0_sd' as used by this function; see Examples.
+#' @param theta_hat_0 Vector of naive point estimates of the treatment effect for the comparisons at the
+#'   end of the phase 2 stage (the first interim analysis); its length is the number of comparisons
+#' @param theta_hat_0_sd Common standard error of 'theta_hat_0' at the end of the phase 2 stage, shared by
+#'   all comparisons; must be > 0
 #' @param alpha_2 Type I error for the two-sided test
-#' @param dist Indicator of the endpoint / distribution type
+#' @param dist Distribution indicator of the endpoint: 1 = the endpoint is normally distributed and the
+#'   comparison is between multiple doses and a common control, otherwise the non-normal branch is used
 #'
-#' @return A named list containing the following elements: 'p-value', 'confidence interval'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{p-value}{The p-value for the hypothesis test}
+#'   \item{confidence interval}{Numeric vector of length 3 giving the lower confidence limit, the median
+#'     unbiased point estimate and the upper confidence limit; the lower limit is consistent with the
+#'     p-value}
+#' }
 #'
 #' @references P. Gao, Y. Li (05 May 2024): Adaptive two-stage seamless sequential design for clinical trials, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2342518. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2342518}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
@@ -112,23 +121,37 @@ two_stage_ci_0<-function(s,theta_hat_0,theta_hat_0_sd,alpha_2,dist){
 #########################################
 #' Phase 2/3 seamless combination Group sequential design: Final analysis, Without sample size change, last_vt > 1
 #'
-#' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param c_bry_two_stg Critical boundaries of the two-stage design
-#' @param c_bry_p3 Critical boundaries of the prior (phase 3) study
-#' @param comp Type of comparison between arms
-#' @param theta_hat_p3 Treatment effect estimate from the prior (phase 3) study
-#' @param theta_hat_p3_sd Standard error of 'theta_hat_p3'
-#' @param theta_hat_last Treatment effect estimate observed at the final analysis
-#' @param theta_hat_last_sd Standard error of 'theta_hat_last'
-#' @param last_vt Index of the analysis at which the trial stopped
+#' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be
+#'   1; here the length of 's' must be 2 or 3, i.e. the phase 2 stage plus one or two phase 3 analyses
+#' @param c_bry_two_stg Vector of critical boundaries of the two-stage design for the overall test, one per
+#'   analysis; must have the same length as 's'
+#' @param c_bry_p3 Vector of critical boundaries of the prior (phase 3) study, one per phase 3 analysis;
+#'   must have 'length(s) - 1' elements
+#' @param comp Number of comparisons in the phase 2 stage, e.g. the number of doses or the number of
+#'   endpoints; must be at least 2
+#' @param theta_hat_p3 Treatment effect estimate observed at the analysis at which the trial stopped, using
+#'   phase 3 data only
+#' @param theta_hat_p3_sd Standard error of 'theta_hat_p3'; must be > 0
+#' @param theta_hat_last Treatment effect estimate observed at the analysis at which the trial stopped,
+#'   based on all data accumulated by then
+#' @param theta_hat_last_sd Standard error of 'theta_hat_last'; must be > 0
+#' @param last_vt Index of the analysis at which the trial stopped; must be > 1 because the trial stopped in
+#'   the phase 3 stage
 #' @param alpha_2 Type I error for the two-sided test
-#' @param dist Indicator of the endpoint / distribution type
+#' @param dist Distribution indicator of the endpoint: 1 = the endpoint is normally distributed and the
+#'   comparison is between multiple doses and a common control, otherwise the non-normal branch is used
 #'
-#' @return A named list containing the following elements: 'p-value', 'confidence interval'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{p-value}{The p-value for the hypothesis test}
+#'   \item{confidence interval}{Numeric vector of length 3 giving the lower confidence limit, the median
+#'     unbiased point estimate and the upper confidence limit; the lower limit is consistent with the
+#'     p-value, while the point estimate and the upper limit use phase 3 data only}
+#' }
 #'
 #' @references P. Gao, Y. Li (05 May 2024): Adaptive two-stage seamless sequential design for clinical trials, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2342518. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2342518}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
@@ -487,30 +510,48 @@ ph3_ci_est_back<-function(s_p3,c_bry_p3,snew,c_bry_new_p3,theta_hat_inter_p3,the
 #' Phase 2/3 seamless combination Group sequential design: Final analysis, With one sample size change
 #'
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param c_bry_two_stg Critical boundaries of the two-stage design
-#' @param c_bry_p3 Critical boundaries of the prior (phase 3) study
-#' @param comp Type of comparison between arms
-#' @param snew Vector of new information fractions after the sample size is changed
-#' @param c_bry_new Critical boundaries after the sample size is changed
-#' @param c_bry_new_p3 Critical boundaries after the sample size is changed (prior study scale)
-#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis
-#' @param theta_hat_inter_sd Standard error of 'theta_hat_inter'
-#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
-#' @param theta_hat_last_ad Treatment effect estimate observed at the last analysis after the sample size change
-#' @param theta_hat_last_ad_sd Standard error of 'theta_hat_last_ad'
+#' @param c_bry_two_stg Vector of critical boundaries of the two-stage design for the overall test, one per
+#'   analysis; must have the same length as 's'
+#' @param c_bry_p3 Vector of critical boundaries of the prior (phase 3) study, one per phase 3 analysis;
+#'   must have 'length(s) - 1' elements
+#' @param comp Number of comparisons in the phase 2 stage, e.g. the number of doses or the number of
+#'   endpoints; must be at least 2
+#' @param snew Vector of new information fractions after the sample size is changed, one per analysis after
+#'   the change; must have at least 'last_vt_ad' elements
+#' @param c_bry_new Vector of critical boundaries after the sample size is changed, one per analysis after
+#'   the change; must have the same length as 'snew'
+#' @param c_bry_new_p3 Vector of critical boundaries after the sample size is changed on the prior
+#'   (phase 3) study scale, one per analysis after the change; must have the same length as 'snew'
+#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis at which the sample
+#'   size is changed
+#' @param theta_hat_inter_sd Standard error of 'theta_hat_inter'; must be > 0
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based); must be
+#'   less than 'length(s)', so that at least one further analysis remains
+#' @param theta_hat_last_ad Treatment effect estimate observed at the last analysis after the sample size
+#'   change
+#' @param theta_hat_last_ad_sd Standard error of 'theta_hat_last_ad'; must be > 0
 #' @param last_vt_ad Index of the last analysis after the sample size change
-#' @param theta_hat_inter_p3 'theta_hat_inter_p3' as used by this function; see Examples.
-#' @param theta_hat_inter_p3_sd 'theta_hat_inter_p3_sd' as used by this function; see Examples.
-#' @param theta_hat_last_ad_p3 'theta_hat_last_ad_p3' as used by this function; see Examples.
-#' @param theta_hat_last_ad_p3_sd 'theta_hat_last_ad_p3_sd' as used by this function; see Examples.
+#' @param theta_hat_inter_p3 Treatment effect estimate observed at the interim analysis at which the sample
+#'   size is changed, using phase 3 data only
+#' @param theta_hat_inter_p3_sd Standard error of 'theta_hat_inter_p3'; must be > 0
+#' @param theta_hat_last_ad_p3 Treatment effect estimate observed at the last analysis after the sample size
+#'   change, using phase 3 data only
+#' @param theta_hat_last_ad_p3_sd Standard error of 'theta_hat_last_ad_p3'; must be > 0
 #' @param alpha_2 Type I error for the two-sided test
-#' @param dist Indicator of the endpoint / distribution type
+#' @param dist Distribution indicator of the endpoint: 1 = the endpoint is normally distributed and the
+#'   comparison is between multiple doses and a common control, otherwise the non-normal branch is used
 #'
-#' @return A named list containing the following elements: 'p-value', 'confidence interval'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{p-value}{The p-value for the hypothesis test}
+#'   \item{confidence interval}{Numeric vector of length 3 giving the lower confidence limit, the median
+#'     unbiased point estimate and the upper confidence limit; the lower limit is consistent with the
+#'     p-value, while the point estimate and the upper limit use phase 3 data only}
+#' }
 #'
 #' @references P. Gao, Y. Li (05 May 2024): Adaptive two-stage seamless sequential design for clinical trials, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2342518. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2342518}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples

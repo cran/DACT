@@ -232,17 +232,38 @@ asd_new_info_time<-function(theta,s,inter_vt,snew,c_alpha,theta_hat_inter,theta_
 ##################################
 #' Group sequential designs / Adaptive sequential designs: Interim analysis, Non-survival analysis, Input theta
 #'
-#' @param theta Assumed effect size
+#' @param theta Assumed effect size used for the conditional power calculation; different values of
+#'   theta can be entered to check the sensitivity of the conditional power to the effect size; if
+#'   theta < 0.001 the new sample size and the new critical boundary are returned as 'NA'
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param c_bry Vector of critical boundaries for each analysis
-#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
-#' @param snew Vector of new information fractions after the sample size is changed
-#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based);
+#'   must be less than length(s)
+#' @param snew Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+#'   the fractions are relative to the new total information and the last element must be 1
+#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis, e.g. the
+#'   difference of the observed means or event rates between the test arm and the control arm
 #' @param theta_hat_inter_sd Standard error of 'theta_hat_inter'
 #' @param n_control_inter Sample size of the control arm at the interim analysis
 #' @param beta Type II error rate, i.e. 1 - power
 #'
-#' @return A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics', 'Critical boundary', 'Assumed effect size: theta', 'c_alpha', 'c_power_theta', 'N_control_new', 'new information fraction', 'New critical boundary'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Interim analysis hypothesis test}{Character string giving the outcome of the interim
+#'     hypothesis test: whether the null hypothesis was rejected at the interim analysis}
+#'   \item{Wald statistics}{Wald statistic of the treatment effect observed at the interim analysis}
+#'   \item{Critical boundary}{Planned critical boundary at the interim analysis at which the sample
+#'     size is re-estimated}
+#'   \item{Assumed effect size: theta}{The assumed effect size theta used for the conditional power
+#'     calculation}
+#'   \item{c_alpha}{Conditional type I error at the interim analysis, calculated by setting theta = 0}
+#'   \item{c_power_theta}{Conditional power at the interim analysis using the assumed effect size theta}
+#'   \item{N_control_new}{New sample size for the control arm after the sample size re-estimation,
+#'     or 'NA' if the null hypothesis was rejected at the interim analysis or if theta < 0.001}
+#'   \item{new information fraction}{The new information fractions after the sample size change}
+#'   \item{New critical boundary}{New critical boundaries for the new interim analyses
+#'     (O'Brien-Fleming type), or 'NA' if they were not calculated}
+#' }
 #'
 #' @examples
 #' asd_new_design_theta(theta = 0.2, s = c(1/3, 2/3, 1), c_bry = c(3.984298, 3.961146, 2.349682),
@@ -316,14 +337,35 @@ asd_new_design_theta<-function(theta,s,c_bry,inter_vt,snew,theta_hat_inter,theta
 #'
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param c_bry Vector of critical boundaries for each analysis
-#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
-#' @param snew Vector of new information fractions after the sample size is changed
-#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based);
+#'   must be less than length(s)
+#' @param snew Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+#'   the fractions are relative to the new total information and the last element must be 1
+#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis, e.g. the
+#'   difference of the observed means or event rates between the test arm and the control arm
 #' @param theta_hat_inter_sd Standard error of 'theta_hat_inter'
 #' @param n_control_inter Sample size of the control arm at the interim analysis
 #' @param beta Type II error rate, i.e. 1 - power
 #'
-#' @return A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics', 'Critical boundary', 'Estimated effect size: theta', 'c_alpha', 'c_power_theta', 'N_control_new', 'new information fraction', 'New critical boundary'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Interim analysis hypothesis test}{Character string giving the outcome of the interim
+#'     hypothesis test: whether the null hypothesis was rejected at the interim analysis}
+#'   \item{Wald statistics}{Wald statistic of the treatment effect observed at the interim analysis}
+#'   \item{Critical boundary}{Planned critical boundary at the interim analysis at which the sample
+#'     size is re-estimated}
+#'   \item{Estimated effect size: theta}{The effect size used for the conditional power calculation,
+#'     taken to be the treatment effect estimate observed at the interim analysis}
+#'   \item{c_alpha}{Conditional type I error at the interim analysis, calculated by setting theta = 0}
+#'   \item{c_power_theta}{Conditional power at the interim analysis using the estimated effect size
+#'     theta}
+#'   \item{N_control_new}{New sample size for the control arm after the sample size re-estimation,
+#'     or 'NA' if the null hypothesis was rejected at the interim analysis or if the estimated effect
+#'     size is < 0.001}
+#'   \item{new information fraction}{The new information fractions after the sample size change}
+#'   \item{New critical boundary}{New critical boundaries for the new interim analyses
+#'     (O'Brien-Fleming type), or 'NA' if they were not calculated}
+#' }
 #'
 #' @examples
 #' asd_new_design(s = c(1/3, 2/3, 1), c_bry = c(3.984298, 3.961146, 2.349682), inter_vt = 1,
@@ -393,17 +435,39 @@ asd_new_design<-function(s,c_bry,inter_vt,snew,theta_hat_inter,theta_hat_inter_s
 ####################################
 #' Group sequential designs / Adaptive sequential designs: Interim analysis, Survival analysis, Input theta
 #'
-#' @param theta Assumed effect size
+#' @param theta Assumed effect size used for the conditional power calculation, i.e. minus the log
+#'   of the hazard ratio; different values of theta can be entered to check the sensitivity of the
+#'   conditional power to the effect size; if theta < 0.001 the new number of events and the new
+#'   critical boundary are returned as 'NA'
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param c_bry Vector of critical boundaries for each analysis
-#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
-#' @param snew Vector of new information fractions after the sample size is changed
-#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based);
+#'   must be less than length(s)
+#' @param snew Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+#'   the fractions are relative to the new total information and the last element must be 1
+#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis, i.e. minus the
+#'   log of the observed hazard ratio
 #' @param theta_hat_inter_sd Standard error of 'theta_hat_inter'
 #' @param events_inter Number of events observed at the interim analysis
 #' @param beta Type II error rate, i.e. 1 - power
 #'
-#' @return A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics', 'Critical boundary', 'Assumed effect size: theta', 'c_alpha', 'c_power_theta', ' events_new', 'New information fraction', 'New critical boundary'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Interim analysis hypothesis test}{Character string giving the outcome of the interim
+#'     hypothesis test: whether the null hypothesis was rejected at the interim analysis}
+#'   \item{Wald statistics}{Wald statistic of the treatment effect observed at the interim analysis}
+#'   \item{Critical boundary}{Planned critical boundary at the interim analysis at which the sample
+#'     size is re-estimated}
+#'   \item{Assumed effect size: theta}{The assumed effect size theta used for the conditional power
+#'     calculation}
+#'   \item{c_alpha}{Conditional type I error at the interim analysis, calculated by setting theta = 0}
+#'   \item{c_power_theta}{Conditional power at the interim analysis using the assumed effect size theta}
+#'   \item{events_new}{New total number of events required after the sample size re-estimation,
+#'     or 'NA' if the null hypothesis was rejected at the interim analysis or if theta < 0.001}
+#'   \item{New information fraction}{The new information fractions after the sample size change}
+#'   \item{New critical boundary}{New critical boundaries for the new interim analyses
+#'     (O'Brien-Fleming type), or 'NA' if they were not calculated}
+#' }
 #'
 #' @examples
 #' asd_new_design_theta_survival(theta = 0.2, s = c(1/3, 2/3, 1),
@@ -456,7 +520,7 @@ asd_new_design_theta_survival<-function(theta,s,c_bry,inter_vt,snew,theta_hat_in
     }
   }
   out=list(outcome,wald_inter,c_bry[inter_vt],theta,c_alpha, c_power_theta, events_new,snew,c_bry_f)
-  names(out)=c("Interim analysis hypothesis test","Wald statistics","Critical boundary","Assumed effect size: theta","c_alpha","c_power_theta"," events_new","New information fraction","New critical boundary")
+  names(out)=c("Interim analysis hypothesis test","Wald statistics","Critical boundary","Assumed effect size: theta","c_alpha","c_power_theta","events_new","New information fraction","New critical boundary")
 
   return(out)
 
@@ -473,14 +537,35 @@ asd_new_design_theta_survival<-function(theta,s,c_bry,inter_vt,snew,theta_hat_in
 #'
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param c_bry Vector of critical boundaries for each analysis
-#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
-#' @param snew Vector of new information fractions after the sample size is changed
-#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis
+#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based);
+#'   must be less than length(s)
+#' @param snew Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+#'   the fractions are relative to the new total information and the last element must be 1
+#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis, i.e. minus the
+#'   log of the observed hazard ratio
 #' @param theta_hat_inter_sd Standard error of 'theta_hat_inter'
 #' @param events_inter Number of events observed at the interim analysis
 #' @param beta Type II error rate, i.e. 1 - power
 #'
-#' @return A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics', 'Critical boundary', 'Estimated effect size: theta', 'c_alpha', 'c_power_theta', ' events_new', 'New information fraction', 'New critical boundary'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Interim analysis hypothesis test}{Character string giving the outcome of the interim
+#'     hypothesis test: whether the null hypothesis was rejected at the interim analysis}
+#'   \item{Wald statistics}{Wald statistic of the treatment effect observed at the interim analysis}
+#'   \item{Critical boundary}{Planned critical boundary at the interim analysis at which the sample
+#'     size is re-estimated}
+#'   \item{Estimated effect size: theta}{The effect size used for the conditional power calculation,
+#'     taken to be the treatment effect estimate observed at the interim analysis}
+#'   \item{c_alpha}{Conditional type I error at the interim analysis, calculated by setting theta = 0}
+#'   \item{c_power_theta}{Conditional power at the interim analysis using the estimated effect size
+#'     theta}
+#'   \item{events_new}{New total number of events required after the sample size re-estimation,
+#'     or 'NA' if the null hypothesis was rejected at the interim analysis or if the estimated effect
+#'     size is < 0.001}
+#'   \item{New information fraction}{The new information fractions after the sample size change}
+#'   \item{New critical boundary}{New critical boundaries for the new interim analyses
+#'     (O'Brien-Fleming type), or 'NA' if they were not calculated}
+#' }
 #'
 #' @examples
 #' asd_new_design_survival(s = c(1/3, 2/3, 1), c_bry = c(3.984298, 3.961146, 2.349682),
@@ -534,7 +619,7 @@ asd_new_design_survival<-function(s,c_bry,inter_vt,snew,theta_hat_inter,theta_ha
     }
   }
   out=list(outcome,wald_inter,c_bry[inter_vt],theta,c_alpha, c_power_theta, events_new,snew,c_bry_f)
-  names(out)=c("Interim analysis hypothesis test","Wald statistics","Critical boundary","Estimated effect size: theta","c_alpha","c_power_theta"," events_new","New information fraction","New critical boundary")
+  names(out)=c("Interim analysis hypothesis test","Wald statistics","Critical boundary","Estimated effect size: theta","c_alpha","c_power_theta","events_new","New information fraction","New critical boundary")
 
   return(out)
 
@@ -670,12 +755,20 @@ asd_bk_img_gen<-function(theta,s,c_bry,theta_hat_inter,theta_hat_inter_sd,inter_
 #'
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param c_bry Vector of critical boundaries for each analysis
-#' @param theta_hat_last Treatment effect estimate observed at the final analysis
+#' @param theta_hat_last Treatment effect estimate observed at the final analysis, i.e. the naive
+#'   point estimate of the parameter of interest at the analysis at which the trial terminated
 #' @param theta_hat_last_sd Standard error of 'theta_hat_last'
-#' @param last_vt Index of the analysis at which the trial stopped
+#' @param last_vt Index of the analysis at which the trial stopped (1-based); this can be the final
+#'   analysis, at which s = 1, or an interim analysis, and it must not exceed length(s)
 #' @param alpha_2 Type I error for the two-sided test
 #'
-#' @return A named list containing the following elements: 'p-value', 'confidence interval'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{p-value}{The p-value of the test of the null hypothesis that the treatment effect is 0}
+#'   \item{confidence interval}{Numeric vector of length 3 giving the lower confidence limit, the
+#'     median-unbiased point estimate and the upper confidence limit of the two-sided
+#'     (1 - alpha_2) confidence interval}
+#' }
 #'
 #' @examples
 #' gsd_ci_est(s = c(1/3,2/3,1), c_bry = c(3.471095, 2.454434,2.004037), theta_hat_last = 2.004,
@@ -797,7 +890,6 @@ c_power_1<-function(s,c_bry,inter_vt,inter_theta_hat,inter_theta_hat_sd){
 
   up_bry=(e_bry[length(s)]-inter_score)/sqrt(T_total-T_inter)-theta*sqrt(T_total-T_inter)
   c_power= 1-stats::pnorm(up_bry)
-
 
   return(c_power)
 }

@@ -17,37 +17,47 @@ two_stage_Sample_size_OF_boundary_survival_Schoenfeld(
 )
 }
 \arguments{
-\item{HR}{Hazard ratio (test vs control)}
+\item{HR}{Hazard ratios of the test arms vs. the control arm; a vector of length >= 2}
 
-\item{margin}{Non-inferiority / superiority margin}
+\item{margin}{Non-inferiority margin for the hazard ratio; must be > 0, with margin = 1 for a
+superiority trial and margin != 1 for a non-inferiority trial}
 
-\item{direction}{Test direction: 1 = larger HR is better, 0 = smaller HR is better}
+\item{direction}{Test direction: 1 = larger HR is better, otherwise smaller HR is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{alpha}{One-sided significance level (type I error rate)}
+\item{alpha}{Type I error for the one-sided test; 0 < alpha < 1, typically 0.025}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Type II error rate, i.e. 1 - power; 0 < beta < 1}
 
-\item{rand_ratio}{Randomization ratio, sample size of the test arm over the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
-\item{dist1}{Endpoint / distribution indicator for the first stage}
+\item{dist1}{Distribution indicator for the first stage: 2 for this survival endpoint setting
+(this is conservative)}
 
-\item{dist2}{Endpoint / distribution indicator for the second stage}
+\item{dist2}{Distribution indicator for the second stage: 1 for this survival endpoint setting
+(this is conservative)}
 }
 \value{
-A named list containing the following elements: 'Combined number of events between a dose and control',
-'total number of events from all doses and control',
-'combined number of events in each dose and control in a two arm study with same critical boudary',
-'type I error control', 'exit probabilities', 'reference'.
+A named list with the following components:
+\describe{
+  \item{Combined number of events between a dose and control}{Number of events required for a single dose compared with the control}
+  \item{total number of events from all doses and control}{Total number of events required for all doses and the control}
+  \item{combined number of events in each dose and control in a two arm study with same critical boudary}{Number of events for each dose and the control in a two-arm study using the same critical boundary}
+  \item{type I error control}{Nested list with the two-stage critical boundaries, the one-sided alpha spending, nominal alpha and cumulative alpha at each interim analysis, and the phase 3 information fraction, phase 3 critical boundary and nominal p-value for phase 3}
+  \item{exit probabilities}{Nested list with the selection probability for each HR, the exit probability for each HR, the total phase 2 probability, the total exit probability and the conditional exit probability given the selected HR}
+  \item{reference}{Reference for the Schoenfeld sample size formula used}
+}
 }
 \description{
 Phase 2/3 seamless combination Group sequential design: Survival analysis, Sample size calculation, O'Brien-Fleming boundary
 }
 \examples{
-two_stage_Sample_size_OF_boundary_survival_Schoenfeld(HR = 0.7, margin = 0.1, direction = 0,
-s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1,
-rand_ratio = 1, dist1 = 1, dist2 = 1)
+\donttest{
+two_stage_Sample_size_OF_boundary_survival_Schoenfeld( HR = c(1.1,1.2,1.25), margin = 1,
+  direction = 1, s = c(0.3,0.7,1), alpha = 0.025, beta = 0.1, rand_ratio = 1, dist1 = 2,
+  dist2 = 1)
+}
 
 }
 \references{
@@ -55,7 +65,7 @@ P. Gao, Y. Li (05 May 2024): Adaptive two-stage seamless sequential design for c
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

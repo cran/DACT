@@ -16,7 +16,8 @@ fixed_rej_rate_normal(
 )
 }
 \arguments{
-\item{mu_t}{Mean of the test arm}
+\item{mu_t}{Mean of the test arm; the null hypothesis is mu_t <= mu_c and the alternative
+hypothesis is mu_t > mu_c}
 
 \item{mu_c}{Mean of the control arm}
 
@@ -24,24 +25,25 @@ fixed_rej_rate_normal(
 
 \item{sigma_c}{Standard deviation of the control arm}
 
-\item{alpha_2}{The type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test}
 
-\item{rand_ratio}{The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
-\item{samsz}{Planned sample size of the control arm used in the simulation}
+\item{samsz}{Sample size of the control arm used in the simulation}
 
 \item{sim_num}{Number of simulation replicates}
 }
 \value{
-The output is the simulated power, which can be used to verify if the calculated sample size provided intended power
+A named numeric value with the following component:
+\describe{
+  \item{rejection rate}{Simulated rejection rate of the two-sided fixed-sample Wald test of mu_t = mu_c; this is the simulated power, and the type I error rate when mu_t = mu_c}
+}
 }
 \description{
 Fixed sample designs: Normal distribution, Simulations
 }
 \examples{
-\donttest{
 fixed_rej_rate_normal(mu_t = 0, mu_c = 0, sigma_t = 1, sigma_c = 1, alpha_2 = 0.05,
 rand_ratio = 1, samsz = 82, sim_num = 20)
-}
 
 }

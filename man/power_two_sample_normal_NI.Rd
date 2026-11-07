@@ -17,32 +17,32 @@ power_two_sample_normal_NI(
 )
 }
 \arguments{
-\item{mu_t}{The mean of the test arm.}
+\item{mu_t}{Mean of the test arm}
 
-\item{mu_c}{The mean of the control arm.}
+\item{mu_c}{Mean of the control arm}
 
-\item{sigma_t}{The standard deviation for the test arm.}
+\item{sigma_t}{Standard deviation of the test arm; must be > 0}
 
-\item{sigma_c}{The standard deviation for the control arm.}
+\item{sigma_c}{Standard deviation of the control arm; must be > 0}
 
-\item{margin}{The non-inferiority margin}
+\item{margin}{Non-inferiority margin; set to 0 for a superiority trial}
 
-\item{direction}{If larger mu is better}
+\item{direction}{Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better}
 
-\item{alpha}{The type I error for the two-sided test.}
+\item{alpha}{Type I error for the one-sided test; 0 < alpha < 1}
 
-\item{n_control}{The sample size for the control arm.}
+\item{n_control}{Sample size of the control arm}
 
-\item{rand_ratio}{The randomization ratio of test arm:control arm.}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 }
 \value{
-The output will show the power.
+A numeric value giving the power.
 }
 \description{
 Fixed sample designs: Normal distribution, Non-inferiority trial, Power calculation
 }
 \examples{
-power_two_sample_normal_NI(mu_t = 0.3, mu_c = 2, sigma_t = 1, sigma_c = 1, margin = 0.4,
-direction = 1, alpha = 0.025, n_control = 100, rand_ratio = 1)
+power_two_sample_normal_NI( mu_t = 2.6, mu_c = 0.6, sigma_t = 9.43, sigma_c = 9.86,
+  margin = 0.1, direction = 1, alpha = 0.025, n_control = 53, rand_ratio = 1)
 
 }

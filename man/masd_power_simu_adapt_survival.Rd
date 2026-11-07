@@ -18,37 +18,47 @@ masd_power_simu_adapt_survival(
 )
 }
 \arguments{
-\item{HR}{Hazard ratio (test vs control)}
+\item{HR}{Vector of hazard ratios of each test arm vs. the control arm; HR < 1 favours the test arm; must be > 0}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{bry_type}{Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending}
+\item{bry_type}{Critical boundary type: 1 = O'Brien-Fleming, 2 = alpha-spending}
 
-\item{alpha_2}{Type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; when bry_type = 2 this is instead the
+vector of two-sided type I error levels spent at each look, which must sum to the total
+two-sided type I error}
 
-\item{surv_rate}{Survival rate used to translate the number of events into a sample size}
+\item{surv_rate}{Survival rate at the end of follow-up; 0 < surv_rate < 1}
 
-\item{HR_cut}{Hazard-ratio cut-off for early stopping at the interim analysis}
+\item{HR_cut}{Hazard-ratio cut-off for the lack-of-efficacy rule at the interim analysis:
+a test arm is dropped when its observed hazard ratio is greater than HR_cut}
 
-\item{evt_num}{Total number of events at the final analysis}
+\item{evt_num}{Planned number of events between one test arm and the control arm by the final analysis; must be > 0}
 
-\item{evt_max}{Maximum number of events}
+\item{evt_max}{Maximum number of events between one test arm and the control arm allowed by the sample size re-estimation; must be >= evt_num}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Conditional type II error; 1 - beta is the target conditional power for the
+sample size re-estimation; 0 < beta < 1}
 
 \item{sim_num}{Number of simulation replicates}
 }
 \value{
-A matrix in which each row corresponds to one simulation replicate and the columns hold the simulated operating characteristics
-(e.g. rejection indicators, sample sizes and stopping stages).
+A named list with the following components:
+\describe{
+  \item{Design}{Matrix with one row per look giving the look number, the information fraction, the critical boundary, the rejection rate by look and the rate of sample size increase}
+  \item{Summary by arm}{Matrix with one row per test arm giving the hazard ratio, the drop rate by arm and the rejection rate by arm}
+  \item{simulation results}{Named numeric vector holding the rejection rate without and with sample size re-estimation, the rate of sample size increase, the rejection rates conditional on meeting the sample size increase criteria, the simulated type I error rate, the non-type I error rejection rate, the futility rate, the planned and maximum two-arm event numbers and the mean simulated two-arm event numbers with and without conditioning on an increase}
+}
 }
 \description{
 Multiple comparisons Group sequential design: Simulations, Survival analysis, Operating characteristics
 }
 \examples{
 \donttest{
-masd_power_simu_adapt_survival(HR = c(0.8,0.8), s = c(1/3,2/3,1), bry_type = 1, alpha_2 = 0.05,
-surv_rate = 0.5, HR_cut = 0.95, evt_num = 800, evt_max = 1200, beta = 0.1, sim_num = 2)
+set.seed(1)
+masd_power_simu_adapt_survival(HR = c(0.63, 0.65, 0.7), s = c(1/3,2/3,1), bry_type = 1,
+alpha_2 = 0.05, surv_rate = 0.5, HR_cut = 0.95, evt_num = 200, evt_max = 500, beta = 0.1,
+sim_num = 2)
 }
 
 }
@@ -57,7 +67,7 @@ P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

@@ -363,14 +363,28 @@ time_power<-function(mu,s,c_bry,T,alpha){
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param std_t Standard deviation of the test arm
-#' @param std_c Standard deviation of the control arm
+#' @param std_t Standard deviation of the test arm; must be > 0
+#' @param std_c Standard deviation of the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_OF_boundary_normal(mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86,
@@ -429,14 +443,26 @@ Sample_size_OF_boundary_normal<-function(mu_t,mu_c,std_t,std_c,s,alpha_2,beta,ra
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param std_t Standard deviation of the test arm
-#' @param std_c Standard deviation of the control arm
+#' @param std_t Standard deviation of the test arm; must be > 0
+#' @param std_c Standard deviation of the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param alpha_2 Type I error for the two-sided test
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_OF_boundary_normal(mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86, s = c(1/3, 2/3, 1),
@@ -496,14 +522,28 @@ power_OF_boundary_normal<-function(mu_t,mu_c,std_t,std_c,s,sampsz_control,rand_r
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param std_t Standard deviation of the test arm
-#' @param std_c Standard deviation of the control arm
+#' @param std_t Standard deviation of the test arm; must be > 0
+#' @param std_c Standard deviation of the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_pocock_boundary_normal(mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86,
@@ -561,14 +601,26 @@ Sample_size_pocock_boundary_normal<-function(mu_t,mu_c,std_t,std_c,s,alpha_2,bet
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param std_t Standard deviation of the test arm
-#' @param std_c Standard deviation of the control arm
+#' @param std_t Standard deviation of the test arm; must be > 0
+#' @param std_c Standard deviation of the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param alpha_2 Type I error for the two-sided test
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_pocock_boundary_normal(mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86,
@@ -627,14 +679,30 @@ power_pocock_boundary_normal<-function(mu_t,mu_c,std_t,std_c,s,sampsz_control,ra
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param std_t Standard deviation of the test arm
-#' @param std_c Standard deviation of the control arm
+#' @param std_t Standard deviation of the test arm; must be > 0
+#' @param std_c Standard deviation of the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test, entered for the alpha-spending boundary as the vector of the
+#'   two-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha_2
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_alsp_boundary_normal(mu_t = 0.2, mu_c = 0, std_t = 1, std_c = 1, s = c(1/3,2/3,1),
@@ -693,14 +761,28 @@ Sample_size_alsp_boundary_normal<-function(mu_t,mu_c,std_t,std_c,s,alpha_2,beta,
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param std_t Standard deviation of the test arm
-#' @param std_c Standard deviation of the control arm
+#' @param std_t Standard deviation of the test arm; must be > 0
+#' @param std_c Standard deviation of the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param alpha_2 Type I error for the two-sided test
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param alpha_2 Type I error for the two-sided test, entered for the alpha-spending boundary as the vector of the
+#'   two-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha_2
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_alsp_boundary_normal(mu_t = 0.2, mu_c = 0, std_t = 1, std_c = 1, s = c(1/3,2/3,1),
@@ -763,20 +845,34 @@ power_alsp_boundary_normal<-function(mu_t,mu_c,std_t,std_c,s,sampsz_control,rand
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param std_t Standard deviation of the test arm
-#' @param std_c Standard deviation of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger mu is better, 0 = smaller mu is better
+#' @param std_t Standard deviation of the test arm; must be > 0
+#' @param std_c Standard deviation of the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger mu is better, otherwise smaller mu is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the implied effect size is not positive.
 #'
 #' @examples
-#' Sample_size_OF_boundary_normal_NI(mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86,
-#' margin = 0.1, direction = 0, s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' Sample_size_OF_boundary_normal_NI( mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86,
+#'   margin = 0.1, direction = 1, s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 Sample_size_OF_boundary_normal_NI<-function(mu_t,mu_c,std_t,std_c,margin,direction,s,alpha,beta,rand_ratio){
@@ -835,16 +931,28 @@ Sample_size_OF_boundary_normal_NI<-function(mu_t,mu_c,std_t,std_c,margin,directi
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param std_t Standard deviation of the test arm
-#' @param std_c Standard deviation of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger mu is better, 0 = smaller mu is better
+#' @param std_t Standard deviation of the test arm; must be > 0
+#' @param std_c Standard deviation of the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger mu is better, otherwise smaller mu is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param alpha One-sided significance level (type I error rate)
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_OF_boundary_normal_NI(mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86, margin = 0.1,
@@ -909,20 +1017,34 @@ power_OF_boundary_normal_NI<-function(mu_t,mu_c,std_t,std_c,margin,direction,s,s
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param std_t Standard deviation of the test arm
-#' @param std_c Standard deviation of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger mu is better, 0 = smaller mu is better
+#' @param std_t Standard deviation of the test arm; must be > 0
+#' @param std_c Standard deviation of the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger mu is better, otherwise smaller mu is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the implied effect size is not positive.
 #'
 #' @examples
-#' Sample_size_pocock_boundary_normal_NI(mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86,
-#' margin = 0.1, direction = 0, s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' Sample_size_pocock_boundary_normal_NI( mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86,
+#'   margin = 0.1, direction = 1, s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 Sample_size_pocock_boundary_normal_NI<-function(mu_t,mu_c,std_t,std_c,margin,direction,s,alpha,beta,rand_ratio){
@@ -984,16 +1106,28 @@ Sample_size_pocock_boundary_normal_NI<-function(mu_t,mu_c,std_t,std_c,margin,dir
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param std_t Standard deviation of the test arm
-#' @param std_c Standard deviation of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger mu is better, 0 = smaller mu is better
+#' @param std_t Standard deviation of the test arm; must be > 0
+#' @param std_c Standard deviation of the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger mu is better, otherwise smaller mu is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param alpha One-sided significance level (type I error rate)
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_pocock_boundary_normal_NI(mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86,
@@ -1056,20 +1190,36 @@ power_pocock_boundary_normal_NI<-function(mu_t,mu_c,std_t,std_c,margin,direction
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param std_t Standard deviation of the test arm
-#' @param std_c Standard deviation of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger mu is better, 0 = smaller mu is better
+#' @param std_t Standard deviation of the test arm; must be > 0
+#' @param std_c Standard deviation of the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger mu is better, otherwise smaller mu is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test, entered for the alpha-spending boundary as the vector of the
+#'   one-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the implied effect size is not positive.
 #'
 #' @examples
-#' Sample_size_alsp_boundary_normal_NI(mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86,
-#' margin = 0.1, direction = 0, s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' Sample_size_alsp_boundary_normal_NI( mu_t = 0.2, mu_c = 0, std_t = 1, std_c = 1, margin = 0.15,
+#'   direction = 1, s = c(1/3,2/3,1), alpha = c(0.001,0.001,0.023), beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 Sample_size_alsp_boundary_normal_NI<-function(mu_t,mu_c,std_t,std_c,margin,direction,s,alpha,beta,rand_ratio){
@@ -1131,20 +1281,35 @@ Sample_size_alsp_boundary_normal_NI<-function(mu_t,mu_c,std_t,std_c,margin,direc
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param std_t Standard deviation of the test arm
-#' @param std_c Standard deviation of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger mu is better, 0 = smaller mu is better
+#' @param std_t Standard deviation of the test arm; must be > 0
+#' @param std_c Standard deviation of the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger mu is better, otherwise smaller mu is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param alpha One-sided significance level (type I error rate)
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param alpha Type I error for the one-sided test, entered for the alpha-spending boundary as the vector of the
+#'   one-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_alsp_boundary_normal_NI(mu_t = 0.2, mu_c = 0, std_t = 1, std_c = 1, margin = 0.15,
-#' direction = 1, s = c(1/3,2/3,1), sampsz_control = 534, rand_ratio = 1, alpha = c(0.001,0.001,0.023))
+#' direction = 1, s = c(1/3,2/3,1), sampsz_control = 534, rand_ratio = 1,
+#' alpha = c(0.001,0.001,0.023))
 #'
 #' @export
 power_alsp_boundary_normal_NI<-function(mu_t,mu_c,std_t,std_c,margin,direction,s,sampsz_control,rand_ratio,alpha){
@@ -1209,14 +1374,28 @@ power_alsp_boundary_normal_NI<-function(mu_t,mu_c,std_t,std_c,margin,direction,s
 
 #' Group sequential designs / Adaptive sequential designs: Binary distribution, Superiority trial, Sample size calculation, O'Brien-Fleming boundary
 #'
-#' @param p_t Mean of the test arm
-#' @param p_c Mean of the control arm
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_OF_boundary_binary_diff(p_t = 0.4, p_c = 0.3, s = c(1/3, 2/3, 1),
@@ -1271,14 +1450,26 @@ Sample_size_OF_boundary_binary_diff<-function(p_t,p_c,s,alpha_2,beta,rand_ratio)
 ######################################################################
 #' Group sequential designs / Adaptive sequential designs: Binary distribution, Superiority trial, Power calculation, O'Brien-Fleming boundary
 #'
-#' @param p_t Mean of the test arm
-#' @param p_c Mean of the control arm
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_OF_boundary_binary_diff(p_t = 0.4, p_c = 0.3, s = c(1/3, 2/3, 1), alpha_2 = 0.05,
@@ -1335,14 +1526,28 @@ power_OF_boundary_binary_diff<-function(p_t,p_c,s,alpha_2,sampsz_control,rand_ra
 ########################################################
 #' Group sequential designs / Adaptive sequential designs: Binary distribution, Superiority trial, Sample size calculation, Pocock boundary
 #'
-#' @param p_t Mean of the test arm
-#' @param p_c Mean of the control arm
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_pocock_boundary_binary_diff(p_t = 0.4, p_c = 0.3, s = c(1/3, 2/3, 1),
@@ -1396,14 +1601,26 @@ Sample_size_pocock_boundary_binary_diff<-function(p_t,p_c,s,alpha_2,beta,rand_ra
 
 #' Group sequential designs / Adaptive sequential designs: Binary distribution, Superiority trial, Power calculation, Pocock boundary
 #'
-#' @param p_t Mean of the test arm
-#' @param p_c Mean of the control arm
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_pocock_boundary_binary_diff(p_t = 0.4, p_c = 0.3, s = c(1/3, 2/3, 1),
@@ -1458,14 +1675,30 @@ power_pocock_boundary_binary_diff<-function(p_t,p_c,s,alpha_2,sampsz_control,ran
 ##########################################################
 #' Group sequential designs / Adaptive sequential designs: Binary distribution, Superiority trial, Sample size calculation, Alpha-spending boundary
 #'
-#' @param p_t Mean of the test arm
-#' @param p_c Mean of the control arm
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test, entered for the alpha-spending boundary as the vector of the
+#'   two-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha_2
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_alsp_boundary_binary_diff(p_t = 0.2, p_c = 0.6, s = c(1/3,2/3,1),
@@ -1519,14 +1752,28 @@ Sample_size_alsp_boundary_binary_diff<-function(p_t,p_c,s,alpha_2,beta,rand_rati
 
 #' Group sequential designs / Adaptive sequential designs: Binary distribution, Superiority trial, Power calculation, Alpha-spending boundary
 #'
-#' @param p_t Mean of the test arm
-#' @param p_c Mean of the control arm
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test, entered for the alpha-spending boundary as the vector of the
+#'   two-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha_2
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_alsp_boundary_binary_diff(p_t = 0.2, p_c = 0.6, s = c(1/3,2/3,1),
@@ -1584,20 +1831,34 @@ power_alsp_boundary_binary_diff<-function(p_t,p_c,s,alpha_2,sampsz_control,rand_
 #########################################################
 #' Group sequential designs / Adaptive sequential designs: Binary distribution, Non-inferiority trial, Sample size calculation, O'Brien-Fleming boundary
 #'
-#' @param p_t Mean of the test arm
-#' @param p_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger p_t is better, 0 = smaller p_t is better
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger p is better, otherwise smaller p is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the implied effect size is not positive.
 #'
 #' @examples
-#' Sample_size_OF_boundary_binary_diff_NI(p_t = 0.4, p_c = 0.3, margin = 0.1, direction = 0,
-#' s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' Sample_size_OF_boundary_binary_diff_NI( p_t = 0.4, p_c = 0.3, margin = 0.1, direction = 1,
+#'   s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 Sample_size_OF_boundary_binary_diff_NI<-function(p_t,p_c,margin, direction,s,alpha,beta,rand_ratio){
@@ -1654,16 +1915,28 @@ Sample_size_OF_boundary_binary_diff_NI<-function(p_t,p_c,margin, direction,s,alp
 
 #' Group sequential designs / Adaptive sequential designs: Binary distribution, Non-inferiority trial, Power calculation, O'Brien-Fleming boundary
 #'
-#' @param p_t Mean of the test arm
-#' @param p_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger p_t is better, 0 = smaller p_t is better
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger p is better, otherwise smaller p is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_OF_boundary_binary_diff_NI(p_t = 0.4, p_c = 0.3, margin = 0.1, direction = 0,
@@ -1726,20 +1999,34 @@ power_OF_boundary_binary_diff_NI<-function(p_t,p_c,margin,direction,s,alpha,samp
 
 #' Group sequential designs / Adaptive sequential designs: Binary distribution, Non-inferiority trial, Sample size calculation, Pocock boundary
 #'
-#' @param p_t Mean of the test arm
-#' @param p_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger p_t is better, 0 = smaller p_t is better
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger p is better, otherwise smaller p is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the implied effect size is not positive.
 #'
 #' @examples
-#' Sample_size_pocock_boundary_binary_diff_NI(p_t = 0.4, p_c = 0.3, margin = 0.1, direction = 0,
-#' s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' Sample_size_pocock_boundary_binary_diff_NI( p_t = 0.4, p_c = 0.3, margin = 0.1, direction = 1,
+#'   s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 Sample_size_pocock_boundary_binary_diff_NI<-function(p_t,p_c,margin, direction,s,alpha,beta,rand_ratio){
@@ -1796,16 +2083,28 @@ Sample_size_pocock_boundary_binary_diff_NI<-function(p_t,p_c,margin, direction,s
 
 #' Group sequential designs / Adaptive sequential designs: Binary distribution, Non-inferiority trial, Power calculation, Pocock boundary
 #'
-#' @param p_t Mean of the test arm
-#' @param p_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger p_t is better, 0 = smaller p_t is better
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger p is better, otherwise smaller p is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_pocock_boundary_binary_diff_NI(p_t = 0.4, p_c = 0.3, margin = 0.1, direction = 0,
@@ -1870,20 +2169,36 @@ power_pocock_boundary_binary_diff_NI<-function(p_t,p_c,margin,direction,s,alpha,
 
 #' Group sequential designs / Adaptive sequential designs: Binary distribution, Non-inferiority trial, Sample size calculation, Alpha-spending boundary
 #'
-#' @param p_t Mean of the test arm
-#' @param p_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger p_t is better, 0 = smaller p_t is better
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger p is better, otherwise smaller p is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test, entered for the alpha-spending boundary as the vector of the
+#'   one-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the implied effect size is not positive.
 #'
 #' @examples
-#' Sample_size_alsp_boundary_binary_diff_NI(p_t = 0.4, p_c = 0.3, margin = 0.1, direction = 0,
-#' s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' Sample_size_alsp_boundary_binary_diff_NI( p_t = 0.2, p_c = 0.6, margin = 0.15, direction = 2,
+#'   s = c(1/3,2/3,1), alpha = c(0.001,0.001,0.023), beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 Sample_size_alsp_boundary_binary_diff_NI<-function(p_t,p_c,margin, direction,s,alpha,beta,rand_ratio){
@@ -1940,16 +2255,30 @@ Sample_size_alsp_boundary_binary_diff_NI<-function(p_t,p_c,margin, direction,s,a
 
 #' Group sequential designs / Adaptive sequential designs: Binary distribution, Non-inferiority trial, Power calculation, Alpha-spending boundary
 #'
-#' @param p_t Mean of the test arm
-#' @param p_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger p_t is better, 0 = smaller p_t is better
+#' @param p_t Response rate (probability of response) in the test arm; 0 < p_t < 1
+#' @param p_c Response rate (probability of response) in the control arm; 0 < p_c < 1
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger p is better, otherwise smaller p is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test, entered for the alpha-spending boundary as the vector of the
+#'   one-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_alsp_boundary_binary_diff_NI(p_t = 0.2, p_c = 0.6, margin = 0.15, direction = 1,
@@ -2015,13 +2344,27 @@ power_alsp_boundary_binary_diff_NI<-function(p_t,p_c,margin,direction,s,alpha,sa
 ####################################################################
 #' Group sequential designs / Adaptive sequential designs: Survival analysis, Superiority trial, Sample size calculation, O'Brien-Fleming boundary
 #'
-#' @param HR Hazards ratio of test arm vs. the control arm
+#' @param HR Hazard ratio of the test arm vs. the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{total number of events}{Total number of events required across both the test arm and the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_OF_boundary_survival_Schoenfeld(HR = 0.7, s = c(1/3, 2/3, 1),
@@ -2083,13 +2426,26 @@ Sample_size_OF_boundary_survival_Schoenfeld<-function(HR,s,alpha_2,beta,rand_rat
 
 #' Group sequential designs / Adaptive sequential designs: Survival analysis, Superiority trial, Power calculation, O'Brien-Fleming boundary
 #'
-#' @param HR Hazards ratio of test arm vs. the control arm
+#' @param HR Hazard ratio of the test arm vs. the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param events_tot Total number of events
-#' @param alpha_2 Type I error for the two-sided test
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param events_tot Total number of events across both the test arm and the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+#' }
 #'
 #' @examples
 #' power_OF_boundary_survival_Schoenfeld(HR = 0.7, s = c(1/3, 2/3, 1), events_tot = 100,
@@ -2148,13 +2504,27 @@ power_OF_boundary_survival_Schoenfeld<-function(HR,s,events_tot,alpha_2,rand_rat
 ###############################################
 #' Group sequential designs / Adaptive sequential designs: Survival analysis, Superiority trial, Sample size calculation, Pocock boundary
 #'
-#' @param HR Hazards ratio of test arm vs. the control arm
+#' @param HR Hazard ratio of the test arm vs. the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{total number of events}{Total number of events required across both the test arm and the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_pocock_boundary_survival_Schoenfeld(HR = 0.7, s = c(1/3, 2/3, 1),
@@ -2208,13 +2578,26 @@ Sample_size_pocock_boundary_survival_Schoenfeld<-function(HR,s,alpha_2,beta,rand
 
 #' Group sequential designs / Adaptive sequential designs: Survival analysis, Superiority trial, Power calculation, Pocock boundary
 #'
-#' @param HR Hazards ratio of test arm vs. the control arm
+#' @param HR Hazard ratio of the test arm vs. the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param events_tot Total number of events
-#' @param alpha_2 Type I error for the two-sided test
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param events_tot Total number of events across both the test arm and the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+#' }
 #'
 #' @examples
 #' power_pocock_boundary_survival_Schoenfeld(HR = 0.7, s = c(1/3, 2/3, 1), events_tot = 100,
@@ -2269,13 +2652,29 @@ power_pocock_boundary_survival_Schoenfeld<-function(HR,s,events_tot,alpha_2,rand
 #######################################################
 #' Group sequential designs / Adaptive sequential designs: Survival analysis, Superiority trial, Sample size calculation, Alpha-spending boundary
 #'
-#' @param HR Hazards ratio of test arm vs. the control arm
+#' @param HR Hazard ratio of the test arm vs. the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test, entered for the alpha-spending boundary as the vector of the
+#'   two-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha_2
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{total number of events}{Total number of events required across both the test arm and the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_alsp_boundary_survival_Schoenfeld(HR = 0.59, s = c(0.596,1),
@@ -2331,13 +2730,28 @@ Sample_size_alsp_boundary_survival_Schoenfeld<-function(HR,s,alpha_2,beta,rand_r
 #####################################################
 #' Group sequential designs / Adaptive sequential designs: Survival analysis, Superiority trial, Power calculation, Alpha-spending boundary
 #'
-#' @param HR Hazards ratio of test arm vs. the control arm
+#' @param HR Hazard ratio of the test arm vs. the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param events_tot Total number of events
-#' @param alpha_2 Type I error for the two-sided test
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param events_tot Total number of events across both the test arm and the control arm
+#' @param alpha_2 Type I error for the two-sided test, entered for the alpha-spending boundary as the vector of the
+#'   two-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha_2
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+#' }
 #'
 #' @examples
 #' power_alsp_boundary_survival_Schoenfeld(HR = 0.8, s = c(0.5,1), events_tot = 841,
@@ -2396,19 +2810,34 @@ power_alsp_boundary_survival_Schoenfeld<-function(HR,s,events_tot,alpha_2,rand_r
 #########################################################
 #' Group sequential designs / Adaptive sequential designs: Survival analysis, Non-inferiority trial, Sample size calculation, O'Brien-Fleming boundary
 #'
-#' @param HR Hazards ratio of test arm vs. the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger HR is better, 0 = smaller HR is better
+#' @param HR Hazard ratio of the test arm vs. the control arm; must be > 0
+#' @param margin Non-inferiority margin on the hazard ratio scale; must be > 0, with HR > margin required when
+#'   direction is 1 and HR < margin required otherwise
+#' @param direction Test direction: 1 = larger HR is better, otherwise smaller HR is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{total number of events}{Total number of events required across both the test arm and the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+#' }
+#' Returns NA when HR is not on the required side of margin for the specified direction.
 #'
 #' @examples
-#' Sample_size_OF_boundary_survival_Schoenfeld_NI(HR = 0.7, margin = 0.1, direction = 0,
-#' s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' Sample_size_OF_boundary_survival_Schoenfeld_NI( HR = 0.7, margin = 0.1, direction = 1,
+#'   s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 Sample_size_OF_boundary_survival_Schoenfeld_NI<-function(HR,margin,direction,s,alpha,beta,rand_ratio){
@@ -2467,15 +2896,29 @@ Sample_size_OF_boundary_survival_Schoenfeld_NI<-function(HR,margin,direction,s,a
 ###################################################
 #' Group sequential designs / Adaptive sequential designs: Survival analysis, Non-inferiority trial, Power calculation, O'Brien-Fleming boundary
 #'
-#' @param HR Hazards ratio of test arm vs. the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger HR is better, 0 = smaller HR is better
+#' @param HR Hazard ratio of the test arm vs. the control arm; must be > 0
+#' @param margin Non-inferiority margin on the hazard ratio scale; must be > 0, with HR > margin required when
+#'   direction is 1 and HR < margin required otherwise
+#' @param direction Test direction: 1 = larger HR is better, otherwise smaller HR is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param events_tot Total number of events
-#' @param alpha One-sided significance level (type I error rate)
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param events_tot Total number of events across both the test arm and the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+#' }
 #'
 #' @examples
 #' power_OF_boundary_survival_Schoenfeld_NI(HR = 0.7, margin = 0.1, direction = 0,
@@ -2540,19 +2983,34 @@ power_OF_boundary_survival_Schoenfeld_NI<-function(HR,margin,direction,s,events_
 ###############################################
 #' Group sequential designs / Adaptive sequential designs: Survival analysis, Non-inferiority trial, Sample size calculation, Pocock boundary
 #'
-#' @param HR Hazards ratio of test arm vs. the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger HR is better, 0 = smaller HR is better
+#' @param HR Hazard ratio of the test arm vs. the control arm; must be > 0
+#' @param margin Non-inferiority margin on the hazard ratio scale; must be > 0, with HR > margin required when
+#'   direction is 1 and HR < margin required otherwise
+#' @param direction Test direction: 1 = larger HR is better, otherwise smaller HR is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{total number of events}{Total number of events required across both the test arm and the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+#' }
+#' Returns NA when HR is not on the required side of margin for the specified direction.
 #'
 #' @examples
-#' Sample_size_pocock_boundary_survival_Schoenfeld_NI(HR = 0.7, margin = 0.1, direction = 0,
-#' s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' Sample_size_pocock_boundary_survival_Schoenfeld_NI( HR = 0.7, margin = 0.1, direction = 1,
+#'   s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 Sample_size_pocock_boundary_survival_Schoenfeld_NI<-function(HR,margin,direction,s,alpha,beta,rand_ratio){
@@ -2609,15 +3067,29 @@ Sample_size_pocock_boundary_survival_Schoenfeld_NI<-function(HR,margin,direction
 
 #' Group sequential designs / Adaptive sequential designs: Survival analysis, Non-inferiority trial, Power calculation, Pocock boundary
 #'
-#' @param HR Hazards ratio of test arm vs. the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger HR is better, 0 = smaller HR is better
+#' @param HR Hazard ratio of the test arm vs. the control arm; must be > 0
+#' @param margin Non-inferiority margin on the hazard ratio scale; must be > 0, with HR > margin required when
+#'   direction is 1 and HR < margin required otherwise
+#' @param direction Test direction: 1 = larger HR is better, otherwise smaller HR is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param events_tot Total number of events
-#' @param alpha One-sided significance level (type I error rate)
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param events_tot Total number of events across both the test arm and the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+#' }
 #'
 #' @examples
 #' power_pocock_boundary_survival_Schoenfeld_NI(HR = 0.7, margin = 0.1, direction = 0,
@@ -2685,19 +3157,36 @@ power_pocock_boundary_survival_Schoenfeld_NI<-function(HR,margin,direction,s,eve
 
 #' Group sequential designs / Adaptive sequential designs: Survival analysis, Non-inferiority trial, Sample size calculation, Alpha-spending boundary
 #'
-#' @param HR Hazards ratio of test arm vs. the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger HR is better, 0 = smaller HR is better
+#' @param HR Hazard ratio of the test arm vs. the control arm; must be > 0
+#' @param margin Non-inferiority margin on the hazard ratio scale; must be > 0, with HR > margin required when
+#'   direction is 1 and HR < margin required otherwise
+#' @param direction Test direction: 1 = larger HR is better, otherwise smaller HR is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test, entered for the alpha-spending boundary as the vector of the
+#'   one-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{total number of events}{Total number of events required across both the test arm and the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+#' }
+#' Returns NA when HR is not on the required side of margin for the specified direction.
 #'
 #' @examples
-#' Sample_size_alsp_boundary_survival_Schoenfeld_NI(HR = 0.7, margin = 0.1, direction = 0,
-#' s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' Sample_size_alsp_boundary_survival_Schoenfeld_NI( HR = 0.59, margin = 1, direction = 2,
+#'   s = c(0.596,1), alpha = c(0.005,0.02), beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 Sample_size_alsp_boundary_survival_Schoenfeld_NI<-function(HR,margin,direction,s,alpha,beta,rand_ratio){
@@ -2756,15 +3245,31 @@ Sample_size_alsp_boundary_survival_Schoenfeld_NI<-function(HR,margin,direction,s
 ################################################################
 #' Group sequential designs / Adaptive sequential designs: Survival analysis, Non-inferiority trial, Power calculation, Alpha-spending boundary
 #'
-#' @param HR Hazards ratio of test arm vs. the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger HR is better, 0 = smaller HR is better
+#' @param HR Hazard ratio of the test arm vs. the control arm; must be > 0
+#' @param margin Non-inferiority margin on the hazard ratio scale; must be > 0, with HR > margin required when
+#'   direction is 1 and HR < margin required otherwise
+#' @param direction Test direction: 1 = larger HR is better, otherwise smaller HR is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param events_tot Total number of events
-#' @param alpha One-sided significance level (type I error rate)
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param events_tot Total number of events across both the test arm and the control arm
+#' @param alpha Type I error for the one-sided test, entered for the alpha-spending boundary as the vector of the
+#'   one-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+#' }
 #'
 #' @examples
 #' power_alsp_boundary_survival_Schoenfeld_NI(HR = 0.8, margin = 1.1, direction = 1, s = c(0.5,1),
@@ -2841,14 +3346,28 @@ power_alsp_boundary_survival_Schoenfeld_NI<-function(HR,margin,direction,s,event
 ###################################################
 #' Group sequential designs / Adaptive sequential designs: Poisson distribution, Superiority trial, Sample size calculation, O'Brien-Fleming boundary
 #'
-#' @param lambda_t Mean of the test arm
-#' @param lambda_c Mean of the control arm
+#' @param lambda_t Event rate (mean number of events) in the test arm; must be > 0
+#' @param lambda_c Event rate (mean number of events) in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_OF_boundary_poisson(lambda_t = 1.1, lambda_c = 1.0, s = c(1/3, 2/3, 1),
@@ -2901,14 +3420,26 @@ Sample_size_OF_boundary_poisson<-function(lambda_t,lambda_c,s,alpha_2,beta,rand_
 
 #' Group sequential designs / Adaptive sequential designs: Poisson distribution, Superiority trial, Power calculation, O'Brien-Fleming boundary
 #'
-#' @param lambda_t Mean of the test arm
-#' @param lambda_c Mean of the control arm
+#' @param lambda_t Event rate (mean number of events) in the test arm; must be > 0
+#' @param lambda_c Event rate (mean number of events) in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_OF_boundary_poisson(lambda_t = 1.1, lambda_c = 1.0, s = c(1/3, 2/3, 1),
@@ -2962,14 +3493,28 @@ power_OF_boundary_poisson<-function(lambda_t,lambda_c,s,alpha_2,sampsz_control,r
 #######################################################
 #' Group sequential designs / Adaptive sequential designs: Poisson distribution, Superiority trial, Sample size calculation, Pocock boundary
 #'
-#' @param lambda_t Mean of the test arm
-#' @param lambda_c Mean of the control arm
+#' @param lambda_t Event rate (mean number of events) in the test arm; must be > 0
+#' @param lambda_c Event rate (mean number of events) in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_pocock_boundary_poisson(lambda_t = 0.2, lambda_c = 0.4, s = c(1/3,2/3,1),
@@ -3022,14 +3567,26 @@ Sample_size_pocock_boundary_poisson<-function(lambda_t,lambda_c,s,alpha_2,beta,r
 
 #' Group sequential designs / Adaptive sequential designs: Poisson distribution, Superiority trial, Power calculation, Pocock boundary
 #'
-#' @param lambda_t Mean of the test arm
-#' @param lambda_c Mean of the control arm
+#' @param lambda_t Event rate (mean number of events) in the test arm; must be > 0
+#' @param lambda_c Event rate (mean number of events) in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_pocock_boundary_poisson(lambda_t = 1.1, lambda_c = 1.0, s = c(1/3, 2/3, 1),
@@ -3083,14 +3640,30 @@ power_pocock_boundary_poisson<-function(lambda_t,lambda_c,s,alpha_2,sampsz_contr
 ################################################################
 #' Group sequential designs / Adaptive sequential designs: Poisson distribution, Superiority trial, Sample size calculation, Alpha-spending boundary
 #'
-#' @param lambda_t Mean of the test arm
-#' @param lambda_c Mean of the control arm
+#' @param lambda_t Event rate (mean number of events) in the test arm; must be > 0
+#' @param lambda_c Event rate (mean number of events) in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test, entered for the alpha-spending boundary as the vector of the
+#'   two-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha_2
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_alsp_boundary_poisson(lambda_t = 0.2, lambda_c = 0.4, s = c(1/3,2/3,1),
@@ -3143,14 +3716,28 @@ Sample_size_alsp_boundary_poisson<-function(lambda_t,lambda_c,s,alpha_2,beta,ran
 
 #' Group sequential designs / Adaptive sequential designs: Poisson distribution, Superiority trial, Power calculation, Alpha-spending boundary
 #'
-#' @param lambda_t Mean of the test arm
-#' @param lambda_c Mean of the control arm
+#' @param lambda_t Event rate (mean number of events) in the test arm; must be > 0
+#' @param lambda_c Event rate (mean number of events) in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha_2 Type I error for the two-sided test, entered for the alpha-spending boundary as the vector of the
+#'   two-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha_2
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_alsp_boundary_poisson(lambda_t = 0.2, lambda_c = 0.4, s = c(1/3,2/3,1),
@@ -3208,20 +3795,34 @@ power_alsp_boundary_poisson<-function(lambda_t,lambda_c,s,alpha_2,sampsz_control
 #########################################################
 #' Group sequential designs / Adaptive sequential designs: Poisson distribution, Non-inferiority trial, Sample size calculation, O'Brien-Fleming boundary
 #'
-#' @param lambda_t Mean of the test arm
-#' @param lambda_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger lambda is better, 0 = smaller lambda is better
+#' @param lambda_t Event rate (mean number of events) in the test arm; must be > 0
+#' @param lambda_c Event rate (mean number of events) in the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger lambda is better, otherwise smaller lambda is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the implied effect size is not positive.
 #'
 #' @examples
-#' Sample_size_OF_boundary_poisson_NI(lambda_t = 1.1, lambda_c = 1.0, margin = 0.1, direction = 0,
-#' s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' Sample_size_OF_boundary_poisson_NI( lambda_t = 1.1, lambda_c = 1.0, margin = 0.1, direction = 1,
+#'   s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 Sample_size_OF_boundary_poisson_NI<-function(lambda_t,lambda_c,margin,direction,s,alpha,beta,rand_ratio){
@@ -3277,16 +3878,28 @@ Sample_size_OF_boundary_poisson_NI<-function(lambda_t,lambda_c,margin,direction,
 #####################################################
 #' Group sequential designs / Adaptive sequential designs: Poisson distribution, Non-inferiority trial, Power calculation, O'Brien-Fleming boundary
 #'
-#' @param lambda_t Mean of the test arm
-#' @param lambda_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger lambda is better, 0 = smaller lambda is better
+#' @param lambda_t Event rate (mean number of events) in the test arm; must be > 0
+#' @param lambda_c Event rate (mean number of events) in the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger lambda is better, otherwise smaller lambda is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_OF_boundary_poisson_NI(lambda_t = 1.1, lambda_c = 1.0, margin = 0.1, direction = 0,
@@ -3348,20 +3961,34 @@ power_OF_boundary_poisson_NI<-function(lambda_t,lambda_c,margin,direction,s,alph
 #######################################################
 #' Group sequential designs / Adaptive sequential designs: Poisson distribution, Non-inferiority trial, Sample size calculation, Pocock boundary
 #'
-#' @param lambda_t Mean of the test arm
-#' @param lambda_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger lambda is better, 0 = smaller lambda is better
+#' @param lambda_t Event rate (mean number of events) in the test arm; must be > 0
+#' @param lambda_c Event rate (mean number of events) in the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger lambda is better, otherwise smaller lambda is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the implied effect size is not positive.
 #'
 #' @examples
-#' Sample_size_pocock_boundary_poisson_NI(lambda_t = 1.1, lambda_c = 1.0, margin = 0.1,
-#' direction = 0, s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' Sample_size_pocock_boundary_poisson_NI( lambda_t = 1.1, lambda_c = 1.0, margin = 0.1,
+#'   direction = 1, s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 Sample_size_pocock_boundary_poisson_NI<-function(lambda_t,lambda_c,margin,direction,s,alpha,beta,rand_ratio){
@@ -3416,16 +4043,28 @@ Sample_size_pocock_boundary_poisson_NI<-function(lambda_t,lambda_c,margin,direct
 
 #' Group sequential designs / Adaptive sequential designs: Poisson distribution, Non-inferiority trial, Power calculation, Pocock boundary
 #'
-#' @param lambda_t Mean of the test arm
-#' @param lambda_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger lambda is better, 0 = smaller lambda is better
+#' @param lambda_t Event rate (mean number of events) in the test arm; must be > 0
+#' @param lambda_c Event rate (mean number of events) in the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger lambda is better, otherwise smaller lambda is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_pocock_boundary_poisson_NI(lambda_t = 1.1, lambda_c = 1.0, margin = 0.1, direction = 0,
@@ -3487,20 +4126,36 @@ power_pocock_boundary_poisson_NI<-function(lambda_t,lambda_c,margin,direction,s,
 ###########################################################
 #' Group sequential designs / Adaptive sequential designs: Poisson distribution, Non-inferiority trial, Sample size calculation, Alpha-spending boundary
 #'
-#' @param lambda_t Mean of the test arm
-#' @param lambda_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger lambda is better, 0 = smaller lambda is better
+#' @param lambda_t Event rate (mean number of events) in the test arm; must be > 0
+#' @param lambda_c Event rate (mean number of events) in the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger lambda is better, otherwise smaller lambda is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test, entered for the alpha-spending boundary as the vector of the
+#'   one-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
+#' Returns NA when the implied effect size is not positive.
 #'
 #' @examples
-#' Sample_size_alsp_boundary_poisson_NI(lambda_t = 1.1, lambda_c = 1.0, margin = 0.1,
-#' direction = 0, s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' Sample_size_alsp_boundary_poisson_NI( lambda_t = 0.2, lambda_c = 0.4, margin = 0.15,
+#'   direction = 2, s = c(1/3,2/3,1), alpha = c(0.001,0.001,0.023), beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 Sample_size_alsp_boundary_poisson_NI<-function(lambda_t,lambda_c,margin,direction,s,alpha,beta,rand_ratio){
@@ -3555,16 +4210,30 @@ Sample_size_alsp_boundary_poisson_NI<-function(lambda_t,lambda_c,margin,directio
 #########################################################################
 #' Group sequential designs / Adaptive sequential designs: Poisson distribution, Non-inferiority trial, Power calculation, Alpha-spending boundary
 #'
-#' @param lambda_t Mean of the test arm
-#' @param lambda_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger lambda is better, 0 = smaller lambda is better
+#' @param lambda_t Event rate (mean number of events) in the test arm; must be > 0
+#' @param lambda_c Event rate (mean number of events) in the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger lambda is better, otherwise smaller lambda is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param alpha Type I error for the one-sided test, entered for the alpha-spending boundary as the vector of the
+#'   one-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#' }
 #'
 #' @examples
 #' power_alsp_boundary_poisson_NI(lambda_t = 0.2, lambda_c = 0.4, margin = 0.15, direction = 1,
@@ -3635,16 +4304,31 @@ power_alsp_boundary_poisson_NI<-function(lambda_t,lambda_c,margin,direction,s,al
 ########################################################
 #' Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Superiority trial, Sample size calculation, O'Brien-Fleming boundary
 #'
-#' @param r_t Mean of the test arm
-#' @param r_c Mean of the control arm
+#' @param r_t Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0
+#' @param r_c Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t exposure time
-#' @param kappa dispersion parameter
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_OF_boundary_neg_binomial(r_t = 0.2, r_c = 0.4, s = c(1/3,2/3,1), alpha_2 = 0.05,
@@ -3706,16 +4390,29 @@ Sample_size_OF_boundary_neg_binomial<-function(r_t,r_c,s,alpha_2,beta,rand_ratio
 
 #' Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Superiority trial, Power calculation, O'Brien-Fleming boundary
 #'
-#' @param r_t Mean of the test arm
-#' @param r_c Mean of the control arm
+#' @param r_t Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0
+#' @param r_c Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t exposure time
-#' @param kappa dispersion parameter
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+#' }
 #'
 #' @examples
 #' power_OF_boundary_neg_binomial(r_t = c(1.1, 1.1, 1.1), r_c = 1.1, s = c(1/3, 2/3, 1),
@@ -3779,16 +4476,31 @@ power_OF_boundary_neg_binomial<-function(r_t,r_c,s,alpha_2,sampsz_control,rand_r
 #################################################
 #' Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Superiority trial, Sample size calculation, Pocock boundary
 #'
-#' @param r_t Mean of the test arm
-#' @param r_c Mean of the control arm
+#' @param r_t Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0
+#' @param r_c Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t exposure time
-#' @param kappa dispersion parameter
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_pocock_boundary_neg_binomial(r_t = 0.2, r_c = 0.4, s = c(1/3,2/3,1),
@@ -3848,16 +4560,29 @@ Sample_size_pocock_boundary_neg_binomial<-function(r_t,r_c,s,alpha_2,beta,rand_r
 
 #' Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Superiority trial, Power calculation, Pocock boundary
 #'
-#' @param r_t Mean of the test arm
-#' @param r_c Mean of the control arm
+#' @param r_t Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0
+#' @param r_c Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t exposure time
-#' @param kappa dispersion parameter
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+#' }
 #'
 #' @examples
 #' power_pocock_boundary_neg_binomial(r_t = c(1.1, 1.1, 1.1), r_c = 1.1, s = c(1/3, 2/3, 1),
@@ -3923,16 +4648,33 @@ power_pocock_boundary_neg_binomial<-function(r_t,r_c,s,alpha_2,sampsz_control,ra
 #############################################################
 #' Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Superiority trial, Sample size calculation, Alpha-spending boundary
 #'
-#' @param r_t Mean of the test arm
-#' @param r_c Mean of the control arm
+#' @param r_t Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0
+#' @param r_c Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t exposure time
-#' @param kappa dispersion parameter
+#' @param alpha_2 Type I error for the two-sided test, entered for the alpha-spending boundary as the vector of the
+#'   two-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha_2
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+#' }
+#' Returns NA when the two arms have the same endpoint parameter.
 #'
 #' @examples
 #' Sample_size_alsp_boundary_neg_binomial(r_t = 0.2, r_c = 0.4, s = c(1/3,2/3,1),
@@ -3992,16 +4734,31 @@ Sample_size_alsp_boundary_neg_binomial<-function(r_t,r_c,s,alpha_2,beta,rand_rat
 
 #' Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Superiority trial, Power calculation, Alpha-spending boundary
 #'
-#' @param r_t Mean of the test arm
-#' @param r_c Mean of the control arm
+#' @param r_t Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0
+#' @param r_c Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha_2 Type I error for the two-sided test
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t exposure time
-#' @param kappa dispersion parameter
+#' @param alpha_2 Type I error for the two-sided test, entered for the alpha-spending boundary as the vector of the
+#'   two-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha_2
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+#' }
 #'
 #' @examples
 #' power_alsp_boundary_neg_binomial(r_t = 1, r_c = 0.8, s = 1, alpha_2 = 0.05,
@@ -4071,22 +4828,37 @@ power_alsp_boundary_neg_binomial<-function(r_t,r_c,s,alpha_2,sampsz_control,rand
 #########################################################
 #' Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Non-inferiority trial, Sample size calculation, O'Brien-Fleming boundary
 #'
-#' @param r_t Mean of the test arm
-#' @param r_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger r_t is better, 0 = smaller r_t is better
+#' @param r_t Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0
+#' @param r_c Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger r_t is better, otherwise smaller r_t is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t exposure time
-#' @param kappa dispersion parameter
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+#' }
+#' Returns NA when the implied effect size is not positive.
 #'
 #' @examples
-#' Sample_size_OF_boundary_neg_binomial_NI(r_t = 0.2, r_c = 0.4, margin = 0.1, direction = 1,
-#' s = c(1/3,2/3,1), alpha = 0.025, beta = 0.1, rand_ratio = 1, nu_t = 1, kappa = 1)
+#' Sample_size_OF_boundary_neg_binomial_NI( r_t = 0.2, r_c = 0.4, margin = 0.1, direction = 2,
+#'   s = c(1/3,2/3,1), alpha = 0.025, beta = 0.1, rand_ratio = 1, nu_t = 1, kappa = 1)
 #'
 #' @export
 Sample_size_OF_boundary_neg_binomial_NI<-function(r_t,r_c,margin,direction,s,alpha,beta,rand_ratio,nu_t,kappa){
@@ -4152,18 +4924,31 @@ Sample_size_OF_boundary_neg_binomial_NI<-function(r_t,r_c,margin,direction,s,alp
 
 #' Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Non-inferiority trial, Power calculation, O'Brien-Fleming boundary
 #'
-#' @param r_t Mean of the test arm
-#' @param r_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger r_t is better, 0 = smaller r_t is better
+#' @param r_t Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0
+#' @param r_c Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger r_t is better, otherwise smaller r_t is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t exposure time
-#' @param kappa dispersion parameter
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+#' }
 #'
 #' @examples
 #' power_OF_boundary_neg_binomial_NI(r_t = c(1.1, 1.1, 1.1), r_c = 1.1, margin = 0.1,
@@ -4238,22 +5023,37 @@ power_OF_boundary_neg_binomial_NI<-function(r_t,r_c,margin,direction,s,alpha,sam
 #################################################
 #' Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Non-inferiority trial, Sample size calculation, Pocock boundary
 #'
-#' @param r_t Mean of the test arm
-#' @param r_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger r_t is better, 0 = smaller r_t is better
+#' @param r_t Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0
+#' @param r_c Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger r_t is better, otherwise smaller r_t is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t exposure time
-#' @param kappa dispersion parameter
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+#' }
+#' Returns NA when the implied effect size is not positive.
 #'
 #' @examples
-#' Sample_size_pocock_boundary_neg_binomial_NI(r_t = 0.2, r_c = 0.4, margin = 0.1, direction = 1,
-#' s = c(1/3,2/3,1), alpha = 0.025, beta = 0.1, rand_ratio = 1, nu_t = 1, kappa = 1)
+#' Sample_size_pocock_boundary_neg_binomial_NI( r_t = 0.2, r_c = 0.4, margin = 0.1, direction = 2,
+#'   s = c(1/3,2/3,1), alpha = 0.025, beta = 0.1, rand_ratio = 1, nu_t = 1, kappa = 1)
 #'
 #' @export
 Sample_size_pocock_boundary_neg_binomial_NI<-function(r_t,r_c,margin,direction,s,alpha,beta,rand_ratio,nu_t,kappa){
@@ -4318,18 +5118,31 @@ Sample_size_pocock_boundary_neg_binomial_NI<-function(r_t,r_c,margin,direction,s
 
 #' Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Non-inferiority trial, Power calculation, Pocock boundary
 #'
-#' @param r_t Mean of the test arm
-#' @param r_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger r_t is better, 0 = smaller r_t is better
+#' @param r_t Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0
+#' @param r_c Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger r_t is better, otherwise smaller r_t is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t exposure time
-#' @param kappa dispersion parameter
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+#' }
 #'
 #' @examples
 #' power_pocock_boundary_neg_binomial_NI(r_t = c(1.1, 1.1, 1.1), r_c = 1.1, margin = 0.1,
@@ -4404,22 +5217,40 @@ power_pocock_boundary_neg_binomial_NI<-function(r_t,r_c,margin,direction,s,alpha
 ###########################################################
 #' Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Non-inferiority trial, Sample size calculation, Alpha-spending boundary
 #'
-#' @param r_t Mean of the test arm
-#' @param r_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger r_t is better, 0 = smaller r_t is better
+#' @param r_t Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0
+#' @param r_c Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger r_t is better, otherwise smaller r_t is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t exposure time
-#' @param kappa dispersion parameter
+#' @param alpha Type I error for the one-sided test, entered for the alpha-spending boundary as the vector of the
+#'   one-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha
+#' @param beta Type II error rate, i.e. 1 - power; 0 < beta < 1
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{test arm sample size}{Sample size required for the test arm}
+#'   \item{control arm sample size}{Sample size required for the control arm}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+#' }
+#' Returns NA when the implied effect size is not positive.
 #'
 #' @examples
-#' Sample_size_alsp_boundary_neg_binomial_NI(r_t = 0.2, r_c = 0.4, margin = 0.1, direction = 1,
-#' s = c(1/3,2/3,1), alpha = c(0.001,0.001,0.023), beta = 0.1, rand_ratio = 1, nu_t = 1, kappa = 1)
+#' Sample_size_alsp_boundary_neg_binomial_NI( r_t = 0.2, r_c = 0.4, margin = 0.1, direction = 2,
+#'   s = c(1/3,2/3,1), alpha = c(0.001,0.001,0.023), beta = 0.1, rand_ratio = 1, nu_t = 1,
+#'   kappa = 1)
 #'
 #' @export
 Sample_size_alsp_boundary_neg_binomial_NI<-function(r_t,r_c,margin,direction,s,alpha,beta,rand_ratio,nu_t,kappa){
@@ -4486,18 +5317,33 @@ Sample_size_alsp_boundary_neg_binomial_NI<-function(r_t,r_c,margin,direction,s,a
 
 #' Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Non-inferiority trial, Power calculation, Alpha-spending boundary
 #'
-#' @param r_t Mean of the test arm
-#' @param r_c Mean of the control arm
-#' @param margin Non-inferiority margin
-#' @param direction Test direction: 1 = larger r_t is better, 0 = smaller r_t is better
+#' @param r_t Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0
+#' @param r_c Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0
+#' @param margin Non-inferiority margin; must be > 0
+#' @param direction Test direction: 1 = larger r_t is better, otherwise smaller r_t is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param alpha One-sided significance level (type I error rate)
-#' @param sampsz_control Control arm sample size
-#' @param rand_ratio Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t exposure time
-#' @param kappa dispersion parameter
+#' @param alpha Type I error for the one-sided test, entered for the alpha-spending boundary as the vector of the
+#'   one-sided alpha-spending values alpha_1, ..., alpha_K at the K analyses; each element must be > 0
+#'   and the elements must sum to alpha
+#' @param sampsz_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
 #'
-#' @return The output will display the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{The achieved power}
+#'   \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+#'   \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+#'   \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+#'   \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+#'   \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+#'   \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+#'   \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+#'   \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+#'   \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+#'   \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+#' }
 #'
 #' @examples
 #' power_alsp_boundary_neg_binomial_NI(r_t = 1, r_c = 0.8, margin = 0, direction = 1, s = 1,

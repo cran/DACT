@@ -19,18 +19,33 @@ masd_est_ci(
 
 \item{c_bry}{Vector of critical boundaries for each analysis}
 
-\item{theta_hat_last_m1}{'theta_hat_last_m1' as used by this function; see Examples.}
+\item{theta_hat_last_m1}{Numeric vector of treatment effect estimates observed at the analysis at
+which the trial stopped, one per comparison (dose), e.g. the difference of the observed means or
+event rates between a test arm and the common control arm, or minus the log of the observed hazard
+ratio; its length gives the number of comparisons}
 
-\item{theta_hat_last_m1_sd}{'theta_hat_last_m1_sd' as used by this function; see Examples.}
+\item{theta_hat_last_m1_sd}{Standard error of 'theta_hat_last_m1'; either a single value shared by
+all comparisons or a vector with one value per comparison; must be > 0}
 
-\item{last_vt}{Index of the analysis at which the trial stopped}
+\item{last_vt}{Index of the analysis at which the trial stopped (1-based); this can be the final
+analysis, at which s = 1, or an interim analysis, and it must not exceed length(s)}
 
 \item{alpha_2}{Type I error for the two-sided test}
 
-\item{dist}{Indicator of the endpoint / distribution type}
+\item{dist}{Distribution indicator: 1 = the comparisons (doses) share one common control arm and the
+endpoint is normally distributed, so that the treatment effect estimates are correlated with
+correlation 1/2; otherwise the comparisons are treated as independent}
 }
 \value{
-A named list containing the following elements: 'p-value', 'confidence interval'.
+A named list with the following components:
+\describe{
+  \item{p-value}{The p-value of the test of the null hypothesis that the treatment effect of the
+    dose (comparison) with the best efficacy is 0}
+  \item{confidence interval}{Numeric vector of length 3 giving the lower confidence limit, the
+    conservatively median unbiased point estimate and the upper confidence limit for the dose
+    (comparison) with the best efficacy; the lower limit is consistent with the p-value, in the
+    sense that the p-value < alpha_2/2 if and only if the lower limit is greater than 0}
+}
 }
 \description{
 Multiple comparisons Group sequential design: Final analysis, Without sample size change
@@ -46,7 +61,7 @@ P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

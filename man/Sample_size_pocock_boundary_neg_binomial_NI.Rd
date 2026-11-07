@@ -18,34 +18,49 @@ Sample_size_pocock_boundary_neg_binomial_NI(
 )
 }
 \arguments{
-\item{r_t}{Mean of the test arm}
+\item{r_t}{Event rate (mean number of events per unit of exposure time) in the test arm; must be > 0}
 
-\item{r_c}{Mean of the control arm}
+\item{r_c}{Event rate (mean number of events per unit of exposure time) in the control arm; must be > 0}
 
-\item{margin}{Non-inferiority margin}
+\item{margin}{Non-inferiority margin; must be > 0}
 
-\item{direction}{Test direction: 1 = larger r_t is better, 0 = smaller r_t is better}
+\item{direction}{Test direction: 1 = larger r_t is better, otherwise smaller r_t is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{alpha}{One-sided significance level (type I error rate)}
+\item{alpha}{Type I error for the one-sided test; 0 < alpha < 1}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Type II error rate, i.e. 1 - power; 0 < beta < 1}
 
-\item{rand_ratio}{Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
-\item{nu_t}{exposure time}
+\item{nu_t}{Exposure time (follow-up time) of each subject, used to convert the number of events into a rate; must be > 0}
 
-\item{kappa}{dispersion parameter}
+\item{kappa}{Dispersion parameter of the negative binomial model; must be > 0}
 }
 \value{
-The output will show the sample size for the control arm and the test arm
+A named list with the following components:
+\describe{
+  \item{test arm sample size}{Sample size required for the test arm}
+  \item{control arm sample size}{Sample size required for the control arm}
+  \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+  \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+  \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+  \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+  \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+  \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+  \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+  \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+  \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+  \item{Reference}{Reference for the sample size formula (Zhu and Lakkis, 2014)}
+}
+Returns NA when the implied effect size is not positive.
 }
 \description{
 Group sequential designs / Adaptive sequential designs: Negative binomial distribution, Non-inferiority trial, Sample size calculation, Pocock boundary
 }
 \examples{
-Sample_size_pocock_boundary_neg_binomial_NI(r_t = 0.2, r_c = 0.4, margin = 0.1, direction = 1,
-s = c(1/3,2/3,1), alpha = 0.025, beta = 0.1, rand_ratio = 1, nu_t = 1, kappa = 1)
+Sample_size_pocock_boundary_neg_binomial_NI( r_t = 0.2, r_c = 0.4, margin = 0.1, direction = 2,
+  s = c(1/3,2/3,1), alpha = 0.025, beta = 0.1, rand_ratio = 1, nu_t = 1, kappa = 1)
 
 }

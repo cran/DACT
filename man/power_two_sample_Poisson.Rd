@@ -7,18 +7,18 @@
 power_two_sample_Poisson(lambda_t, lambda_c, alpha_2, n_control, rand_ratio)
 }
 \arguments{
-\item{lambda_t}{The event rate of the test arm}
+\item{lambda_t}{Event rate of the test arm under the Poisson model; must be > 0}
 
-\item{lambda_c}{The event rate of the control arm}
+\item{lambda_c}{Event rate of the control arm under the Poisson model; must be > 0}
 
-\item{alpha_2}{The type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; 0 < alpha_2 < 1}
 
 \item{n_control}{Sample size of the control arm}
 
-\item{rand_ratio}{The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 }
 \value{
-The output will show the power
+A numeric value giving the power.
 }
 \description{
 Fixed sample designs: Poisson distribution, Superiority trial, Power calculation

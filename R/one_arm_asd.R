@@ -54,6 +54,15 @@ ph2simon <- function(pu, pa, ep1, ep2, nmax = 100) {
   return(ph2)
 }
 
+#' Print method for a Simon's two-stage phase II design
+#'
+#' @param x An object of class `ph2simon`, as returned by the internal `ph2simon` helper
+#' @param ... Further arguments passed to `print`
+#'
+#' @return `NULL`, invisibly, or the warning message, invisibly, if the optimal sample size
+#'   is too close to `nmax`. Called for the side effect of printing the optimal and minimax
+#'   designs.
+#'
 #' @export
 print.ph2simon <- function(x, ...) {
   xout = x$out
@@ -73,6 +82,13 @@ print.ph2simon <- function(x, ...) {
   }
 }
 
+#' Plot method for a Simon's two-stage phase II design
+#'
+#' @param x An object of class `ph2simon`, as returned by the internal `ph2simon` helper
+#' @param ... Further graphical arguments passed to `plot`
+#'
+#' @return `NULL`, invisibly. Called for the side effect of drawing the expected-sample-size curve.
+#'
 #' @export
 plot.ph2simon <- function(x, ...) {
   xout = x$out
@@ -200,30 +216,34 @@ twostage.admissible  <- function(x) {
 ##############################################################################
 ###############################################
 
-#' Two-stage design: Simon's design
+#' Single arm phase 2 oncology trial: Two-stage design, Simon's design
 #'
-#' @param alpha One-sided type I error.
-#' @param beta  Type II error.
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param p_1   Assumed response rate.
+#' @param alpha Type I error for the one-sided test
+#' @param beta Type II error rate, i.e. 1 - power
+#' @param p_0 Response rate indicating low activity with insufficient clinical benefit
+#' @param p_1 Assumed response rate
 #'
-#' @return r1: If no more than r1 responses are observed at the first look, then the trial would be stopped for futility.
-#' @return n1: Number of patients at first look.
-#' @return r_2: The null hypothesis will be rejected if at least r_2 responses are observed at the end of the trial.
-#' @return n_2: Number of patients at second look. n_2 is also the total sample size.
-#' @return EN(p_0) is the expected sample size under the null hypothesis.
-#' @return PET(p_0) is the probability of early termination under the null hypothesis.
-#' @return PET_p_1 is the probability of early termination under p=p_1.
-#' @return power_p_1 is the power under p=p_1.
-#' @return Type I error is the probability of rejecting the null hypothesis under p<=p_0.
-#' @return The minimax design has the smallest n_2 among all possible choices of (n1,r1,n_2,r_2).
-#' @return The optimal design has the smallest EN(p_0) among all possible choices of (n1,r1,n_2,r_2).
-#' @return The average design is an augmentation of the original Simon’s design (Gao, Zhang. 2024).
-#' The n1 for the average design is the average of n1's from the minimax and the optimal designs.
+#' @return A matrix with one row for each of the minimax design (smallest n_2), the optimal
+#'   design (smallest EN(p_0)) and the average design (an augmentation of the original
+#'   Simon's design, Gao and Zhang 2024), and one column per design quantity:
+#' \describe{
+#'   \item{r1}{If no more than r1 responses are observed at the first look, then the trial
+#'     would be stopped for futility}
+#'   \item{n1}{Number of patients at first look}
+#'   \item{r_2}{The null hypothesis will be rejected if at least r_2 responses are observed
+#'     at the end of the trial}
+#'   \item{n_2}{Number of patients at second look; n_2 is also the total sample size}
+#'   \item{EN(p_0)}{Expected sample size under the null hypothesis}
+#'   \item{PET(p_0)}{Probability of early termination under the null hypothesis}
+#'   \item{t1_err}{Type I error, the probability of rejecting the null hypothesis under
+#'     p <= p_0}
+#'   \item{PET_p_1}{Probability of early termination under p = p_1}
+#'   \item{power_p_1}{Power under p = p_1}
+#' }
 #'
 #' @references R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials:
-#' an expansion of Simon’s design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
+#' an expansion of Simon's design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
 #' To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2341673}.
 #'
 #' @examples
@@ -1020,33 +1040,34 @@ Stg3_sz_r2e=function(r_1,n_1,r_2,n_2,r_03,r_2_e,PET_plow,d_23_cut,alpha,beta,p_0
 
 #############################
 
-#' Two-stage design: the hybrid design
+#' Single arm phase 2 oncology trial: Two-stage design, the hybrid design
 #'
-#' @param alpha One-sided type I error.
-#' @param beta  Type II error.
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param p_low Minimally clinically beneficial response rate.
-#' @param p_1   Assumed response rate.
-#' @param d_12_cut Min(n2-n1) sets the minimal difference between n2 and n1 for the design.
+#' @param alpha Type I error for the one-sided test
+#' @param beta Type II error rate, i.e. 1 - power
+#' @param p_0 Response rate indicating low activity with insufficient clinical benefit
+#' @param p_low Minimally clinically beneficial response rate
+#' @param p_1 Assumed response rate
+#' @param d_12_cut Sets the minimal difference between n_2 and n_1 for the design; min(n_2 - n_1)
 #'
-#' @return n1: Number of patients at first look.
-#' @return n_2: Number of patients at second look. n_2 is also the total sample size.
-#' @return r1: If no more than r1 responses are observed at the first look, then the trial would be stopped for futility.
-#' @return r_2: The null hypothesis will be rejected if at least r_2 responses are observed at the end of the trial.
-#' @return EN(p0) is the expected sample size under the null hypothesis.
-#' @return PET(p0) is the probability of early termination under the null hypothesis.
-#' @return PET_p is the probability of early termination under p=p_1.
-#' @return PET_p_low is the probability of early termination under p=p_low.
-#' @return power_p is the power under p=p_1.
-#' @return power_p_low is the power under p=p_low.
-#' @return Type I error is the probability of rejecting the null hypothesis under p<=p_0.
-#' @return The minimax design has the smallest n2 among all possible choices of (n1,r1,n_2,r_2).
-#' @return The optimal design has the smallest EN(p0) ) among all possible choices of (n1,r1,n_2,r_2).
-#' @return The n1  for the average design is the average of n1's from the minimax and the optimal designs.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Simon's design: p=p_1}{A matrix with one row per design (minimax, optimal and
+#'     average) for Simon's design using p_1 as the target response rate, with columns r1,
+#'     n1, r_2, n_2, EN(p0) (expected sample size under p_0), PET(p0) (probability of early
+#'     termination under p_0), t1_err, PET_p (PET under p_1), PET_p_low (PET under p_low),
+#'     power_p (power under p_1) and power_p_low (power under p_low)}
+#'   \item{Simon's design: p=p_low}{The corresponding matrix for Simon's design using p_low
+#'     as the target response rate}
+#'   \item{Hybrid design}{A matrix with one row per design (minimax, optimal and average)
+#'     and columns n_1, r_1, r_1_e (the trial is stopped for superiority if at least r_1_e
+#'     responses are observed at the first look), r_2, n_2, t1_err, power (power under p_1),
+#'     PET_p1, PET_p_low, PET_p0, En_p0 (expected sample size under p_0) and PW_p_low (power
+#'     under p_low)}
+#' }
 #'
 #' @references R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials:
-#' an expansion of Simon’s design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
+#' an expansion of Simon's design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
 #' To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2341673}.
 #'
 #' @examples
@@ -1074,7 +1095,6 @@ hybrid_sz<-function(alpha,beta,p_0,p_low,p_1,d_12_cut){
   hybrid_design=NULL
   for (i in 1:3){
    hybrid_design=rbind(hybrid_design, Stg2_sz(n_1=n_1_p_low[i],r_1=r_1_p_low[i],d_12_cut=d_12_cut,alpha=alpha,beta=beta,p_0=p_0,p_1=p_1))
-                                     Stg2_sz(n_1=100,r_1=25,d_12_cut=5,alpha=c(0.001,0.024),beta=0.1,p_0=0.2,p_1=0.4)
   }
   ##################################################################################
 
@@ -1117,38 +1137,45 @@ hybrid_sz<-function(alpha,beta,p_0,p_low,p_1,d_12_cut){
 
 #############################
 
-#' Two-stage design: the midpoint design
+#' Single arm phase 2 oncology trial: Two-stage design, the midpoint design
 #'
-#' @param alpha One-sided type I error.
-#' @param beta  Type II error.
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param p_low Minimally clinically beneficial response rate.
-#' @param p_1   Assumed response rate.
-#' @param q     0<q<1.
-#' @param d_12_cut Min(n2-n1) sets the minimal difference between n2 and n1 for the design.
+#' @param alpha Type I error for the one-sided test
+#' @param beta Type II error rate, i.e. 1 - power
+#' @param p_0 Response rate indicating low activity with insufficient clinical benefit
+#' @param p_low Minimally clinically beneficial response rate
+#' @param p_1 Assumed response rate
+#' @param q Weight between 0 and 1 used to interpolate the first-look sample size of the
+#'   mid-point design from the two Simon's designs: n_1 = q * n_1(p_1) + (1 - q) * n_1(p_low),
+#'   where n_1(p_1) and n_1(p_low) are the first-look sample sizes of Simon's designs with
+#'   target response rates p_1 and p_low; 0 < q < 1
+#' @param d_12_cut Sets the minimal difference between n_2 and n_1 for the design; min(n_2 - n_1)
 #'
-#' @return n1: Number of patients at first look.
-#' @return n_2: Number of patients at second look. n_2 is also the total sample size.
-#' @return r1: If no more than r1 responses are observed at the first look, then the trial would be stopped for futility.
-#' @return r_2: The null hypothesis will be rejected if at least r_2 responses are observed at the end of the trial.
-#' @return EN(p0) is the expected sample size under the null hypothesis.
-#' @return PET(p0) is the probability of early termination under the null hypothesis.
-#' @return PET_p is the probability of early termination under p=p_1.
-#' @return PET_p_low is the probability of early termination under p=p_low.
-#' @return power_p is the power under p=p_1.
-#' @return power_p_low is the power under p=p_low.
-#' @return Type I error is the probability of rejecting the null hypothesis under p<=p_0.
-#' @return The minimax design has the smallest n_2 among all possible choices of (n1,r1,n2,r2).
-#' @return The optimal design has the smallest EN(p_0) ) among all possible choices of (n1,r1,n_2,r_2).
-#' @return The n1  for the average design is the average of n1's from the minimax and the optimal designs.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Simon's design: p=p_1}{A matrix with one row per design (minimax, optimal and
+#'     average) for Simon's design using p_1 as the target response rate, with columns r1,
+#'     n1, r_2, n_2, EN(p0) (expected sample size under p_0), PET(p0) (probability of early
+#'     termination under p_0), t1_err, PET_p (PET under p_1), PET_p_low (PET under p_low),
+#'     power_p (power under p_1) and power_p_low (power under p_low)}
+#'   \item{Simon's design: p=p_low}{The corresponding matrix for Simon's design using p_low
+#'     as the target response rate}
+#'   \item{The mid-point design: p=p_1}{A matrix with one row per design (minimax, optimal
+#'     and average) and columns r_1, r_2, n_1, n_2, r_1_e (the trial is stopped for
+#'     superiority if at least r_1_e responses are observed at the first look), t1_err,
+#'     PET_p_low, power_p (power under p_1), PET_p0, EN_p0 (expected sample size under p_0),
+#'     PW_p_low (power under p_low) and q. If q is too large for the probability of early
+#'     termination under p_low to be below beta, a character string with a warning message is
+#'     returned instead}
+#' }
 #'
 #' @references R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials:
-#' an expansion of Simon’s design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
+#' an expansion of Simon's design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
 #' To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2341673}.
 #'
 #' @examples
-#' midpnt_sz(alpha=c(0.001,0.024),beta=0.1,p_0=0.2,p_low=0.33,p_1=0.4,q=0.5,d_12_cut=5)
+#' midpnt_sz(alpha = c(0.001,0.024), beta = 0.1, p_0 = 0.2, p_low = 0.33, p_1 = 0.5, q = 0,
+#' d_12_cut = 5)
 #'
 #' @export
 midpnt_sz<-function(alpha,beta,p_0,p_low,p_1,q,d_12_cut){
@@ -1221,39 +1248,39 @@ midpnt_sz<-function(alpha,beta,p_0,p_low,p_1,q,d_12_cut){
 
 ###############################
 
-#' Three-stage design
+#' Single arm phase 2 oncology trial: Three-stage design
 #'
-#' @param alpha One-sided type I error.
-#' @param beta  Type II error.
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param p_low Minimally clinically beneficial response rate.
-#' @param p_1   Assumed response rate.
-#' @param d_23_cut Min(n3-n2) sets the minimal difference between n3 and n2 for the design.
+#' @param alpha Type I error for the one-sided test
+#' @param beta Type II error rate, i.e. 1 - power
+#' @param p_0 Response rate indicating low activity with insufficient clinical benefit
+#' @param p_low Minimally clinically beneficial response rate
+#' @param p_1 Assumed response rate
+#' @param d_23_cut Sets the minimal difference between n_3 and n_2 for the design; min(n_3 - n_2)
 #'
-#' @return n1: Number of patients at first look. n1 for the three-stage design is the from Simon’s design with p=p_1.
-#' @return n_2: Number of patients at second look. n_2 for the three-stage design is the n1 from Simon’s design with p=p_low.
-#' @return r1: If no more than r1 responses are observed at the first look, then the trial would be stopped for futility.
-#' @return r_2: The null hypothesis will be rejected if at least r_2 responses are observed at the end of the trial.
-#' @return EN(p0) is the expected sample size under the null hypothesis.
-#' @return PET(p0) is the probability of early termination under the null hypothesis.
-#' @return PET_p is the probability of early termination under p=p_1.
-#' @return PET_p_low is the probability of early termination under p=p_low.
-#' @return power_p_1 is the power under p=p_1.
-#' @return power_p_low is the power under p=p_low.
-#' @return Type I error is the probability of rejecting the null hypothesis under p<=p_0.
-#' @return The minimax design has the smallest n_2 among all possible choices of (n1,r1,n_2,r_2).
-#' @return The optimal design has the smallest EN(p0) among all possible choices of (n1,r1,n_2,r_2).
-#' @return The n1 and n_2 for the average design is the average of n1's and n_2's from the minimax and the optimal designs.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Simon's design: p=p_1}{A matrix with one row per design (minimax, optimal and
+#'     average) for Simon's design using p_1 as the target response rate, with columns r1,
+#'     n1, r_2, n_2, EN(p0) (expected sample size under p_0), PET(p0) (probability of early
+#'     termination under p_0), t1_err, PET_p (PET under p_1), PET_p_low (PET under p_low),
+#'     power_p (power under p_1) and power_p_low (power under p_low)}
+#'   \item{Simon's design: p=p_low}{The corresponding matrix for Simon's design using p_low
+#'     as the target response rate}
+#'   \item{Expanded 3 stage design}{A matrix with one row per design (minimax, optimal and
+#'     average) and columns r_1, r_2, r_3, n_1, n_2, n_3 (n_3 is also the total sample size),
+#'     r_2_e (the trial is stopped for superiority if at least r_2_e responses are observed at
+#'     the second look), t1_err, PET_p1, PET_plow, power (power under p_1), EN_p0 (expected
+#'     sample size under p_0) and PW_p_low (power under p_low)}
+#' }
 #'
 #' @references R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials:
-#' an expansion of Simon’s design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
+#' an expansion of Simon's design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
 #' To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2341673}.
 #'
 #' @examples
-#' \donttest{
-#' EXP_3_stg_sz(alpha=c(0.001,0.024),beta=0.1,p_0=0.2,p_low=0.33,p_1=0.4,d_23_cut=5)
-#' }
+#' EXP_3_stg_sz( alpha = c(0.001,0.024), beta = 0.1, p_0 = 0.2, p_low = 0.4, p_1 = 0.55,
+#'   d_23_cut = 0)
 #'
 #' @export
 EXP_3_stg_sz=function(alpha,beta,p_0,p_low,p_1,d_23_cut){

@@ -7,30 +7,34 @@
 fixed_rej_nbglm_simu(alpha_2, r_c, r_t, rand_ratio, kappa, samsz, sim_num)
 }
 \arguments{
-\item{alpha_2}{The type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test}
 
-\item{r_c}{The event rate of the test arm}
+\item{r_c}{Event rate of the control arm; must be > 0}
 
-\item{r_t}{The event rate of the control arm}
+\item{r_t}{Event rate of the test arm; the null hypothesis is r_t >= r_c and the alternative
+hypothesis is r_t < r_c; must be > 0}
 
-\item{rand_ratio}{The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
-\item{kappa}{Dispersion (size) parameter of the negative binomial distribution}
+\item{kappa}{Dispersion parameter of the negative binomial distribution; the negative binomial size
+parameter used in the simulation is 1/kappa, so kappa must be > 0 and a larger kappa means more overdispersion}
 
-\item{samsz}{Planned sample size of the control arm used in the simulation}
+\item{samsz}{Sample size of the control arm used in the simulation}
 
 \item{sim_num}{Number of simulation replicates}
 }
 \value{
-The output is the simulated power, which can be used to verify if the calculated sample size provided intended power
+A named list with the following components:
+\describe{
+  \item{rejection rate}{Simulated rejection rate of the two-sided Wald test from the negative binomial log-link GLM; this is the simulated power, and the type I error rate when r_t = r_c}
+  \item{mean size}{Mean over the simulation replicates of the estimated negative binomial size (dispersion) parameter theta of the fitted GLM}
+}
 }
 \description{
 Fixed sample designs: Negative binomial distribution, Simulations
 }
 \examples{
-\donttest{
 fixed_rej_nbglm_simu(alpha_2 = 0.05, r_c = 1, r_t = 1*0.6, rand_ratio = 1, kappa = 1,
 samsz = 188, sim_num = 20)
-}
 
 }

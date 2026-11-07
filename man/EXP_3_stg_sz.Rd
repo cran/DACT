@@ -2,65 +2,52 @@
 % Please edit documentation in R/one_arm_asd.R
 \name{EXP_3_stg_sz}
 \alias{EXP_3_stg_sz}
-\title{Three-stage design}
+\title{Single arm phase 2 oncology trial: Three-stage design}
 \usage{
 EXP_3_stg_sz(alpha, beta, p_0, p_low, p_1, d_23_cut)
 }
 \arguments{
-\item{alpha}{One-sided type I error.}
+\item{alpha}{Type I error for the one-sided test}
 
-\item{beta}{Type II error.}
+\item{beta}{Type II error rate, i.e. 1 - power}
 
-\item{p_0}{Response rate indicating low activity with insufficient clinical benefit.}
+\item{p_0}{Response rate indicating low activity with insufficient clinical benefit}
 
-\item{p_low}{Minimally clinically beneficial response rate.}
+\item{p_low}{Minimally clinically beneficial response rate}
 
-\item{p_1}{Assumed response rate.}
+\item{p_1}{Assumed response rate}
 
-\item{d_23_cut}{Min(n3-n2) sets the minimal difference between n3 and n2 for the design.}
+\item{d_23_cut}{Sets the minimal difference between n_3 and n_2 for the design; min(n_3 - n_2)}
 }
 \value{
-n1: Number of patients at first look. n1 for the three-stage design is the from Simon’s design with p=p_1.
-
-n_2: Number of patients at second look. n_2 for the three-stage design is the n1 from Simon’s design with p=p_low.
-
-r1: If no more than r1 responses are observed at the first look, then the trial would be stopped for futility.
-
-r_2: The null hypothesis will be rejected if at least r_2 responses are observed at the end of the trial.
-
-EN(p0) is the expected sample size under the null hypothesis.
-
-PET(p0) is the probability of early termination under the null hypothesis.
-
-PET_p is the probability of early termination under p=p_1.
-
-PET_p_low is the probability of early termination under p=p_low.
-
-power_p_1 is the power under p=p_1.
-
-power_p_low is the power under p=p_low.
-
-Type I error is the probability of rejecting the null hypothesis under p<=p_0.
-
-The minimax design has the smallest n_2 among all possible choices of (n1,r1,n_2,r_2).
-
-The optimal design has the smallest EN(p0) among all possible choices of (n1,r1,n_2,r_2).
-
-The n1 and n_2 for the average design is the average of n1's and n_2's from the minimax and the optimal designs.
+A named list with the following components:
+\describe{
+  \item{Simon's design: p=p_1}{A matrix with one row per design (minimax, optimal and
+    average) for Simon's design using p_1 as the target response rate, with columns r1,
+    n1, r_2, n_2, EN(p0) (expected sample size under p_0), PET(p0) (probability of early
+    termination under p_0), t1_err, PET_p (PET under p_1), PET_p_low (PET under p_low),
+    power_p (power under p_1) and power_p_low (power under p_low)}
+  \item{Simon's design: p=p_low}{The corresponding matrix for Simon's design using p_low
+    as the target response rate}
+  \item{Expanded 3 stage design}{A matrix with one row per design (minimax, optimal and
+    average) and columns r_1, r_2, r_3, n_1, n_2, n_3 (n_3 is also the total sample size),
+    r_2_e (the trial is stopped for superiority if at least r_2_e responses are observed at
+    the second look), t1_err, PET_p1, PET_plow, power (power under p_1), EN_p0 (expected
+    sample size under p_0) and PW_p_low (power under p_low)}
+}
 }
 \description{
-Three-stage design
+Single arm phase 2 oncology trial: Three-stage design
 }
 \examples{
-\donttest{
-EXP_3_stg_sz(alpha=c(0.001,0.024),beta=0.1,p_0=0.2,p_low=0.33,p_1=0.4,d_23_cut=5)
-}
+EXP_3_stg_sz( alpha = c(0.001,0.024), beta = 0.1, p_0 = 0.2, p_low = 0.4, p_1 = 0.55,
+  d_23_cut = 0)
 
 }
 \references{
 R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 
 P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials:
-an expansion of Simon’s design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
+an expansion of Simon's design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
 To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2341673}.
 }

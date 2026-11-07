@@ -54,7 +54,10 @@ masd_c_power_com<-function(s,c_bry,theta,theta_hat_inter_m1,theta_hat_inter_m1_s
   #### The functions c_cal calcuate the  exit probablities for the given exit bounadries e0#
   ## the function for the vector of Brownian motions ###
   #################################################
-  c_power= 1-pmvnorm(lower=-Inf,upper=u_bry_theta,mean=0,sigma=cov_mtx,abseps=1e-8)[1]
+  ## a multivariate-normal integral with non-finite boundaries must not abort
+  ## the replicate: report NA (non-evaluable) instead
+  c_power= tryCatch(1-pmvnorm(lower=-Inf,upper=u_bry_theta,mean=0,sigma=cov_mtx,abseps=1e-8)[1],
+                    error=function(e) NA_real_)
   return(c_power)
 }
 ########################################
@@ -98,7 +101,13 @@ new_ebry_com<-function(T,T_inter,T_new,c_alpha,s,theta_hat_inter_m2,theta_hat_in
       return(tmp)
     }
 
-  e_bry=ifelse(c_cal(MAX_INT)<c_alpha, stats::uniroot(function(x) c_cal(x)-c_alpha,c(-MAX_INT,MAX_INT),tol=1e-5)$root, +Inf)
+  ## the root search can fail when the conditional type I error is not
+  ## attainable (NA statistics, degenerate boundaries); return NA instead of
+  ## aborting the replicate
+  e_bry=tryCatch(
+    ifelse(c_cal(MAX_INT)<c_alpha, stats::uniroot(function(x) c_cal(x)-c_alpha,c(-MAX_INT,MAX_INT),tol=1e-5)$root, +Inf),
+    error=function(e) NA_real_
+  )
 
   return(e_bry)
 }
@@ -152,7 +161,10 @@ masd_c_power_new_com<-function(theta,s,new_e_bry,theta_hat_inter_m2,theta_hat_in
 
   ## the function for the vector of Brownian motions ###
   ### the function for single Brownian motion###
-  c_power_new= ifelse(max(T_inter-T_new)>0, 0, 1-pmvnorm(lower=-Inf,upper=u_bry,mean=0,sigma=cov_mtx,abseps=1e-8)[1])
+  c_power_new= tryCatch(
+    ifelse(isTRUE(max(T_inter-T_new)>0), 0, 1-pmvnorm(lower=-Inf,upper=u_bry,mean=0,sigma=cov_mtx,abseps=1e-8)[1]),
+    error=function(e) NA_real_
+  )
   return(c_power_new)
 }
 ##################################
@@ -239,7 +251,8 @@ con_density <- function(theta_hat_inter,theta_hat_inter_sd,dist){
   u_bry=theta_max/sqrt(T_inter)
 
   #################################################
-  c_density= 1-pmvnorm(lower=-Inf,upper=u_bry,mean=0,sigma=cov_mtx,abseps=1e-8)[1]
+  c_density= tryCatch(1-pmvnorm(lower=-Inf,upper=u_bry,mean=0,sigma=cov_mtx,abseps=1e-8)[1],
+                      error=function(e) NA_real_)
   return(c_density)
 
 
@@ -283,6 +296,13 @@ msd_rej_rate_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c_bry,samsz,
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej=0; stg=0; samsz_simu_control=N[length(s)]
+    samsz_simu_tot=N[length(s)]*(comp+1); arm_rej=rep(0,comp)
 
       #the loop specifies what is generated for each simulation
       ########################################
@@ -341,9 +361,9 @@ msd_rej_rate_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c_bry,samsz,
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -355,7 +375,7 @@ msd_rej_rate_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c_bry,samsz,
       ### step 3. If Wald statistics cross the boundary at up to length(s)-1, terminte trial ##
       ############################################################################################
 
-      if ( max(test_max)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max)>=0)){ ##null hypothesis rejected, no more random sampling
 
         rej=1
         #If max(test)>0, te nulll hypothesis is rejected
@@ -367,7 +387,7 @@ msd_rej_rate_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c_bry,samsz,
         samsz_simu_control=N[last_vt]
         samsz_simu_tot=N[last_vt]*(comp+1)
 
-      }else if (max(test_max)<0) {
+      }else if (isTRUE(max(test_max)<0)) {
 
             rej=0
             stg=0
@@ -378,9 +398,9 @@ msd_rej_rate_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c_bry,samsz,
 
         }
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
       out=c(rej,stg,samsz_simu_control,samsz_simu_tot,arm_rej)
@@ -415,7 +435,7 @@ msd_rej_rate_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c_bry,samsz,
     #that the null hypothesis were rejected at the j-th interim analysis
   }
   arm_summary=cbind(mu_t,mu_c,arm_rej_rt)
-  colnames(arm_summary)=c("mu_t1,...","mu_c","Rejection rate by arm")
+  colnames(arm_summary)=c(LABEL()$mu_t1,LABEL()$mu_c,"Rejection rate by arm")
 
 
   mean_control_samsz=mean(samsz_simu_control)
@@ -427,7 +447,7 @@ msd_rej_rate_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c_bry,samsz,
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -452,7 +472,7 @@ msd_rej_rate_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c_bry,samsz,
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -494,30 +514,34 @@ msd_rej_rate_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c_bry,samsz,
 
 #' Multiple comparisons Group sequential design: Simulations, Normal distribution, Type I error and power
 #'
-#' @param mu_t Means of the test arm
-#' @param mu_c Means of the control arm
-#' @param sigma_t Standard deviation of the test arm
-#' @param sigma_c Standard deviation of the control arm
-#' @param direction Test direction: 1 = larger mu is better, 0 = smaller mu is better
+#' @param mu_t Vector of true means of the test arms, one per dose
+#' @param mu_c Mean of the control arm
+#' @param sigma_t Standard deviation of the test arm; must be > 0
+#' @param sigma_c Standard deviation of the control arm; must be > 0
+#' @param direction Test direction: 1 = larger mu is better, otherwise smaller mu is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
+#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = alpha-spending
+#' @param alpha_2 Type I error for the two-sided test; when bry_type = 2 this is instead the
+#'   vector of two-sided type I error levels spent at each look, which must sum to the total
+#'   two-sided type I error
+#' @param samsz Sample size of the control arm used in the simulation; must be > 0
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A matrix in which each row corresponds to one simulation replicate and the columns hold the simulated operating characteristics
-#' (e.g. rejection indicators, sample sizes and stopping stages).
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Design}{Matrix with one row per look giving the look number, the information fraction, the critical boundary and the rejection rate by look}
+#'   \item{Summary by arm}{Matrix with one row per test arm giving the test-arm mean, the control-arm mean and the rejection rate by arm}
+#'   \item{simulation results}{Named numeric vector holding the rejection rate, the simulated type I error rate, the non-type I error rejection rate, the planned control and total sample sizes and the mean simulated control and total sample sizes}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
-#' \donttest{
 #' msd_power_simu_normal(mu_t = c(0,0,0), mu_c = 0, sigma_t = 1, sigma_c = 1, direction = 1,
 #' s = c(1/3,2/3,1), bry_type = 1, alpha_2 = 0.05, samsz = 100, sim_num = 20)
-#' }
 #'
 #' @export
 msd_power_simu_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,bry_type,alpha_2,samsz,sim_num){
@@ -572,6 +596,14 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej_nossr=0; rej=0; stg=0
+    samsz_simu_control=N[length(s)]; samsz_simu_tot=N[length(s)]*(comp+1); futi=0
+    arm_drop=rep(0,comp); arm_rej=rep(0,comp)
       #the loop specifies what is generated for each simulation
       ########################################
       ## step 1: generating random samples ###
@@ -632,7 +664,7 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
 
       arm_drop=rep(0,length(mu_t))
       for (i in 1:comp){
-        if ( theta_hat_inter_m1[i]<theta_cut){
+        if (isTRUE(theta_hat_inter_m1[i]<theta_cut)){
           arm_drop[i]=1
         }else{
           arm_drop[i]=0
@@ -648,9 +680,9 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -658,20 +690,20 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
       test_max=wald_max_m1-c_bry
       test_max_1=test_max[1:length(s)-1]
 
-      if (max( theta_hat_inter_m1)<theta_cut) {futi=1}else {futi=0}
+      if (isTRUE(max( theta_hat_inter_m1)<theta_cut)) {futi=1}else {futi=0}
 
       # test compares the Wald statistics with the critical boundaries
       #any value of test>0 indicates that the Wald statistics crossed the critical boundaries at up to length(s)-1
       ############################################################################################
       ### step 3. If Wald statistics cross the boundary at up to length(s)-1, terminte trial ##
       ############################################################################################
-      if ( max(test_max)>=0){
+      if (isTRUE(max(test_max)>=0)){
         rej_nossr=1
-      }else if ( max(test_max)<0){
+      }else if (isTRUE(max(test_max)<0)){
         rej_nossr=0
       }
 
-      if ( max(test_max_1)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max_1)>=0)){ ##null hypothesis rejected, no more random sampling
         futi=0
         rej=1
         test_max_t=test_max_1[test_max_1>0]
@@ -679,7 +711,7 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
         last_vt=stg
         samsz_simu_control=N[last_vt]
         samsz_simu_tot=N[last_vt]*(comp+1)
-      }else if (max(test_max_1)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max_1)<0)) {   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -691,7 +723,7 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
         ###     Continue to planned sample size and stop trial  ##
         #########################################################
         if (futi==1) { # If TRUE, there is not satisfactory efficacy, stop trial at planned sample size
-          if (test_max[length(s)]>0){
+          if (isTRUE(test_max[length(s)]>0)){
             rej=1
             stg=length(s)
           } else {
@@ -734,24 +766,24 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
 
           c_power_m2=masd_c_power_com(s=s,c_bry=c_bry,theta=theta_hat_inter_m2,theta_hat_inter_m1=theta_hat_inter_m2,theta_hat_inter_m1_sd=theta_hat_inter_m2_sd,dist=dist)
           c_alpha_m1=masd_c_power_com(s=s,c_bry=c_bry,theta=rep(0,length(theta_hat_inter_m1)),theta_hat_inter_m1=theta_hat_inter_m1,theta_hat_inter_m1_sd=theta_hat_inter_m1_sd,dist=dist)
-          if (c_power_m2>= 1-beta){
+          if (isTRUE(c_power_m2>= 1-beta)){
             #########################################
             ### Proceed to planned sample size  #####
             ### and conduct final testing       #####
             #########################################
             last_vt=length(s)
             wald_m2=wald_m1[mu_keep,]
-            if (length(mu_keep)==1){
+            if (isTRUE(length(mu_keep)==1)){
               wald_m2_last=wald_m2[last_vt]
               wald_max_m2=wald_m2_last
-            }else if (length(mu_keep)>1){
+            }else if (isTRUE(length(mu_keep)>1)){
               wald_m2_last=wald_m2[,last_vt]
               wald_max_m2=max(wald_m2_last)
             }
 
             test_m2=wald_max_m2-c_bry[length(s)]
             arm_test_m2=wald_m2_last-c_bry[length(s)]
-            if (test_m2>0) {
+            if (isTRUE(test_m2>0)) {
               rej=1
               stg=length(s)
               last_vt=stg
@@ -762,20 +794,22 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
             }
             samsz_simu_control=N[last_vt]
             samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)   #For q-th (collumn number is q) simulation,
-          }else if (c_power_m2<1-beta){
+          }else if (isTRUE(c_power_m2<1-beta)){
             t_new_0=masd_new_info_time_com(theta=theta_hat_inter_m2,s=s,c_alpha=c_alpha_m1,theta_hat_inter_m2=theta_hat_inter_m2,
                                            theta_hat_inter_m2_sd=theta_hat_inter_m2_sd,beta=beta,dist=1)
-            if (as.numeric(t_new_0[2])<=1){
+            ## default when the re-estimation is not evaluable
+            N_new_t=samsz
+            if (isTRUE(as.numeric(t_new_0[2])<=1)){
               N_new_t=samsz
-            }else if (as.numeric(t_new_0[2])>1){
+            }else if (isTRUE(as.numeric(t_new_0[2])>1)){
               T_new_0=as.numeric(t_new_0[[1]])
               N_new_t_0=max(ceiling(n_control_inter*(T_new_0/T_inter)))
               N_new_t_1=max(samsz,N_new_t_0)
               N_new_t= min(N_new_t_1,N_max)
             }
 
-            if(N_new_t==samsz){
-              if (test_max[length(s)]>0){
+            if(isTRUE(N_new_t==samsz)){
+              if (isTRUE(test_max[length(s)]>0)){
                 rej=1
                 stg=length(s)
               } else {
@@ -784,13 +818,13 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
               last_vt=length(s)
               samsz_simu_control=N[last_vt]
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)
-            }else  if(N_new_t>samsz){
+            }else  if(isTRUE(N_new_t>samsz)){
               ####################################################################################
               ###  Step 4.2.1.3.1: Generate new random samples according to the new sample size ##
               ####################################################################################
               x0_new=x0[1:N_new_t]
               x_new=x[c(mu_keep),1:N_new_t]
-              if (length(mu_keep)==1){
+              if (isTRUE(length(mu_keep)==1)){
                 if (direction==1){
                   theta_hat_m2_new=mean(x_new)-mean(x0_new)
                 }else if (direction==2){
@@ -801,7 +835,7 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
                 theta_hat_m2_sd_new=1/sqrt(t_hat_m2_new)
                 wald_m2_new=theta_hat_m2_new*sqrt(t_hat_m2_new)
                 wald_max_m2_new=max(wald_m2_new)
-              }else if (length(mu_keep)>1){
+              }else if (isTRUE(length(mu_keep)>1)){
                 t_hat_m2_new=NULL
                 theta_hat_m2_new=NULL
                 theta_hat_m2_sd_new=NULL
@@ -818,13 +852,17 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
                     wald_m2_new[i]=theta_hat_m2_new[i]*sqrt(t_hat_m2_new[i])
                   }
                 }else if (direction==2){
-
+                  ## BUGFIX: the original code lost its 'for' loop in this branch,
+                  ## so 'i' leaked from an earlier loop and could exceed nrow(x_new),
+                  ## aborting the replicate with 'subscript out of bounds'.
+                  for (i in 1:length(mu_keep)){
                   theta_hat_m2_new[i]=mean(x0_new)-mean(x_new[i,])
                   var_hat_m2_new[i]=stats::var(x_new[i,])+stats::var(x0_new)
                   t_hat_m2_new[i]=N_new_t/var_hat_m2_new[i]
                   theta_hat_m2_sd_new[i]=1/sqrt(t_hat_m2_new[i])
 
                   wald_m2_new[i]=theta_hat_m2_new[i]*sqrt(t_hat_m2_new[i])
+                  }
 
                 }
 
@@ -858,7 +896,7 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
               samsz_simu_control=N_new_t
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N_new_t-N[length(s)-1])*(length(mu_keep)+1)
 
-              if ( max(test_new)>0){
+              if (isTRUE(max(test_new)>0)){
 
                 rej=1
 
@@ -877,7 +915,7 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
 
               for (i in 1:length(mu_keep)){
 
-                if (test_new[i]>=0){
+                if (isTRUE(test_new[i]>=0)){
                   arm_rej_new[i]=1
                 }else {
                   arm_rej_new[i]=0
@@ -895,9 +933,9 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
 
       }
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
       out=c(rej_nossr,rej,stg,samsz_simu_control,samsz_simu_tot,futi,arm_drop,arm_rej)
@@ -942,7 +980,7 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
   futi_rt=mean(futi)
 
   arm_summary=cbind(mu_t,mu_c,arm_drop_rt,arm_rej_rt)
-  colnames(arm_summary)=c("mu_t1,...","mu_c","drop rate by arm","Rejection rate by arm")
+  colnames(arm_summary)=c(LABEL()$mu_t1,LABEL()$mu_c,"drop rate by arm","Rejection rate by arm")
 
   mean_control_samsz=mean(samsz_simu_control)
   mean_tot_samsz=mean(samsz_simu_tot)
@@ -954,7 +992,7 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -979,7 +1017,7 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -1050,25 +1088,35 @@ masd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c
 
 #' Multiple comparisons Group sequential design: Simulations, Normal distribution, Operating characteristics
 #'
-#' @param mu_t Means of the test arm
-#' @param mu_c Means of the control arm
-#' @param sigma_t Standard deviation of the test arm
-#' @param sigma_c Standard deviation of the control arm
-#' @param direction Test direction: 1 = larger mu is better, 0 = smaller mu is better
+#' @param mu_t Vector of true means of the test arms, one per dose; setting mu_t = mu_c gives the simulated type I error rate
+#' @param mu_c Mean of the control arm
+#' @param sigma_t Standard deviation of the test arm; must be > 0
+#' @param sigma_c Standard deviation of the control arm; must be > 0
+#' @param direction Test direction: 1 = larger mu is better, otherwise smaller mu is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param samsz Planned sample size of the control arm used in the simulation
-#' @param N_max Maximum allowed sample size (control arm)
+#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = alpha-spending
+#' @param alpha_2 Type I error for the two-sided test; when bry_type = 2 this is instead the
+#'   vector of two-sided type I error levels spent at each look, which must sum to the total
+#'   two-sided type I error
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the
+#'   sample size re-estimation; 0 < beta < 1
+#' @param theta_cut Lack-of-efficacy threshold on the effect-size scale: a test arm is
+#'   dropped at the interim analysis when its observed effect size is below this value
+#' @param samsz Sample size of the control arm used in the simulation; must be > 0
+#' @param N_max Maximum sample size for the control arm allowed by the sample size
+#'   re-estimation; must be >= samsz
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A named list containing the following elements: 'simulation summary', 'planned control', 'planned total'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Design}{Matrix with one row per look giving the look number, the information fraction, the critical boundary, the rejection rate by look and the rate of sample size increase}
+#'   \item{Summary by arm}{Matrix with one row per test arm giving the test-arm mean, the control-arm mean, the drop rate by arm and the rejection rate by arm}
+#'   \item{simulation results}{Named numeric vector holding the rejection rate without and with sample size re-estimation, the rate of sample size increase, the rejection rates conditional on meeting the sample size increase criteria, the simulated type I error rate, the non-type I error rejection rate, the futility rate, the planned and maximum control sample sizes, the mean simulated control sample size and the mean simulated control sample size conditional on an increase}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
@@ -1138,6 +1186,14 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej_nossr=0; rej=0; stg=0
+    samsz_simu_control=N[length(s)]; samsz_simu_tot=N[length(s)]*(comp+1); futi=0
+    arm_drop=rep(0,comp); arm_rej=rep(0,comp)
 
       #the loop specifies what is generated for each simulation
       ########################################
@@ -1218,7 +1274,7 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
       ############################################################################################
       rej_nossr = ifelse(max(test_max)>=0, 1, 0)
 
-      if ( max(test_max_1)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max_1)>=0)){ ##null hypothesis rejected, no more random sampling
 
         futi=0
         rej=1
@@ -1229,7 +1285,7 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
         samsz_simu_control=N[last_vt]
         samsz_simu_tot=N[last_vt]*(comp+1)
 
-      }else if (max(test_max_1)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max_1)<0)) {   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -1244,7 +1300,7 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
         if (futi==1) { # If TRUE, there is not satisfactory efficacy, stop trial at planned sample size
 
 
-          if (test_max[length(s)]>0){
+          if (isTRUE(test_max[length(s)]>0)){
             rej=1
             stg=length(s)
           } else {
@@ -1294,7 +1350,7 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
 
           c_power_m2=masd_c_power_com(s=s,c_bry=c_bry,theta=theta_hat_inter_m2,theta_hat_inter_m1=theta_hat_inter_m2,theta_hat_inter_m1_sd=theta_hat_inter_m2_sd,dist=dist)
           c_alpha_m1=masd_c_power_com(s=s,c_bry=c_bry,theta=rep(0,length(theta_hat_inter_m1)),theta_hat_inter_m1=theta_hat_inter_m1,theta_hat_inter_m1_sd=theta_hat_inter_m1_sd,dist=dist)
-          if (c_power_m2>= 1-beta){
+          if (isTRUE(c_power_m2>= 1-beta)){
             #########################################
             ### Proceed to planned sample size  #####
             ### and conduct final testing       #####
@@ -1304,18 +1360,18 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
 
             wald_m2=wald_m1[mu_keep,]
 
-            if (length(mu_keep)==1){
+            if (isTRUE(length(mu_keep)==1)){
               wald_m2_last=wald_m2[last_vt]
               wald_max_m2=wald_m2_last
 
-            }else if (length(mu_keep)>1){
+            }else if (isTRUE(length(mu_keep)>1)){
               wald_m2_last=wald_m2[,last_vt]
               wald_max_m2=max(wald_m2_last)
             }
 
             test_m2=wald_max_m2-c_bry[length(s)]
             arm_test_m2=wald_m2_last-c_bry[length(s)]
-            if (test_m2>0) {
+            if (isTRUE(test_m2>0)) {
               rej=1
               stg=length(s)
               last_vt=stg
@@ -1328,14 +1384,16 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
             samsz_simu_control=N[last_vt]
             samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)   #For q-th (collumn number is q) simulation,
 
-          }else if (c_power_m2<1-beta){
+          }else if (isTRUE(c_power_m2<1-beta)){
 
             t_new_0=masd_new_info_time_com(theta=theta_hat_inter_m2,s=s,c_alpha=c_alpha_m1,theta_hat_inter_m2=theta_hat_inter_m2,
                                            theta_hat_inter_m2_sd=theta_hat_inter_m2_sd,beta=beta,dist=1)
 
-            if (as.numeric(t_new_0[2])<=1){
+            ## default when the re-estimation is not evaluable
+            N_new_t=samsz
+            if (isTRUE(as.numeric(t_new_0[2])<=1)){
               N_new_t=samsz
-            }else if (as.numeric(t_new_0[2])>1){
+            }else if (isTRUE(as.numeric(t_new_0[2])>1)){
               T_new_0=as.numeric(t_new_0[[1]])
 
               N_new_t_0=max(ceiling(n_control_inter*(T_new_0/T_inter)))
@@ -1343,9 +1401,9 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
               N_new_t= min(N_new_t_1,N_max)
             }
 
-            if(N_new_t==samsz){
+            if(isTRUE(N_new_t==samsz)){
 
-              if (test_max[length(s)]>0){
+              if (isTRUE(test_max[length(s)]>0)){
                 rej=1
                 stg=length(s)
               } else {
@@ -1356,7 +1414,7 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
               samsz_simu_control=N[last_vt]
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)
 
-            }else  if(N_new_t>samsz){
+            }else  if(isTRUE(N_new_t>samsz)){
 
               ####################################################################################
               ###  Step 4.2.1.3.1: Generate new random samples according to the new sample size ##
@@ -1365,7 +1423,7 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
               x0_new=x0[1:N_new_t]
               x_new=x[c(mu_keep),1:N_new_t]
 
-              if (length(mu_keep)==1){
+              if (isTRUE(length(mu_keep)==1)){
 
                 if (direction==1){
                   theta_hat_m2_new=mean(x_new)-mean(x0_new)
@@ -1381,7 +1439,7 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
 
                 wald_max_m2_new=max(wald_m2_new)
 
-              }else if (length(mu_keep)>1){
+              }else if (isTRUE(length(mu_keep)>1)){
                 t_hat_m2_new=NULL
                 theta_hat_m2_new=NULL
                 theta_hat_m2_sd_new=NULL
@@ -1403,13 +1461,17 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
                   }
 
                 }else if (direction==2){
-
+                  ## BUGFIX: the original code lost its 'for' loop in this branch,
+                  ## so 'i' leaked from an earlier loop and could exceed nrow(x_new),
+                  ## aborting the replicate with 'subscript out of bounds'.
+                  for (i in 1:length(mu_keep)){
                   theta_hat_m2_new[i]=mean(x0_new)-mean(x_new[i,])
                   var_hat_m2_new[i]=stats::var(x_new[i,])+stats::var(x0_new)
                   t_hat_m2_new[i]=N_new_t/var_hat_m2_new[i]
                   theta_hat_m2_sd_new[i]=1/sqrt(t_hat_m2_new[i])
 
                   wald_m2_new[i]=theta_hat_m2_new[i]*sqrt(t_hat_m2_new[i])
+                  }
 
                 }
 
@@ -1440,7 +1502,7 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
               samsz_simu_control=N_new_t
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N_new_t-N[length(s)-1])*(length(mu_keep)+1)
 
-              if ( max(test_new)>0){
+              if (isTRUE(max(test_new)>0)){
 
                 rej=1
 
@@ -1467,9 +1529,9 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
 
       }
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
       out=c(rej_nossr,rej,stg,samsz_simu_control,samsz_simu_tot,futi,arm_drop,arm_rej)
@@ -1509,7 +1571,7 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -1534,7 +1596,7 @@ masd_rej_OC_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -1600,9 +1662,9 @@ masd_OC_power_simu_adapt_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,
   simu_out=masd_rej_OC_simu_adapt_com_normal(mu_t=mu_t,mu_c=mu_c,sigma_t=sigma_t,sigma_c=sigma_c,direction=direction,
                                           s=s,c_bry=c_bry,theta_cut=theta_cut,beta=beta,samsz=samsz,N_max=N_max,sim_num=sim_num,dist=1)
 
-  mu_t_names=paste(paste("mu_t","[",c(1:length(mu_t)),"]",sep=""))
+  mu_t_names=paste(paste(LABEL()$mu_t,"[",c(1:length(mu_t)),"]",sep=""))
   out_1= round(c(mu_t,mu_c,as.numeric(simu_out)),4)
-  names(out_1)=c(mu_t_names,"mu_c", names(simu_out))
+  names(out_1)=c(mu_t_names,LABEL()$mu_c, names(simu_out))
   # out=data.frame(out_1)
   out=out_1
   return(out)
@@ -1624,39 +1686,47 @@ masd_OC_power_simu_adapt_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,
 ###################
 #' Multiple comparisons Group sequential design: Simulations, Normal distribution, Optimizing adaptive sequential design
 #'
-#' @param groups Vector of group labels used in the simulation
+#' @param groups Matrix of true means of the test arms: each row is one simulation scenario and each column one test arm/dose
 #' @param mu_c Mean of the control arm
-#' @param sigma_t Standard deviation of the test arm
-#' @param sigma_c Standard deviation of the control arm
-#' @param direction Test direction: 1 = larger mu is better, 0 = smaller mu is better
-#' @param s1 Information fractions for the first stage / first group
-#' @param s2 Information fractions for the second stage / second group
-#' @param alpha_2 Type I error for the two-sided test
-#' @param alpha_2_alps_s1 Type I error spent up to the interim analysis (stage 1 / group 1)
-#' @param alpha_2_alps_s2 Cumulative type I error spent at the final analysis (stage 2 / group 2)
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param samsz_1 Planned sample size (control arm) of the first stage / group
-#' @param samsz_2 Planned sample size (control arm) of the second stage / group
-#' @param N_max_1 Maximum allowed sample size (control arm) of the first stage / group
-#' @param N_max_2 Maximum allowed sample size (control arm) of the second stage / group
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param sigma_t Standard deviation of the test arm; must be > 0
+#' @param sigma_c Standard deviation of the control arm; must be > 0
+#' @param direction Test direction: 1 = larger mu is better, otherwise smaller mu is better
+#' @param s1 Vector of information fractions of the first interim analysis schedule, e.g. c(1/3, 2/3, 1); the last element must be 1
+#' @param s2 Vector of information fractions of the second interim analysis schedule, e.g. c(0.5, 1); the last element must be 1
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param alpha_2_alps_s1 Two-sided type I error levels spent at each look of the schedule s1; must sum to alpha_2
+#' @param alpha_2_alps_s2 Two-sided type I error levels spent at each look of the schedule s2; must sum to alpha_2
+#' @param theta_cut Lack-of-efficacy threshold on the effect-size scale: a test arm is
+#'   dropped at the interim analysis when its observed effect size is below this value
+#' @param samsz_1 Sample size of the control arm used in the simulation for the first sample size scenario; must be > 0
+#' @param samsz_2 Sample size of the control arm used in the simulation for the second sample size scenario; must be > 0
+#' @param N_max_1 Maximum sample size for the control arm allowed by the sample size re-estimation in the first N_max scenario; must be >= samsz_1
+#' @param N_max_2 Maximum sample size for the control arm allowed by the sample size re-estimation in the second N_max scenario; must be >= samsz_2
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the
+#'   sample size re-estimation; 0 < beta < 1
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{List holding the O'Brien-Fleming group sequential design for the schedule s1 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{List holding the O'Brien-Fleming group sequential design for the schedule s2 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s1}{List holding the alpha-spending group sequential design for the schedule s1 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s2}{List holding the alpha-spending group sequential design for the schedule s2 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
 #' \donttest{
-#' masd_simu_OC_normal(
-#' groups = rbind(c(0.3,0.4,0.5),c(0.1,0.2,0.3),c(0.3,0.4,0.5),c(0.1,0.2,0.3)),
-#' mu_c = 0, sigma_t = 1, sigma_c = 1, direction = 1, s1 = c(1/3,2/3,1), s2 = c(0.5,1),
+#' set.seed(1)
+#' masd_simu_OC_normal(groups = rbind(c(0.3,0.4,0.5),c(0.1,0.2,0.3),c(0.3,0.4,0.5),c(0.1,0.2,0.3)),
+#' mu_c = 0.15, sigma_t = 1, sigma_c = 1, direction = 1, s1 = c(1/3,2/3,1), s2 = c(0.5,1),
 #' alpha_2 = 0.05, alpha_2_alps_s1 = c(0.001,0.001,0.048), alpha_2_alps_s2 = c(0.001,0.049),
-#' theta_cut = 0.01, samsz_1 = 100, samsz_2 = 150, N_max_1 = 200, N_max_2 = 300,
-#' beta = 0.1, sim_num = 2)
+#' theta_cut = 0.01, samsz_1 = 50, samsz_2 = 75, N_max_1 = 1000, N_max_2 = 1500, beta = 0.1,
+#' sim_num = 2)
 #' }
 #'
 #' @export
@@ -1698,7 +1768,7 @@ masd_simu_OC_normal<-function(groups,mu_c,sigma_t,sigma_c,direction,s1,s2,alpha_
   mu_t_vec = groups
   rownames( mu_t_vec)=NULL
 
-  u_t_group_names=paste(paste("mu_t group",c(1:dim(mu_t_vec)[1]),sep=" "))
+  u_t_group_names=paste(paste(LABEL()$mu_t_group,c(1:dim(mu_t_vec)[1]),sep=" "))
   #########################################
   #### OC simulations for OF boundaries ###
   #########################################
@@ -1984,6 +2054,13 @@ msd_rej_rate_survival<-function(HR,lambda,s,c_bry,evt_num,samp_multip,surv_rate,
   ####  begining of the simulation loops  ####
   ############################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej=0; stg=0; evt_num_simu_2arm=evt_num_s[length(s)]
+    evt_num_simu_tot=(evt_num_s[length(s)]/2)*(comp+1); arm_rej=rep(0,comp)
 
       #########################################################
       ### Step 1: Generate random samples fro phae 2 stage ####
@@ -2042,10 +2119,15 @@ msd_rej_rate_survival<-function(HR,lambda,s,c_bry,evt_num,samp_multip,surv_rate,
       t=matrix(rep(0,(length(s)+1)*comp),nrow=comp,ncol=(length(s)+1))
       ##### Obtaningin parameters and store in the matrices ##############
 
+      evt_short=0  ## set when a required number of events is unreachable
       for (i in (1:length(s))) {
 
         evt_pos=evt_count[evt_count>evt_num_s[i]]#substring of  evt_count that are larger than evt_num
-        evt_cut=match(evt_pos[1],evt_count) #the first incidence that evt_count is larger than evt_num
+        ## the required number of events may be unreachable within the available
+        ## follow-up: clamp the index, and blank the statistics below so the
+        ## replicate is reported as non-evaluable instead of using an NA index
+        evt_short=isTRUE(evt_short) || is.na(match(evt_pos[1],evt_count))
+        evt_cut=if (isTRUE(evt_short)) length(evt_count) else match(evt_pos[1],evt_count) #the first incidence that evt_count is larger than evt_num
 
         for (j in (1:comp)) {
           #  vector of zeros, length of the vector is the same as the original smaple size
@@ -2056,15 +2138,23 @@ msd_rej_rate_survival<-function(HR,lambda,s,c_bry,evt_num,samp_multip,surv_rate,
 
 
           test= list(time=time,status=event,grp)#survival data
-          coxcf=summary(coxph(Surv(time,status)~grp,test)) #run the coxph function and get the estimates
+          coxcf=tryCatch(summary(coxph(Surv(time,status)~grp,test)), error=function(e) NULL)  ## a failed fit is reported as NA
           # ~grp means that coxph compares the HR of levels in grp (x vs. x0)
           # test is the same as data=test
-          theta_hat[j,i]= coxcf$coefficients[1] #estimated log(HR)
-          theta_hat_sd[j,i]= coxcf$coefficients[3] #estimated standard error of log(HR)
+          theta_hat[j,i]=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[1]
+          theta_hat_sd[j,i]=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[3]
           t[j,i]=(theta_hat_sd[j,i])^(-2)
           wald[j,i]=theta_hat[j,i]/ theta_hat_sd[j,i]
           score[j,i]= theta_hat[j,i]*t[j,i]
         }
+      }
+
+      ## the number of events required at a look was not reached within the
+      ## available follow-up: the statistics of this replicate are not
+      ## evaluable and it falls back to the non-evaluable defaults above
+      if (isTRUE(evt_short)) {
+        theta_hat[]=NA_real_; theta_hat_sd[]=NA_real_; t[]=NA_real_
+        wald[]=NA_real_; score[]=NA_real_
       }
 
       wald_max=rep(0,(length(s)))
@@ -2083,9 +2173,9 @@ msd_rej_rate_survival<-function(HR,lambda,s,c_bry,evt_num,samp_multip,surv_rate,
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -2097,7 +2187,7 @@ msd_rej_rate_survival<-function(HR,lambda,s,c_bry,evt_num,samp_multip,surv_rate,
 
       #any value of test>0 indicates that the wald statistics crossed the critical boundaries
 
-      if ( max(test_max)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max)>=0)){ ##null hypothesis rejected, no more random sampling
 
         rej=1
         test_max_t=test_max[test_max>0]
@@ -2107,7 +2197,7 @@ msd_rej_rate_survival<-function(HR,lambda,s,c_bry,evt_num,samp_multip,surv_rate,
 
         evt_num_simu_2arm=evt_num_s[last_vt]
         evt_num_simu_tot= (evt_num_simu_2arm/2)*(comp+1)
-      }else if (max(test_max)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max)<0)) {   #beginnin of step 4
             rej=0
             stg=0
           last_vt=length(s)
@@ -2120,9 +2210,9 @@ msd_rej_rate_survival<-function(HR,lambda,s,c_bry,evt_num,samp_multip,surv_rate,
           ###          and re-estiate sample size                               ##
           ########################################################################
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
 
@@ -2166,7 +2256,7 @@ msd_rej_rate_survival<-function(HR,lambda,s,c_bry,evt_num,samp_multip,surv_rate,
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -2191,7 +2281,7 @@ msd_rej_rate_survival<-function(HR,lambda,s,c_bry,evt_num,samp_multip,surv_rate,
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -2234,26 +2324,31 @@ msd_rej_rate_survival<-function(HR,lambda,s,c_bry,evt_num,samp_multip,surv_rate,
 ################################################
 #' Multiple comparisons Group sequential design: Simulations, Survival analysis, Type I error and power
 #'
-#' @param HR Hazard ratio (test vs control)
+#' @param HR Vector of hazard ratios of each test arm vs. the control arm; HR < 1 favours the test arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param surv_rate Survival rate used to translate the number of events into a sample size
-#' @param evt_num Total number of events at the final analysis
+#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = alpha-spending
+#' @param alpha_2 Type I error for the two-sided test; when bry_type = 2 this is instead the
+#'   vector of two-sided type I error levels spent at each look, which must sum to the total
+#'   two-sided type I error
+#' @param surv_rate Survival rate at the end of follow-up; 0 < surv_rate < 1
+#' @param evt_num Planned number of events between one test arm and the control arm by the final analysis; must be > 0
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A named list containing the following elements: 'simulation summary', 'planned control', 'planned total'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Design}{Matrix with one row per look giving the look number, the information fraction, the critical boundary and the rejection rate by look}
+#'   \item{Summary by arm}{Matrix with one row per test arm giving the hazard ratio and the rejection rate by arm}
+#'   \item{simulation results}{Named numeric vector holding the rejection rate, the simulated type I error rate, the non-type I error rejection rate, the planned two-arm and total event numbers and the mean simulated two-arm and total event numbers}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
-#' \donttest{
 #' msd_power_simu_survival(HR = c(0.8,0.8), s = c(1/3,2/3,1), bry_type = 1, alpha_2 = 0.05,
 #' surv_rate = 0.5, evt_num = 800, sim_num = 20)
-#' }
 #'
 #' @export
 msd_power_simu_survival<-function(HR,s,bry_type,alpha_2,surv_rate,evt_num,sim_num){
@@ -2314,6 +2409,14 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej_nossr=0; rej=0; stg=0
+    evt_num_simu_2arm=evt_num_s[length(s)]; evt_num_simu_tot=(evt_num_s[length(s)]/2)*(comp+1); futi=0
+    arm_drop=rep(0,comp); arm_rej=rep(0,comp)
       #the loop specifies what is generated for each simulation
       #########################################################
       ### Step 1: Generate random samples fro phae 2 stage ####
@@ -2380,10 +2483,15 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
       t_m1=matrix(rep(0,(length(s)+1)*comp),nrow=comp,ncol=(length(s)+1))
       ##### Obtaningin parameters and store in the matrices ##############
 
+      evt_short=0  ## set when a required number of events is unreachable
       for (i in (1:(length(s)+1))) {
 
         evt_pos=evt_count_m1[evt_count_m1>evt_num_m1_s[i]]#substring of  evt_count that are larger than evt_num
-        evt_cut_m1=match(evt_pos[1],evt_count_m1) #the first incidence that evt_count is larger than evt_num
+        ## the required number of events may be unreachable within the available
+        ## follow-up: clamp the index, and blank the statistics below so the
+        ## replicate is reported as non-evaluable instead of using an NA index
+        evt_short=isTRUE(evt_short) || is.na(match(evt_pos[1],evt_count_m1))
+        evt_cut_m1=if (isTRUE(evt_short)) length(evt_count_m1) else match(evt_pos[1],evt_count_m1) #the first incidence that evt_count is larger than evt_num
 
         for (j in (1:comp)) {
           #  vector of zeros, length of the vector is the same as the original smaple size
@@ -2394,15 +2502,23 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
 
 
           test= list(time=time,status=event,grp)#survival data
-          coxcf=summary(coxph(Surv(time,status)~grp,test)) #run the coxph function and get the estimates
+          coxcf=tryCatch(summary(coxph(Surv(time,status)~grp,test)), error=function(e) NULL)  ## a failed fit is reported as NA
           # ~grp means that coxph compares the HR of levels in grp (x vs. x0)
           # test is the same as data=test
-          theta_hat_m1[j,i]= coxcf$coefficients[1] #estimated log(HR)
-          theta_hat_m1_sd[j,i]= coxcf$coefficients[3] #estimated standard error of log(HR)
+          theta_hat_m1[j,i]=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[1]
+          theta_hat_m1_sd[j,i]=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[3]
           t_m1[j,i]=(theta_hat_m1_sd[j,i])^(-2)
           wald_m1[j,i]=theta_hat_m1[j,i]/ theta_hat_m1_sd[j,i]
           score_m1[j,i]= theta_hat_m1[j,i]*t_m1[j,i]
         }
+      }
+
+      ## the number of events required at a look was not reached within the
+      ## available follow-up: the statistics of this replicate are not
+      ## evaluable and it falls back to the non-evaluable defaults above
+      if (isTRUE(evt_short)) {
+        theta_hat_m1[]=NA_real_; theta_hat_m1_sd[]=NA_real_; t_m1[]=NA_real_
+        wald_m1[]=NA_real_; score_m1[]=NA_real_
       }
 
       T_hat=t_m1[,length(s)]
@@ -2416,7 +2532,7 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
       theta_hat_inter_m1_sd=theta_hat_m1_sd[,inter_vt]
       arm_drop=rep(0,length(HR))
       for (i in 1:comp){
-        if ( theta_hat_inter_m1[i]<theta_cut){
+        if (isTRUE(theta_hat_inter_m1[i]<theta_cut)){
           arm_drop[i]=1
         }else{
           arm_drop[i]=0
@@ -2434,9 +2550,9 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -2445,18 +2561,18 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
       test_max=wald_max_m1-c_bry
       test_max_1=test_max[1:length(s)-1]
 
-      if (max( theta_hat_inter_m1)<theta_cut) {futi=1}else {futi=0}
+      if (isTRUE(max( theta_hat_inter_m1)<theta_cut)) {futi=1}else {futi=0}
 
       ####################################
 
       #any value of test>0 indicates that the wald statistics crossed the critical boundaries
-      if ( max(test_max)>=0){
+      if (isTRUE(max(test_max)>=0)){
         rej_nossr=1
-      }else if ( max(test_max)<0){
+      }else if (isTRUE(max(test_max)<0)){
         rej_nossr=0
       }
 
-      if ( max(test_max_1)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max_1)>=0)){ ##null hypothesis rejected, no more random sampling
         futi=0
         rej=1
         #If max(test)>0, te nulll hypothesis is rejected
@@ -2466,7 +2582,7 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
         last_vt=stg
         evt_num_simu_2arm=evt_num_s[last_vt]
         evt_num_simu_tot= (evt_num_simu_2arm/2)*(comp+1)
-      }else if (max(test_max_1)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max_1)<0)) {   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -2477,7 +2593,7 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
         ###     Continue to planned sampe size and stop trial                                      ##
         #############################################################################################
         if (futi==1) { # If TRUE, thiere is not satisfactory efficacy, stop trial at planned sample size
-          if (test_max[length(s)]>0){
+          if (isTRUE(test_max[length(s)]>0)){
             rej=1
             stg=length(s)
           } else {
@@ -2513,24 +2629,24 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
 
           c_power_m2=masd_c_power_com(s=s,c_bry=c_bry,theta=theta_hat_inter_m2,theta_hat_inter_m1=theta_hat_inter_m2,theta_hat_inter_m1_sd=theta_hat_inter_m2_sd,dist=2)
           c_alpha_m1=masd_c_power_com(s=s,c_bry=c_bry,theta=rep(0,length(theta_hat_inter_m1)),theta_hat_inter_m1=theta_hat_inter_m1,theta_hat_inter_m1_sd=theta_hat_inter_m1_sd,dist=2)
-          if (c_power_m2>= 1-beta){
+          if (isTRUE(c_power_m2>= 1-beta)){
             #########################################
             ### Proceed to planned sample size  #####
             ### and conduct final testing       #####
             #########################################
             last_vt=length(s)
             wald_m2=wald_m1[mu_keep,]
-            if (length(mu_keep)==1){
+            if (isTRUE(length(mu_keep)==1)){
               wald_m2_last=wald_m2[last_vt]
               wald_max_m2=wald_m2_last
-            }else if (length(mu_keep)>1){
+            }else if (isTRUE(length(mu_keep)>1)){
               wald_m2_last=wald_m2[,last_vt]
               wald_max_m2=max(wald_m2_last)
             }
 
             test_m2=wald_max_m2-c_bry[length(s)]
             arm_test_m2=wald_m2_last-c_bry[length(s)]
-            if (test_m2>0) {
+            if (isTRUE(test_m2>0)) {
               rej=1
               stg=length(s)
               last_vt=stg
@@ -2541,14 +2657,16 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
             }
             evt_num_simu_2arm=evt_num_s[last_vt]
             evt_num_simu_tot=(evt_num_s[length(s)-1]/2)*(comp+1)+((evt_num_s[last_vt]-evt_num_s[length(s)-1])/2)*(length(mu_keep)+1)
-          }else if (c_power_m2<1-beta){
+          }else if (isTRUE(c_power_m2<1-beta)){
 
             t_new_0=masd_new_info_time_com(theta=theta_hat_inter_m2,s=s,c_alpha=c_alpha_m1,theta_hat_inter_m2=theta_hat_inter_m2,
                                            theta_hat_inter_m2_sd=theta_hat_inter_m2_sd,beta=beta,dist=1)
 
-            if (as.numeric(t_new_0[2])<=1){
+            ## default when the re-estimation is not evaluable
+            new_sampsz=evt_num
+            if (isTRUE(as.numeric(t_new_0[2])<=1)){
               new_sampsz=evt_num
-            }else if (as.numeric(t_new_0[2])>1){
+            }else if (isTRUE(as.numeric(t_new_0[2])>1)){
               T_new_0=as.numeric(t_new_0[[1]])
 
               event_inter=evt_num_s[length(s)-1]
@@ -2557,9 +2675,9 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
               new_sampsz=min(max(new_sampsz_0,evt_num),evt_max)
             }
 
-            if( new_sampsz==evt_num){
+            if (isTRUE(new_sampsz==evt_num)){
 
-              if (test_max[length(s)]>0){
+              if (isTRUE(test_max[length(s)]>0)){
                 rej=1
                 stg=length(s)
               } else {
@@ -2570,7 +2688,7 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
               evt_num_simu_2arm=evt_num_s[last_vt]
               evt_num_simu_tot=(evt_num_s[length(s)-1]/2)*(comp+1)+((evt_num_s[last_vt]-evt_num_s[length(s)-1])/2)*(length(mu_keep)+1)
 
-            }else  if( new_sampsz>evt_num){
+            }else if (isTRUE(new_sampsz>evt_num)){
 
               theta_m2=theta_hat_inter_m1[mu_keep]
               theta_hat_inter_m2=theta_hat_inter_m1[mu_keep]
@@ -2608,7 +2726,7 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
               #   }
               # }
 
-              if (length(mu_keep)==1){
+              if (isTRUE(length(mu_keep)==1)){
                 total_evt_count_m2 = 0
                 for (i in 1:sampsz){
                   total_evt_count_m2 = total_evt_count_m2 + x0_status[i]+x_status_m2[i]
@@ -2631,23 +2749,27 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
 
               new_evt_m2=(new_sampsz/2)*(length(mu_keep)+1)
               evt_pos=evt_count_m2[evt_count_m2>new_sampsz]#substring of  evt_count that are larger than evt_num
-              evt_cut_m2=match(evt_pos[1],evt_count_m2) #the first incidence that evt_count is larger than evt_num
+              ## the required number of events may be unreachable within the available
+              ## follow-up: clamp the index, and blank the statistics below so the
+              ## replicate is reported as non-evaluable instead of using an NA index
+              evt_short=is.na(match(evt_pos[1],evt_count_m2))
+              evt_cut_m2=if (isTRUE(evt_short)) length(evt_count_m2) else match(evt_pos[1],evt_count_m2) #the first incidence that evt_count is larger than evt_num
 
-              if (length(mu_keep)==1){
+              if (isTRUE(length(mu_keep)==1)){
                 time=c(time_x0[1:evt_cut_m2],time_x_m2[1:evt_cut_m2]) #combined samples before total number of events exceed evt_num
                 event=c(x0_status[1:evt_cut_m2],x_status_m2[1:evt_cut_m2]) #censoring status before total number of events exceed evt_num
                 grp=c(grp_x0[1:evt_cut_m2],grp_x_m2[1:evt_cut_m2]) #vector of zero, with length=2*evt_cut
 
                 test= list(time=time,status=event,grp)#survival data
-                coxcf=summary(coxph(Surv(time,status)~grp,test)) #run the coxph function and get the estimates
+                coxcf=tryCatch(summary(coxph(Surv(time,status)~grp,test)), error=function(e) NULL)  ## a failed fit is reported as NA
                 # ~grp means that coxph compares the HR of levels in grp (x vs. x0)
                 # test is the same as data=test
-                theta_hat_m2_last= coxcf$coefficients[1] #estimated log(HR)
-                theta_hat_m2_last_sd= coxcf$coefficients[3] #estimated standard error of log(HR)
+                theta_hat_m2_last=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[1]
+                theta_hat_m2_last_sd=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[3]
                 t_m2_last=(theta_hat_m2_last_sd)^(-2)
                 wald_m2_last=theta_hat_m2_last/theta_hat_m2_last_sd
                 score_m2_last= theta_hat_m2_last* t_m2_last
-              }else if (length(mu_keep)>1){
+              }else if (isTRUE(length(mu_keep)>1)){
 
                 for (j in (1:length(mu_keep))) {
                   #  vector of zeros, length of the vector is the same as the original smaple size
@@ -2656,15 +2778,23 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
                   grp=c(grp_x0[1:evt_cut_m2],grp_x_m2[j,1:evt_cut_m2]) #vector of zero, with length=2*evt_cut
 
                   test= list(time=time,status=event,grp)#survival data
-                  coxcf=summary(coxph(Surv(time,status)~grp,test)) #run the coxph function and get the estimates
+                  coxcf=tryCatch(summary(coxph(Surv(time,status)~grp,test)), error=function(e) NULL)  ## a failed fit is reported as NA
                   # ~grp means that coxph compares the HR of levels in grp (x vs. x0)
                   # test is the same as data=test
-                  theta_hat_m2_last[j]= coxcf$coefficients[1] #estimated log(HR)
-                  theta_hat_m2_last_sd[j]= coxcf$coefficients[3] #estimated standard error of log(HR)
+                  theta_hat_m2_last[j]=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[1]
+                  theta_hat_m2_last_sd[j]=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[3]
                   t_m2_last[j]=(theta_hat_m2_last_sd[j])^(-2)
                   wald_m2_last[j]=theta_hat_m2_last[j]/theta_hat_m2_last_sd[j]
                   score_m2_last[j]= theta_hat_m2_last[j]* t_m2_last[j]
                 }
+              }
+
+              ## the number of events required after the sample size increase
+              ## was not reached: the statistics after re-estimation are not
+              ## evaluable and the replicate falls back to its defaults
+              if (isTRUE(evt_short)) {
+                theta_hat_m2_last[]=NA_real_; theta_hat_m2_last_sd[]=NA_real_
+                t_m2_last[]=NA_real_; wald_m2_last[]=NA_real_; score_m2_last[]=NA_real_
               }
 
               T_new=t_m2_last
@@ -2696,10 +2826,10 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
               # evt_num_simu_tot= (evt_num_simu_2arm/2)*(comp+1)
               evt_num_simu_tot=(evt_num_s[length(s)-1]/2)*(comp+1)+((new_sampsz-evt_num_s[length(s)-1])/2)*(length(mu_keep)+1)
               #  if ( max(test_max_new)>0){
-              if ( max(test_new)>=0){
+              if (isTRUE(max(test_new)>=0)){
                 rej=1
                 stg=length(s)
-              }else if ( max(test_new)<0){
+              }else if (isTRUE(max(test_new)<0)){
                 #################################################################################
                 ## Fail to reject the Null hypothesis if the critical boundary is not crossed  ###
                 #################################################################################
@@ -2709,7 +2839,7 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
 
               arm_rej_new=NULL
               for (i in 1:length(mu_keep)){
-                if (test_new[i]>=0){
+                if (isTRUE(test_new[i]>=0)){
                   arm_rej_new[i]=1
                 }else {
                   arm_rej_new[i]=0
@@ -2723,9 +2853,9 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
         }
       }
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
 
@@ -2781,7 +2911,7 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
 
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
         arm_pos_rej[j,i]=1
       }else {
         arm_pos_rej[j,i]=0
@@ -2803,7 +2933,7 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -2873,29 +3003,39 @@ masd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,HR_
 ################################################
 #' Multiple comparisons Group sequential design: Simulations, Survival analysis, Operating characteristics
 #'
-#' @param HR Hazard ratio (test vs control)
+#' @param HR Vector of hazard ratios of each test arm vs. the control arm; HR < 1 favours the test arm; must be > 0
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param surv_rate Survival rate used to translate the number of events into a sample size
-#' @param HR_cut Hazard-ratio cut-off for early stopping at the interim analysis
-#' @param evt_num Total number of events at the final analysis
-#' @param evt_max Maximum number of events
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = alpha-spending
+#' @param alpha_2 Type I error for the two-sided test; when bry_type = 2 this is instead the
+#'   vector of two-sided type I error levels spent at each look, which must sum to the total
+#'   two-sided type I error
+#' @param surv_rate Survival rate at the end of follow-up; 0 < surv_rate < 1
+#' @param HR_cut Hazard-ratio cut-off for the lack-of-efficacy rule at the interim analysis:
+#'   a test arm is dropped when its observed hazard ratio is greater than HR_cut
+#' @param evt_num Planned number of events between one test arm and the control arm by the final analysis; must be > 0
+#' @param evt_max Maximum number of events between one test arm and the control arm allowed by the sample size re-estimation; must be >= evt_num
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the
+#'   sample size re-estimation; 0 < beta < 1
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A matrix in which each row corresponds to one simulation replicate and the columns hold the simulated operating characteristics
-#' (e.g. rejection indicators, sample sizes and stopping stages).
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Design}{Matrix with one row per look giving the look number, the information fraction, the critical boundary, the rejection rate by look and the rate of sample size increase}
+#'   \item{Summary by arm}{Matrix with one row per test arm giving the hazard ratio, the drop rate by arm and the rejection rate by arm}
+#'   \item{simulation results}{Named numeric vector holding the rejection rate without and with sample size re-estimation, the rate of sample size increase, the rejection rates conditional on meeting the sample size increase criteria, the simulated type I error rate, the non-type I error rejection rate, the futility rate, the planned and maximum two-arm event numbers and the mean simulated two-arm event numbers with and without conditioning on an increase}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
 #' \donttest{
-#' masd_power_simu_adapt_survival(HR = c(0.8,0.8), s = c(1/3,2/3,1), bry_type = 1, alpha_2 = 0.05,
-#' surv_rate = 0.5, HR_cut = 0.95, evt_num = 800, evt_max = 1200, beta = 0.1, sim_num = 2)
+#' set.seed(1)
+#' masd_power_simu_adapt_survival(HR = c(0.63, 0.65, 0.7), s = c(1/3,2/3,1), bry_type = 1,
+#' alpha_2 = 0.05, surv_rate = 0.5, HR_cut = 0.95, evt_num = 200, evt_max = 500, beta = 0.1,
+#' sim_num = 2)
 #' }
 #'
 #' @export
@@ -2962,6 +3102,14 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej_nossr=0; rej=0; stg=0
+    evt_num_simu_2arm=evt_num_s[length(s)]; evt_num_simu_tot=(evt_num_s[length(s)]/2)*(comp+1); futi=0
+    arm_drop=rep(0,comp); arm_rej=rep(0,comp)
       #the loop specifies what is generated for each simulation
 
       #########################################################
@@ -3030,10 +3178,15 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
       t_m1=matrix(rep(0,(length(s)+1)*comp),nrow=comp,ncol=(length(s)+1))
       ##### Obtaningin parameters and store in the matrices ##############
 
+      evt_short=0  ## set when a required number of events is unreachable
       for (i in (1:(length(s)+1))) {
 
         evt_pos=evt_count_m1[evt_count_m1>evt_num_m1_s[i]]#substring of  evt_count that are larger than evt_num
-        evt_cut_m1=match(evt_pos[1],evt_count_m1) #the first incidence that evt_count is larger than evt_num
+        ## the required number of events may be unreachable within the available
+        ## follow-up: clamp the index, and blank the statistics below so the
+        ## replicate is reported as non-evaluable instead of using an NA index
+        evt_short=isTRUE(evt_short) || is.na(match(evt_pos[1],evt_count_m1))
+        evt_cut_m1=if (isTRUE(evt_short)) length(evt_count_m1) else match(evt_pos[1],evt_count_m1) #the first incidence that evt_count is larger than evt_num
 
         for (j in (1:comp)) {
           #  vector of zeros, length of the vector is the same as the original smaple size
@@ -3044,15 +3197,23 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
 
 
           test= list(time=time,status=event,grp)#survival data
-          coxcf=summary(coxph(Surv(time,status)~grp,test)) #run the coxph function and get the estimates
+          coxcf=tryCatch(summary(coxph(Surv(time,status)~grp,test)), error=function(e) NULL)  ## a failed fit is reported as NA
           # ~grp means that coxph compares the HR of levels in grp (x vs. x0)
           # test is the same as data=test
-          theta_hat_m1[j,i]= coxcf$coefficients[1] #estimated log(HR)
-          theta_hat_m1_sd[j,i]= coxcf$coefficients[3] #estimated standard error of log(HR)
+          theta_hat_m1[j,i]=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[1]
+          theta_hat_m1_sd[j,i]=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[3]
           t_m1[j,i]=(theta_hat_m1_sd[j,i])^(-2)
           wald_m1[j,i]=theta_hat_m1[j,i]/ theta_hat_m1_sd[j,i]
           score_m1[j,i]= theta_hat_m1[j,i]*t_m1[j,i]
         }
+      }
+
+      ## the number of events required at a look was not reached within the
+      ## available follow-up: the statistics of this replicate are not
+      ## evaluable and it falls back to the non-evaluable defaults above
+      if (isTRUE(evt_short)) {
+        theta_hat_m1[]=NA_real_; theta_hat_m1_sd[]=NA_real_; t_m1[]=NA_real_
+        wald_m1[]=NA_real_; score_m1[]=NA_real_
       }
 
       T_hat=t_m1[,length(s)]
@@ -3069,7 +3230,7 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
 
       arm_drop=rep(0,length(HR))
       for (i in 1:comp){
-        if ( theta_hat_inter_m1[i]<theta_cut){
+        if (isTRUE(theta_hat_inter_m1[i]<theta_cut)){
           arm_drop[i]=1
         }else{
           arm_drop[i]=0
@@ -3087,9 +3248,9 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -3098,18 +3259,18 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
       test_max=wald_max_m1-c_bry
       test_max_1=test_max[1:length(s)-1]
 
-      if (max( theta_hat_inter_m1)<theta_cut) {futi=1}else {futi=0}
+      if (isTRUE(max( theta_hat_inter_m1)<theta_cut)) {futi=1}else {futi=0}
 
       ####################################
 
       #any value of test>0 indicates that the wald statistics crossed the critical boundaries
-      if ( max(test_max)>=0){
+      if (isTRUE(max(test_max)>=0)){
         rej_nossr=1
-      }else if ( max(test_max)<0){
+      }else if (isTRUE(max(test_max)<0)){
         rej_nossr=0
       }
 
-      if ( max(test_max_1)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max_1)>=0)){ ##null hypothesis rejected, no more random sampling
 
         futi=0
         rej=1
@@ -3122,7 +3283,7 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
         evt_num_simu_2arm=evt_num_s[last_vt]
         evt_num_simu_tot= (evt_num_simu_2arm/2)*(comp+1)
 
-      }else if (max(test_max_1)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max_1)<0)) {   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -3136,7 +3297,7 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
 
         if (futi==1) { # If TRUE, thiere is not satisfactory efficacy, stop trial at planned sample size
 
-          if (test_max[length(s)]>0){
+          if (isTRUE(test_max[length(s)]>0)){
             rej=1
             stg=length(s)
           } else {
@@ -3180,7 +3341,7 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
 
           c_power_m2=masd_c_power_com(s=s,c_bry=c_bry,theta=theta_hat_inter_m2,theta_hat_inter_m1=theta_hat_inter_m2,theta_hat_inter_m1_sd=theta_hat_inter_m2_sd,dist=2)
           c_alpha_m1=masd_c_power_com(s=s,c_bry=c_bry,theta=rep(0,length(theta_hat_inter_m1)),theta_hat_inter_m1=theta_hat_inter_m1,theta_hat_inter_m1_sd=theta_hat_inter_m1_sd,dist=2)
-          if (c_power_m2>= 1-beta){
+          if (isTRUE(c_power_m2>= 1-beta)){
 
             #########################################
             ### Proceed to planned sample size  #####
@@ -3191,18 +3352,18 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
 
             wald_m2=wald_m1[mu_keep,]
 
-            if (length(mu_keep)==1){
+            if (isTRUE(length(mu_keep)==1)){
               wald_m2_last=wald_m2[last_vt]
               wald_max_m2=wald_m2_last
 
-            }else if (length(mu_keep)>1){
+            }else if (isTRUE(length(mu_keep)>1)){
               wald_m2_last=wald_m2[,last_vt]
               wald_max_m2=max(wald_m2_last)
             }
 
             test_m2=wald_max_m2-c_bry[length(s)]
             arm_test_m2=wald_m2_last-c_bry[length(s)]
-            if (test_m2>0) {
+            if (isTRUE(test_m2>0)) {
               rej=1
               stg=length(s)
               last_vt=stg
@@ -3215,14 +3376,16 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
             evt_num_simu_2arm=evt_num_s[last_vt]
             evt_num_simu_tot=(evt_num_s[length(s)-1]/2)*(comp+1)+((evt_num_s[last_vt]-evt_num_s[length(s)-1])/2)*(length(mu_keep)+1)
 
-          }else if (c_power_m2<1-beta){
+          }else if (isTRUE(c_power_m2<1-beta)){
 
             t_new_0=masd_new_info_time_com(theta=theta_hat_inter_m2,s=s,c_alpha=c_alpha_m1,theta_hat_inter_m2=theta_hat_inter_m2,
                                            theta_hat_inter_m2_sd=theta_hat_inter_m2_sd,beta=beta,dist=1)
 
-            if (as.numeric(t_new_0[2])<=1){
+            ## default when the re-estimation is not evaluable
+            new_sampsz=evt_num
+            if (isTRUE(as.numeric(t_new_0[2])<=1)){
               new_sampsz=evt_num
-            }else if (as.numeric(t_new_0[2])>1){
+            }else if (isTRUE(as.numeric(t_new_0[2])>1)){
               T_new_0=as.numeric(t_new_0[[1]])
 
               event_inter=evt_num_s[length(s)-1]
@@ -3231,9 +3394,9 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
               new_sampsz=min(max(new_sampsz_0,evt_num),evt_max)
             }
 
-            if( new_sampsz==evt_num){
+            if (isTRUE(new_sampsz==evt_num)){
 
-              if (test_max[length(s)]>0){
+              if (isTRUE(test_max[length(s)]>0)){
                 rej=1
                 stg=length(s)
               } else {
@@ -3244,7 +3407,7 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
               evt_num_simu_2arm=evt_num_s[last_vt]
               evt_num_simu_tot=(evt_num_s[length(s)-1]/2)*(comp+1)+((evt_num_s[last_vt]-evt_num_s[length(s)-1])/2)*(length(mu_keep)+1)
 
-            }else  if( new_sampsz>evt_num){
+            }else if (isTRUE(new_sampsz>evt_num)){
 
               theta_m2=theta_hat_inter_m1[mu_keep]
               theta_hat_inter_m2=theta_hat_inter_m1[mu_keep]
@@ -3283,7 +3446,7 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
               #     }
               #   }
               # }
-              if (length(mu_keep)==1){
+              if (isTRUE(length(mu_keep)==1)){
                 total_evt_count_m2 = 0
                 for (i in 1:sampsz){
                   total_evt_count_m2 = total_evt_count_m2 + x0_status[i]+x_status_m2[i]
@@ -3307,23 +3470,27 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
 
               new_evt_m2=(new_sampsz/2)*(length(mu_keep)+1)
               evt_pos=evt_count_m2[evt_count_m2>new_sampsz]#substring of  evt_count that are larger than evt_num
-              evt_cut_m2=match(evt_pos[1],evt_count_m2) #the first incidence that evt_count is larger than evt_num
+              ## the required number of events may be unreachable within the available
+              ## follow-up: clamp the index, and blank the statistics below so the
+              ## replicate is reported as non-evaluable instead of using an NA index
+              evt_short=is.na(match(evt_pos[1],evt_count_m2))
+              evt_cut_m2=if (isTRUE(evt_short)) length(evt_count_m2) else match(evt_pos[1],evt_count_m2) #the first incidence that evt_count is larger than evt_num
 
-              if (length(mu_keep)==1){
+              if (isTRUE(length(mu_keep)==1)){
                 time=c(time_x0[1:evt_cut_m2],time_x_m2[1:evt_cut_m2]) #combined samples before total number of events exceed evt_num
                 event=c(x0_status[1:evt_cut_m2],x_status_m2[1:evt_cut_m2]) #censoring status before total number of events exceed evt_num
                 grp=c(grp_x0[1:evt_cut_m2],grp_x_m2[1:evt_cut_m2]) #vector of zero, with length=2*evt_cut
 
                 test= list(time=time,status=event,grp)#survival data
-                coxcf=summary(coxph(Surv(time,status)~grp,test)) #run the coxph function and get the estimates
+                coxcf=tryCatch(summary(coxph(Surv(time,status)~grp,test)), error=function(e) NULL)  ## a failed fit is reported as NA
                 # ~grp means that coxph compares the HR of levels in grp (x vs. x0)
                 # test is the same as data=test
-                theta_hat_m2_last= coxcf$coefficients[1] #estimated log(HR)
-                theta_hat_m2_last_sd= coxcf$coefficients[3] #estimated standard error of log(HR)
+                theta_hat_m2_last=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[1]
+                theta_hat_m2_last_sd=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[3]
                 t_m2_last=(theta_hat_m2_last_sd)^(-2)
                 wald_m2_last=theta_hat_m2_last/theta_hat_m2_last_sd
                 score_m2_last= theta_hat_m2_last* t_m2_last
-              }else if (length(mu_keep)>1){
+              }else if (isTRUE(length(mu_keep)>1)){
 
                 for (j in (1:length(mu_keep))) {
                   #  vector of zeros, length of the vector is the same as the original smaple size
@@ -3334,15 +3501,23 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
 
 
                   test= list(time=time,status=event,grp)#survival data
-                  coxcf=summary(coxph(Surv(time,status)~grp,test)) #run the coxph function and get the estimates
+                  coxcf=tryCatch(summary(coxph(Surv(time,status)~grp,test)), error=function(e) NULL)  ## a failed fit is reported as NA
                   # ~grp means that coxph compares the HR of levels in grp (x vs. x0)
                   # test is the same as data=test
-                  theta_hat_m2_last[j]= coxcf$coefficients[1] #estimated log(HR)
-                  theta_hat_m2_last_sd[j]= coxcf$coefficients[3] #estimated standard error of log(HR)
+                  theta_hat_m2_last[j]=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[1]
+                  theta_hat_m2_last_sd[j]=if (is.null(coxcf)) NA_real_ else coxcf$coefficients[3]
                   t_m2_last[j]=(theta_hat_m2_last_sd[j])^(-2)
                   wald_m2_last[j]=theta_hat_m2_last[j]/theta_hat_m2_last_sd[j]
                   score_m2_last[j]= theta_hat_m2_last[j]* t_m2_last[j]
                 }
+              }
+
+              ## the number of events required after the sample size increase
+              ## was not reached: the statistics after re-estimation are not
+              ## evaluable and the replicate falls back to its defaults
+              if (isTRUE(evt_short)) {
+                theta_hat_m2_last[]=NA_real_; theta_hat_m2_last_sd[]=NA_real_
+                t_m2_last[]=NA_real_; wald_m2_last[]=NA_real_; score_m2_last[]=NA_real_
               }
 
               T_new=t_m2_last
@@ -3375,11 +3550,11 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
               # evt_num_simu_tot= (evt_num_simu_2arm/2)*(comp+1)
               evt_num_simu_tot=(evt_num_s[length(s)-1]/2)*(comp+1)+((new_sampsz-evt_num_s[length(s)-1])/2)*(length(mu_keep)+1)
               #  if ( max(test_max_new)>0){
-              if ( max(test_new)>=0){
+              if (isTRUE(max(test_new)>=0)){
                 rej=1
                 stg=length(s)
 
-              }else if ( max(test_new)<0){
+              }else if (isTRUE(max(test_new)<0)){
                 #################################################################################
                 ## Fail to reject the Null hypothesis if the critical boundary is not crossed  ###
                 #################################################################################
@@ -3392,7 +3567,7 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
 
               for (i in 1:length(mu_keep)){
 
-                if (test_new[i]>=0){
+                if (isTRUE(test_new[i]>=0)){
                   arm_rej_new[i]=1
                 }else {
                   arm_rej_new[i]=0
@@ -3410,9 +3585,9 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
 
       }
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
 
@@ -3463,7 +3638,7 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -3488,7 +3663,7 @@ masd_rej_OC_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,evt_num,evt_max,
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -3575,35 +3750,44 @@ masd_OC_power_simu_adapt_survival<-function(HR,s,c_bry,alpha_2,surv_rate,HR_cut,
 ##################################
 #' Multiple comparisons Group sequential design: Simulations, Survival analysis, Optimizing adaptive sequential design
 #'
-#' @param groups Vector of group labels used in the simulation
-#' @param s1 Information fractions for the first stage / first group
-#' @param s2 Information fractions for the second stage / second group
-#' @param alpha_2 Type I error for the two-sided test
-#' @param alpha_2_alps_s1 Type I error spent up to the interim analysis (stage 1 / group 1)
-#' @param alpha_2_alps_s2 Cumulative type I error spent at the final analysis (stage 2 / group 2)
-#' @param surv_rate Survival rate used to translate the number of events into a sample size
-#' @param evt_num_1 Number of events for the first stage / group
-#' @param evt_num_2 Number of events for the second stage / group
-#' @param evt_max_1 Maximum number of events for the first stage / group
-#' @param evt_max_2 Maximum number of events for the second stage / group
-#' @param HR_cut Hazard-ratio cut-off for early stopping at the interim analysis
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param groups Matrix of true hazard ratios of each test arm vs. the control arm: each row is one simulation scenario and each column one test arm; must be > 0
+#' @param s1 Vector of information fractions of the first interim analysis schedule, e.g. c(1/3, 2/3, 1); the last element must be 1
+#' @param s2 Vector of information fractions of the second interim analysis schedule, e.g. c(0.5, 1); the last element must be 1
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param alpha_2_alps_s1 Two-sided type I error levels spent at each look of the schedule s1; must sum to alpha_2
+#' @param alpha_2_alps_s2 Two-sided type I error levels spent at each look of the schedule s2; must sum to alpha_2
+#' @param surv_rate Survival rate at the end of follow-up; 0 < surv_rate < 1
+#' @param evt_num_1 Planned number of events between one test arm and the control arm by the final analysis in the first event number scenario; must be > 0
+#' @param evt_num_2 Planned number of events between one test arm and the control arm by the final analysis in the second event number scenario; must be > 0
+#' @param evt_max_1 Maximum number of events between one test arm and the control arm in the first maximum-event-number scenario; must be >= evt_num_1
+#' @param evt_max_2 Maximum number of events between one test arm and the control arm in the second maximum-event-number scenario; must be >= evt_num_2
+#' @param HR_cut Hazard-ratio cut-off for the lack-of-efficacy rule at the interim analysis:
+#'   a test arm is dropped when its observed hazard ratio is greater than HR_cut
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the
+#'   sample size re-estimation; 0 < beta < 1
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{List holding the O'Brien-Fleming group sequential design for the schedule s1 and the simulation results for the four combinations of the two planned event numbers and the two maximum event numbers}
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{List holding the O'Brien-Fleming group sequential design for the schedule s2 and the simulation results for the four combinations of the two planned event numbers and the two maximum event numbers}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s1}{List holding the alpha-spending group sequential design for the schedule s1 and the simulation results for the four combinations of the two planned event numbers and the two maximum event numbers}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s2}{List holding the alpha-spending group sequential design for the schedule s2 and the simulation results for the four combinations of the two planned event numbers and the two maximum event numbers}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
 #' \donttest{
+#' set.seed(1)
 #' masd_simu_OC_survival(
-#' groups = rbind(c(1,1,1),c(0.9,0.85,0.8),c(0.8,0.84,0.85),c(0.5,0.6,0.7)),
+#' groups = rbind(c(0.85, 0.87, 0.9), c(0.8, 0.82, 0.85), c(0.75, 0.78, 0.8), c(0.7, 0.75, 0.8)),
 #' s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05, alpha_2_alps_s1 = c(0.001,0.001,0.048),
 #' alpha_2_alps_s2 = c(0.001,0.049), surv_rate = 0.5, evt_num_1 = 200, evt_num_2 = 300,
-#' evt_max_1 = 800, evt_max_2 = 1000, HR_cut = 0.95, beta = 0.1, sim_num = 2)
+#' evt_max_1 = 2000, evt_max_2 = 3000, HR_cut = 0.95, beta = 0.1, sim_num = 2)
 #' }
 #'
 #' @export
@@ -3928,6 +4112,13 @@ msd_rej_rate_binary<-function(p_t,p_c,direction,s,c_bry,samsz,sim_num){
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej=0; stg=0; samsz_simu_control=N[length(s)]
+    samsz_simu_tot=N[length(s)]*(comp+1); arm_rej=rep(0,comp)
 
 
       #########################################################
@@ -4000,9 +4191,9 @@ msd_rej_rate_binary<-function(p_t,p_c,direction,s,c_bry,samsz,sim_num){
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -4014,7 +4205,7 @@ msd_rej_rate_binary<-function(p_t,p_c,direction,s,c_bry,samsz,sim_num){
       ### step 3. If Wald statistics cross the boundary at up to length(s)-1, terminte trial ##
       ############################################################################################
 
-      if ( max(test_max)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max)>=0)){ ##null hypothesis rejected, no more random sampling
         rej=1
         #If max(test)>0, te nulll hypothesis is rejected
         test_max_t=test_max[test_max>0]
@@ -4025,7 +4216,7 @@ msd_rej_rate_binary<-function(p_t,p_c,direction,s,c_bry,samsz,sim_num){
         samsz_simu_control=N[last_vt]
         samsz_simu_tot=N[last_vt]*(comp+1)
 
-      }else if (max(test_max)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max)<0)) {   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -4044,9 +4235,9 @@ msd_rej_rate_binary<-function(p_t,p_c,direction,s,c_bry,samsz,sim_num){
           ###     Continue to planned sample size and stop trial  ##
           #########################################################
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
       out=c(rej,stg,samsz_simu_control,samsz_simu_tot,arm_rej)
@@ -4096,7 +4287,7 @@ msd_rej_rate_binary<-function(p_t,p_c,direction,s,c_bry,samsz,sim_num){
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -4121,7 +4312,7 @@ msd_rej_rate_binary<-function(p_t,p_c,direction,s,c_bry,samsz,sim_num){
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -4168,27 +4359,32 @@ msd_rej_rate_binary<-function(p_t,p_c,direction,s,c_bry,samsz,sim_num){
 
 #' Multiple comparisons Group sequential design: Simulations, Binary distribution, Type I error and power
 #'
-#' @param p_t Event (response) proportion in the test arm
-#' @param p_c Event (response) proportion in the control arm
-#' @param direction Test direction: 1 = larger p is better, 0 = smaller p is better
+#' @param p_t Vector of true event rates of the test arms, one per dose; 0 < p_t < 1
+#' @param p_c Event rate of the control arm; 0 < p_c < 1
+#' @param direction Test direction: 1 = larger p is better, otherwise smaller p is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
+#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = alpha-spending
+#' @param alpha_2 Type I error for the two-sided test; when bry_type = 2 this is instead the
+#'   vector of two-sided type I error levels spent at each look, which must sum to the total
+#'   two-sided type I error
+#' @param samsz Sample size of the control arm used in the simulation; must be > 0
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A named list containing the following elements: 'simulation summary', 'planned control sample size', 'planned total sample size'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Design}{Matrix with one row per look giving the look number, the information fraction, the critical boundary and the rejection rate by look}
+#'   \item{Summary by arm}{Matrix with one row per test arm giving the test-arm event rate, the control-arm event rate and the rejection rate by arm}
+#'   \item{simulation results}{Named numeric vector holding the rejection rate, the simulated type I error rate, the non-type I error rejection rate, the planned control and total sample sizes and the mean simulated control and total sample sizes}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
-#' \donttest{
 #' msd_power_simu_binary(p_t = c(0.4,0.4), p_c = 0.4, direction = 1, s = c(1/3,2/3,1),
 #' bry_type = 1, alpha_2 = 0.05, samsz = 100, sim_num = 20)
-#' }
 #'
 #' @export
 msd_power_simu_binary<-function(p_t,p_c,direction,s,bry_type,alpha_2,samsz,sim_num){
@@ -4238,6 +4434,14 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej_nossr=0; rej=0; stg=0
+    samsz_simu_control=N[length(s)]; samsz_simu_tot=N[length(s)]*(comp+1); futi=0
+    arm_drop=rep(0,comp); arm_rej=rep(0,comp)
 
       #########################################################
       ### Step 1: Generate random samples ####
@@ -4308,7 +4512,7 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
 
       arm_drop=rep(0,length(p_t))
       for (i in 1:comp){
-        if ( theta_hat_inter_m1[i]<theta_cut){
+        if (isTRUE(theta_hat_inter_m1[i]<theta_cut)){
           arm_drop[i]=1
         }else{
           arm_drop[i]=0
@@ -4324,9 +4528,9 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -4335,19 +4539,19 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
       #  test=wald_m1-c_bry
       test_max_1=test_max[1:length(s)-1]
 
-      if (max( theta_hat_inter_m1)<theta_cut) {futi=1}else {futi=0}
+      if (isTRUE(max( theta_hat_inter_m1)<theta_cut)) {futi=1}else {futi=0}
       # test compares the Wald statistics with the critical boundaries
       #any value of test>0 indicates that the Wald statistics crossed the critical boundaries at up to length(s)-1
       ############################################################################################
       ### step 3. If Wald statistics cross the boundary at up to length(s)-1, terminte trial ##
       ############################################################################################
-      if ( max(test_max)>=0){
+      if (isTRUE(max(test_max)>=0)){
         rej_nossr=1
-      }else if ( max(test_max)<0){
+      }else if (isTRUE(max(test_max)<0)){
         rej_nossr=0
       }
 
-      if ( max(test_max_1)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max_1)>=0)){ ##null hypothesis rejected, no more random sampling
 
         futi=0
         rej=1
@@ -4360,7 +4564,7 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
         samsz_simu_control=N[last_vt]
         samsz_simu_tot=N[last_vt]*(comp+1)
 
-      }else if (max(test_max_1)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max_1)<0)) {   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -4369,7 +4573,7 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
 
         if (futi==1) { # If TRUE, thiere is not satisfactory efficacy, stop trial at planned sample size
 
-          if (test_max[length(s)]>0){
+          if (isTRUE(test_max[length(s)]>0)){
             rej=1
             stg=length(s)
           } else {
@@ -4412,7 +4616,7 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
           c_power_m2=masd_c_power_com(s=s,c_bry=c_bry,theta=theta_hat_inter_m2,theta_hat_inter_m1=theta_hat_inter_m2,theta_hat_inter_m1_sd=theta_hat_inter_m2_sd,dist=dist)
           c_alpha_m1=masd_c_power_com(s=s,c_bry=c_bry,theta=rep(0,length(theta_hat_inter_m1)),theta_hat_inter_m1=theta_hat_inter_m1,theta_hat_inter_m1_sd=theta_hat_inter_m1_sd,dist=dist)
 
-          if (c_power_m2>= 1-beta){
+          if (isTRUE(c_power_m2>= 1-beta)){
             ########################################################################
             ### Step 4.2. If max(theta>theta_cut), calculate conditional power    ##
             ###          and re-estiate sample size                               ##
@@ -4421,18 +4625,18 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
 
             wald_m2=wald_m1[mu_keep,]
 
-            if (length(mu_keep)==1){
+            if (isTRUE(length(mu_keep)==1)){
               wald_m2_last=wald_m2[last_vt]
               wald_max_m2=wald_m2_last
 
-            }else if (length(mu_keep)>1){
+            }else if (isTRUE(length(mu_keep)>1)){
               wald_m2_last=wald_m2[,last_vt]
               wald_max_m2=max(wald_m2_last)
             }
 
             test_m2=wald_max_m2-c_bry[length(s)]
             arm_test_m2=wald_m2_last-c_bry[length(s)]
-            if (test_m2>0) {
+            if (isTRUE(test_m2>0)) {
               rej=1
               stg=length(s)
               last_vt=stg
@@ -4449,14 +4653,16 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
             ### A dose is dropped for lack of efficacy if: theta_hat<theta cut                   ###
             ### or of min theta_hat is less than 1/3 of the max theta_hat                        ###
             ########################################################################################
-          }else if (c_power_m2<1-beta){
+          }else if (isTRUE(c_power_m2<1-beta)){
 
                t_new_0=masd_new_info_time_com(theta=theta_hat_inter_m2,s=s,c_alpha=c_alpha_m1,theta_hat_inter_m2=theta_hat_inter_m2,
                                              theta_hat_inter_m2_sd=theta_hat_inter_m2_sd,beta=beta,dist=1)
 
-              if (as.numeric(t_new_0[2])<=1){
+              ## default when the re-estimation is not evaluable
+              N_new_t=samsz
+              if (isTRUE(as.numeric(t_new_0[2])<=1)){
                 N_new_t=samsz
-              }else if (as.numeric(t_new_0[2])>1){
+              }else if (isTRUE(as.numeric(t_new_0[2])>1)){
                 T_new_0=as.numeric(t_new_0[[1]])
 
                 N_new_t_0=max(ceiling(n_control_inter*(T_new_0/T_inter)))
@@ -4464,9 +4670,9 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
                 N_new_t= min(N_new_t_1,N_max)
               }
 
-            if(N_new_t==samsz){
+            if(isTRUE(N_new_t==samsz)){
 
-              if (test_max[length(s)]>0){
+              if (isTRUE(test_max[length(s)]>0)){
                 rej=1
                 stg=length(s)
               } else {
@@ -4477,7 +4683,7 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
               samsz_simu_control=N[last_vt]
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)
 
-            }else  if(N_new_t>samsz){
+            }else  if(isTRUE(N_new_t>samsz)){
 
               x0_new=x0[1:N_new_t]
               x_new=x[c(mu_keep),1:N_new_t]
@@ -4549,7 +4755,7 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
               samsz_simu_control=N_new_t
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N_new_t-N[length(s)-1])*(length(mu_keep)+1)
 
-              if ( max(test_new)>0){
+              if (isTRUE(max(test_new)>0)){
 
                 rej=1
 
@@ -4566,7 +4772,7 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
 
               for (i in 1:length(mu_keep)){
 
-                if (test_new[i]>=0){
+                if (isTRUE(test_new[i]>=0)){
                   arm_rej_new[i]=1
                 }else {
                   arm_rej_new[i]=0
@@ -4584,9 +4790,9 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
         }
       }
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
       out=c(rej_nossr,rej,stg,samsz_simu_control,samsz_simu_tot,futi,arm_drop,arm_rej)
@@ -4646,7 +4852,7 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -4671,7 +4877,7 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -4736,24 +4942,33 @@ masd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,bet
 
 #' Multiple comparisons Group sequential design: Simulations, Binary distribution, Operating characteristics
 #'
-#' @param p_t Event (response) proportion in the test arm
-#' @param p_c Event (response) proportion in the control arm
-#' @param direction Test direction: 1 = larger p is better, 0 = smaller p is better
+#' @param p_t Vector of true event rates of the test arms, one per dose; 0 < p_t < 1
+#' @param p_c Event rate of the control arm; 0 < p_c < 1
+#' @param direction Test direction: 1 = larger p is better, otherwise smaller p is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param samsz Planned sample size of the control arm used in the simulation
-#' @param N_max Maximum allowed sample size (control arm)
+#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = alpha-spending
+#' @param alpha_2 Type I error for the two-sided test; when bry_type = 2 this is instead the
+#'   vector of two-sided type I error levels spent at each look, which must sum to the total
+#'   two-sided type I error
+#' @param theta_cut Lack-of-efficacy threshold on the effect-size scale: a test arm is
+#'   dropped at the interim analysis when its observed effect size is below this value
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the
+#'   sample size re-estimation; 0 < beta < 1
+#' @param samsz Sample size of the control arm used in the simulation; must be > 0
+#' @param N_max Maximum sample size for the control arm allowed by the sample size
+#'   re-estimation; must be >= samsz
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A matrix in which each row corresponds to one simulation replicate and the columns hold the simulated operating characteristics
-#' (e.g. rejection indicators, sample sizes and stopping stages).
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Design}{Matrix with one row per look giving the look number, the information fraction, the critical boundary, the rejection rate by look and the rate of sample size increase}
+#'   \item{Summary by arm}{Matrix with one row per test arm giving the test-arm event rate, the control-arm event rate, the drop rate by arm and the rejection rate by arm}
+#'   \item{simulation results}{Named numeric vector holding the rejection rate without and with sample size re-estimation, the rate of sample size increase, the rejection rates conditional on meeting the sample size increase criteria, the simulated type I error rate, the non-type I error rejection rate, the futility rate, the planned and maximum control sample sizes, the mean simulated control sample size and the mean simulated control sample size conditional on an increase}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
@@ -4821,6 +5036,14 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej_nossr=0; rej=0; stg=0
+    samsz_simu_control=N[length(s)]; samsz_simu_tot=N[length(s)]*(comp+1); futi=0
+    arm_drop=rep(0,comp); arm_rej=rep(0,comp)
 
       #########################################################
       ### Step 1: Generate random samples ####
@@ -4891,7 +5114,7 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
 
       arm_drop=rep(0,length(p_t))
       for (i in 1:comp){
-        if ( theta_hat_inter_m1[i]<theta_cut){
+        if (isTRUE(theta_hat_inter_m1[i]<theta_cut)){
           arm_drop[i]=1
         }else{
           arm_drop[i]=0
@@ -4907,9 +5130,9 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -4918,19 +5141,19 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
       #  test=wald_m1-c_bry
       test_max_1=test_max[1:length(s)-1]
 
-      if (max( theta_hat_inter_m1)<theta_cut) {futi=1}else {futi=0}
+      if (isTRUE(max( theta_hat_inter_m1)<theta_cut)) {futi=1}else {futi=0}
       # test compares the Wald statistics with the critical boundaries
       #any value of test>0 indicates that the Wald statistics crossed the critical boundaries at up to length(s)-1
       ############################################################################################
       ### step 3. If Wald statistics cross the boundary at up to length(s)-1, terminte trial ##
       ############################################################################################
-      if ( max(test_max)>=0){
+      if (isTRUE(max(test_max)>=0)){
         rej_nossr=1
-      }else if ( max(test_max)<0){
+      }else if (isTRUE(max(test_max)<0)){
         rej_nossr=0
       }
 
-      if ( max(test_max_1)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max_1)>=0)){ ##null hypothesis rejected, no more random sampling
 
         futi=0
         rej=1
@@ -4943,7 +5166,7 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
         samsz_simu_control=N[last_vt]
         samsz_simu_tot=N[last_vt]*(comp+1)
 
-      }else if (max(test_max_1)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max_1)<0)) {   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -4952,7 +5175,7 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
 
         if (futi==1) { # If TRUE, thiere is not satisfactory efficacy, stop trial at planned sample size
 
-          if (test_max[length(s)]>0){
+          if (isTRUE(test_max[length(s)]>0)){
             rej=1
             stg=length(s)
           } else {
@@ -4995,7 +5218,7 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
           c_power_m2=masd_c_power_com(s=s,c_bry=c_bry,theta=theta_hat_inter_m2,theta_hat_inter_m1=theta_hat_inter_m2,theta_hat_inter_m1_sd=theta_hat_inter_m2_sd,dist=dist)
           c_alpha_m1=masd_c_power_com(s=s,c_bry=c_bry,theta=rep(0,length(theta_hat_inter_m1)),theta_hat_inter_m1=theta_hat_inter_m1,theta_hat_inter_m1_sd=theta_hat_inter_m1_sd,dist=dist)
 
-          if (c_power_m2>= 1-beta){
+          if (isTRUE(c_power_m2>= 1-beta)){
             ########################################################################
             ### Step 4.2. If max(theta>theta_cut), calculate conditional power    ##
             ###          and re-estiate sample size                               ##
@@ -5004,18 +5227,18 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
 
             wald_m2=wald_m1[mu_keep,]
 
-            if (length(mu_keep)==1){
+            if (isTRUE(length(mu_keep)==1)){
               wald_m2_last=wald_m2[last_vt]
               wald_max_m2=wald_m2_last
 
-            }else if (length(mu_keep)>1){
+            }else if (isTRUE(length(mu_keep)>1)){
               wald_m2_last=wald_m2[,last_vt]
               wald_max_m2=max(wald_m2_last)
             }
 
             test_m2=wald_max_m2-c_bry[length(s)]
             arm_test_m2=wald_m2_last-c_bry[length(s)]
-            if (test_m2>0) {
+            if (isTRUE(test_m2>0)) {
               rej=1
               stg=length(s)
               last_vt=stg
@@ -5032,14 +5255,16 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
             ### A dose is dropped for lack of efficacy if: theta_hat<theta cut                   ###
             ### or of min theta_hat is less than 1/3 of the max theta_hat                        ###
             ########################################################################################
-          }else if (c_power_m2<1-beta){
+          }else if (isTRUE(c_power_m2<1-beta)){
 
             t_new_0=masd_new_info_time_com(theta=theta_hat_inter_m2,s=s,c_alpha=c_alpha_m1,theta_hat_inter_m2=theta_hat_inter_m2,
                                            theta_hat_inter_m2_sd=theta_hat_inter_m2_sd,beta=beta,dist=1)
 
-            if (as.numeric(t_new_0[2])<=1){
+            ## default when the re-estimation is not evaluable
+            N_new_t=samsz
+            if (isTRUE(as.numeric(t_new_0[2])<=1)){
               N_new_t=samsz
-            }else if (as.numeric(t_new_0[2])>1){
+            }else if (isTRUE(as.numeric(t_new_0[2])>1)){
               T_new_0=as.numeric(t_new_0[[1]])
 
               N_new_t_0=max(ceiling(n_control_inter*(T_new_0/T_inter)))
@@ -5047,9 +5272,9 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
               N_new_t= min(N_new_t_1,N_max)
             }
 
-            if(N_new_t==samsz){
+            if(isTRUE(N_new_t==samsz)){
 
-              if (test_max[length(s)]>0){
+              if (isTRUE(test_max[length(s)]>0)){
                 rej=1
                 stg=length(s)
               } else {
@@ -5060,7 +5285,7 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
               samsz_simu_control=N[last_vt]
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)
 
-            }else  if(N_new_t>samsz){
+            }else  if(isTRUE(N_new_t>samsz)){
 
               x0_new=x0[1:N_new_t]
               x_new=x[c(mu_keep),1:N_new_t]
@@ -5132,7 +5357,7 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
               samsz_simu_control=N_new_t
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N_new_t-N[length(s)-1])*(length(mu_keep)+1)
 
-              if ( max(test_new)>0){
+              if (isTRUE(max(test_new)>0)){
 
                 rej=1
 
@@ -5149,7 +5374,7 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
 
               for (i in 1:length(mu_keep)){
 
-                if (test_new[i]>=0){
+                if (isTRUE(test_new[i]>=0)){
                   arm_rej_new[i]=1
                 }else {
                   arm_rej_new[i]=0
@@ -5167,9 +5392,9 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
         }
       }
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
       out=c(rej_nossr,rej,stg,samsz_simu_control,samsz_simu_tot,futi,arm_drop,arm_rej)
@@ -5223,7 +5448,7 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -5248,7 +5473,7 @@ masd_rej_OC_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,theta_cut,
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -5338,36 +5563,45 @@ masd_OC_power_simu_adapt_binary<-function(p_t,p_c,direction,s,bry_type,alpha_2,t
 ###################
 #' Multiple comparisons Group sequential design: Simulations, Binary distribution, Optimizing adaptive sequential design
 #'
-#' @param groups Vector of group labels used in the simulation
-#' @param p_c Event (response) proportion in the control arm
-#' @param direction Test direction: 1 = larger p is better, 0 = smaller p is better
-#' @param s1 Information fractions for the first stage / first group
-#' @param s2 Information fractions for the second stage / second group
-#' @param alpha_2 Type I error for the two-sided test
-#' @param alpha_2_alps_s1 Type I error spent up to the interim analysis (stage 1 / group 1)
-#' @param alpha_2_alps_s2 Cumulative type I error spent at the final analysis (stage 2 / group 2)
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param samsz_1 Planned sample size (control arm) of the first stage / group
-#' @param samsz_2 Planned sample size (control arm) of the second stage / group
-#' @param N_max_1 Maximum allowed sample size (control arm) of the first stage / group
-#' @param N_max_2 Maximum allowed sample size (control arm) of the second stage / group
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param groups Matrix of true event rates of the test arms: each row is one simulation scenario and each column one test arm/dose; 0 < groups < 1
+#' @param p_c Event rate of the control arm; 0 < p_c < 1
+#' @param direction Test direction: 1 = larger p is better, otherwise smaller p is better
+#' @param s1 Vector of information fractions of the first interim analysis schedule, e.g. c(1/3, 2/3, 1); the last element must be 1
+#' @param s2 Vector of information fractions of the second interim analysis schedule, e.g. c(0.5, 1); the last element must be 1
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param alpha_2_alps_s1 Two-sided type I error levels spent at each look of the schedule s1; must sum to alpha_2
+#' @param alpha_2_alps_s2 Two-sided type I error levels spent at each look of the schedule s2; must sum to alpha_2
+#' @param theta_cut Lack-of-efficacy threshold on the effect-size scale: a test arm is
+#'   dropped at the interim analysis when its observed effect size is below this value
+#' @param samsz_1 Sample size of the control arm used in the simulation for the first sample size scenario; must be > 0
+#' @param samsz_2 Sample size of the control arm used in the simulation for the second sample size scenario; must be > 0
+#' @param N_max_1 Maximum sample size for the control arm allowed by the sample size re-estimation in the first N_max scenario; must be >= samsz_1
+#' @param N_max_2 Maximum sample size for the control arm allowed by the sample size re-estimation in the second N_max scenario; must be >= samsz_2
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the
+#'   sample size re-estimation; 0 < beta < 1
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{List holding the O'Brien-Fleming group sequential design for the schedule s1 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{List holding the O'Brien-Fleming group sequential design for the schedule s2 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s1}{List holding the alpha-spending group sequential design for the schedule s1 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s2}{List holding the alpha-spending group sequential design for the schedule s2 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
 #' \donttest{
-#' masd_simu_OC_binary(
-#' groups = rbind(c(0.2,0.3,0.4),c(0.3,0.4,0.5),c(0.4,0.5,0.6),c(0.5,0.6,0.7)),
-#' p_c = 0.2, direction = 1, s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05,
-#' alpha_2_alps_s1 = c(0.001,0.001,0.048), alpha_2_alps_s2 = c(0.001,0.049), theta_cut = 0.01,
-#' samsz_1 = 100, samsz_2 = 150, N_max_1 = 200, N_max_2 = 300, beta = 0.1, sim_num = 2)
+#' set.seed(1)
+#' masd_simu_OC_binary(groups = rbind(c(0.35,0.4,0.45),c(0.4,0.45,0.5),c(0.35,0.45,0.55),
+#' c(0.45,0.5,0.55)), p_c = 0.3, direction = 1, s1 = c(1/3,2/3,1), s2 = c(0.5,1),
+#' alpha_2 = 0.05, alpha_2_alps_s1 = c(0.001,0.001,0.048),
+#' alpha_2_alps_s2 = c(0.001,0.049), theta_cut = 0.01, samsz_1 = 50, samsz_2 = 75,
+#' N_max_1 = 1000, N_max_2 = 1500, beta = 0.1, sim_num = 2)
 #' }
 #'
 #' @export
@@ -5697,6 +5931,13 @@ msd_rej_rate_poisson<-function(lambda_c,lambda_t,direction,s,c_bry,samsz,sim_num
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej=0; stg=0; samsz_simu_control=N[length(s)]
+    samsz_simu_tot=N[length(s)]*(comp+1); arm_rej=rep(0,comp)
 
       #########################################################
       ### Step 1: Generate random samples fro phae 2 stage ####
@@ -5771,9 +6012,9 @@ msd_rej_rate_poisson<-function(lambda_c,lambda_t,direction,s,c_bry,samsz,sim_num
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -5783,7 +6024,7 @@ msd_rej_rate_poisson<-function(lambda_c,lambda_t,direction,s,c_bry,samsz,sim_num
       ### step 3. If Wald statistics cross the boundary at up to length(s)-1, terminte trial ##
       ############################################################################################
 
-      if ( max(test_max)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max)>=0)){ ##null hypothesis rejected, no more random sampling
 
         rej=1
         test_max_t=test_max[test_max>0]
@@ -5794,7 +6035,7 @@ msd_rej_rate_poisson<-function(lambda_c,lambda_t,direction,s,c_bry,samsz,sim_num
         samsz_simu_control=N[last_vt]
         samsz_simu_tot=N[last_vt]*(comp+1)
 
-      }else if (max(test_max)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max)<0)) {   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -5809,9 +6050,9 @@ msd_rej_rate_poisson<-function(lambda_c,lambda_t,direction,s,c_bry,samsz,sim_num
           samsz_simu_tot=N[last_vt]*(comp+1)
 
         }
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
       out=c(rej,stg,samsz_simu_control,samsz_simu_tot,arm_rej)
@@ -5849,7 +6090,7 @@ msd_rej_rate_poisson<-function(lambda_c,lambda_t,direction,s,c_bry,samsz,sim_num
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -5874,7 +6115,7 @@ msd_rej_rate_poisson<-function(lambda_c,lambda_t,direction,s,c_bry,samsz,sim_num
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -5921,27 +6162,32 @@ msd_rej_rate_poisson<-function(lambda_c,lambda_t,direction,s,c_bry,samsz,sim_num
 
 #' Multiple comparisons Group sequential design: Simulations, Poisson distribution, Type I error and power
 #'
-#' @param lambda_c Event rate in the control arm (Poisson / negative binomial endpoint)
-#' @param lambda_t Event rate in the test arm (Poisson / negative binomial endpoint)
-#' @param direction Test direction: 1 = larger lambda is better, 0 = smaller lambda is better
+#' @param lambda_c Mean event count of the control arm; must be > 0
+#' @param lambda_t Vector of true mean event counts of the test arms, one per dose; must be > 0
+#' @param direction Test direction: 1 = larger lambda is better, otherwise smaller lambda is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
+#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = alpha-spending
+#' @param alpha_2 Type I error for the two-sided test; when bry_type = 2 this is instead the
+#'   vector of two-sided type I error levels spent at each look, which must sum to the total
+#'   two-sided type I error
+#' @param samsz Sample size of the control arm used in the simulation; must be > 0
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A named list containing the following elements: 'simulation summary', 'planned control', 'planned total'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Design}{Matrix with one row per look giving the look number, the information fraction, the critical boundary and the rejection rate by look}
+#'   \item{Summary by arm}{Matrix with one row per test arm giving the test-arm mean, the control-arm mean and the rejection rate by arm}
+#'   \item{simulation results}{Named numeric vector holding the rejection rate, the simulated type I error rate, the non-type I error rejection rate, the planned control and total sample sizes and the mean simulated control and total sample sizes}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
-#' \donttest{
 #' msd_power_simu_poisson(lambda_c = 0.8, lambda_t = c(0.8,0.8,0.8), direction = 1,
 #' s = c(1/3,2/3,1), bry_type = 1, alpha_2 = 0.05, samsz = 100, sim_num = 20)
-#' }
 #'
 #' @export
 msd_power_simu_poisson<-function(lambda_c,lambda_t,direction,s,bry_type,alpha_2,samsz,sim_num){
@@ -5999,6 +6245,14 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej_nossr=0; rej=0; stg=0
+    samsz_simu_control=N[length(s)]; samsz_simu_tot=N[length(s)]*(comp+1); futi=0
+    arm_drop=rep(0,comp); arm_rej=rep(0,comp)
 
       #########################################################
       ### Step 1: Generate random samples fro phae 2 stage ####
@@ -6074,7 +6328,7 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
 
       arm_drop=rep(0,length(lambda_t))
       for (i in 1:comp){
-        if ( theta_hat_inter_m1[i]<theta_cut){
+        if (isTRUE(theta_hat_inter_m1[i]<theta_cut)){
           arm_drop[i]=1
         }else{
           arm_drop[i]=0
@@ -6092,9 +6346,9 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -6102,20 +6356,20 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
       test_max=wald_max_m1-c_bry
       test_max_1=test_max[1:length(s)-1]
 
-      if (max( theta_hat_inter_m1)<theta_cut) {futi=1}else {futi=0}
+      if (isTRUE(max( theta_hat_inter_m1)<theta_cut)) {futi=1}else {futi=0}
 
       # test compares the Wald statistics with the critical boundaries
       #any value of test>0 indicates that the Wald statistics crossed the critical boundaries at up to length(s)-1
       ############################################################################################
       ### step 3. If Wald statistics cross the boundary at up to length(s)-1, terminte trial ##
       ############################################################################################
-      if ( max(test_max)>=0){
+      if (isTRUE(max(test_max)>=0)){
         rej_nossr=1
-      }else if ( max(test_max)<0){
+      }else if (isTRUE(max(test_max)<0)){
         rej_nossr=0
       }
 
-      if ( max(test_max_1)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max_1)>=0)){ ##null hypothesis rejected, no more random sampling
         futi=0
         rej=1
         #If max(test)>0, te nulll hypothesis is rejected
@@ -6127,7 +6381,7 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
                 samsz_simu_control=N[last_vt]
         samsz_simu_tot=N[last_vt]*(comp+1)
 
-      }else if (max(test_max_1)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max_1)<0)) {   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -6136,7 +6390,7 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
 
         if (futi==1) { # If TRUE, thiere is not satisfactory efficacy, stop trial at planned sample size
 
-          if (test_max[length(s)]>0){
+          if (isTRUE(test_max[length(s)]>0)){
             rej=1
             stg=length(s)
           } else {
@@ -6174,7 +6428,7 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
           c_power_m2=masd_c_power_com(s=s,c_bry=c_bry,theta=theta_hat_inter_m2,theta_hat_inter_m1=theta_hat_inter_m2,theta_hat_inter_m1_sd=theta_hat_inter_m2_sd,dist=dist)
           c_alpha_m1=masd_c_power_com(s=s,c_bry=c_bry,theta=rep(0,length(theta_hat_inter_m1)),theta_hat_inter_m1=theta_hat_inter_m1,theta_hat_inter_m1_sd=theta_hat_inter_m1_sd,dist=dist)
 
-          if (c_power_m2>= 1-beta){
+          if (isTRUE(c_power_m2>= 1-beta)){
             #########################################
             ### Proceed to planned sample size  #####
             ### and conduct final testing       #####
@@ -6183,18 +6437,18 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
 
             wald_m2=wald_m1[mu_keep,]
 
-            if (length(mu_keep)==1){
+            if (isTRUE(length(mu_keep)==1)){
               wald_m2_last=wald_m2[last_vt]
               wald_max_m2=wald_m2_last
 
-            }else if (length(mu_keep)>1){
+            }else if (isTRUE(length(mu_keep)>1)){
               wald_m2_last=wald_m2[,last_vt]
               wald_max_m2=max(wald_m2_last)
             }
 
             test_m2=wald_max_m2-c_bry[length(s)]
             arm_test_m2=wald_m2_last-c_bry[length(s)]
-            if (test_m2>0) {
+            if (isTRUE(test_m2>0)) {
               rej=1
               stg=length(s)
               last_vt=stg
@@ -6205,14 +6459,16 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
             }
           samsz_simu_control=N[last_vt]
             samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)   #For q-th (collumn number is q) simulation,
-          }else if (c_power_m2<1-beta){
+          }else if (isTRUE(c_power_m2<1-beta)){
 
             t_new_0=masd_new_info_time_com(theta=theta_hat_inter_m2,s=s,c_alpha=c_alpha_m1,theta_hat_inter_m2=theta_hat_inter_m2,
                                            theta_hat_inter_m2_sd=theta_hat_inter_m2_sd,beta=beta,dist=1)
 
-            if (as.numeric(t_new_0[2])<=1){
+            ## default when the re-estimation is not evaluable
+            N_new_t=samsz
+            if (isTRUE(as.numeric(t_new_0[2])<=1)){
               N_new_t=samsz
-            }else if (as.numeric(t_new_0[2])>1){
+            }else if (isTRUE(as.numeric(t_new_0[2])>1)){
               T_new_0=as.numeric(t_new_0[[1]])
 
               N_new_t_0=max(ceiling(n_control_inter*(T_new_0/T_inter)))
@@ -6220,9 +6476,9 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
               N_new_t= min(N_new_t_1,N_max)
             }
 
-            if(N_new_t==samsz){
+            if(isTRUE(N_new_t==samsz)){
 
-              if (test_max[length(s)]>0){
+              if (isTRUE(test_max[length(s)]>0)){
                 rej=1
                 stg=length(s)
               } else {
@@ -6233,7 +6489,7 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
               samsz_simu_control=N[last_vt]
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)
 
-            }else  if(N_new_t>samsz){
+            }else  if(isTRUE(N_new_t>samsz)){
 
               ####################################################################################
               ###  Step 4.2.1.3.1: Generate new random samples according to the new sample size ##
@@ -6247,7 +6503,7 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
               x_new=x[c(mu_keep),1:N_new_t]
               #x0 is the random sample at the first interim analysis for the control
 
-              if (length(mu_keep)==1){
+              if (isTRUE(length(mu_keep)==1)){
 
                 if (direction==1){
 
@@ -6265,7 +6521,7 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
 
                 wald_max_m2_new=max(wald_m2_new)
 
-              }else if (length(mu_keep)>1){
+              }else if (isTRUE(length(mu_keep)>1)){
 
                 t_hat_m2_new=NULL
                 theta_hat_m2_new=NULL
@@ -6330,7 +6586,7 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
               samsz_simu_control=N_new_t
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N_new_t-N[length(s)-1])*(length(mu_keep)+1)
 
-              if ( max(test_new)>0){
+              if (isTRUE(max(test_new)>0)){
 
                 rej=1
 
@@ -6348,7 +6604,7 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
 
               for (i in 1:length(mu_keep)){
 
-                if (test_new[i]>=0){
+                if (isTRUE(test_new[i]>=0)){
                   arm_rej_new[i]=1
                 }else {
                   arm_rej_new[i]=0
@@ -6366,9 +6622,9 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
 
       }
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
       out=c(rej_nossr,rej,stg,samsz_simu_control,samsz_simu_tot,futi,arm_drop,arm_rej)
@@ -6408,7 +6664,7 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
   futi_rt=mean(futi)
 
   arm_summary=cbind(lambda_t,lambda_c,arm_drop_rt,arm_rej_rt)
-  colnames(arm_summary)=c("lambda_t1,...","lambda_c","drop rate by arm","Rejection rate by arm")
+  colnames(arm_summary)=c(LABEL()$lambda_t1,LABEL()$lambda_c,"drop rate by arm","Rejection rate by arm")
 
   mean_control_samsz=mean(samsz_simu_control)
   mean_tot_samsz=mean(samsz_simu_tot)
@@ -6420,7 +6676,7 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -6445,7 +6701,7 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -6518,23 +6774,33 @@ masd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,th
 
 #' Multiple comparisons Group sequential design: Simulations, Poisson distribution, Operating characteristics
 #'
-#' @param lambda_t Event rate in the test arm (Poisson / negative binomial endpoint)
-#' @param lambda_c Event rate in the control arm (Poisson / negative binomial endpoint)
-#' @param direction Test direction: 1 = larger lambda is better, 0 = smaller lambda is better
+#' @param lambda_t Vector of true mean event counts of the test arms, one per dose; must be > 0
+#' @param lambda_c Mean event count of the control arm; must be > 0
+#' @param direction Test direction: 1 = larger lambda is better, otherwise smaller lambda is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param samsz Planned sample size of the control arm used in the simulation
-#' @param N_max Maximum allowed sample size (control arm)
+#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = alpha-spending
+#' @param alpha_2 Type I error for the two-sided test; when bry_type = 2 this is instead the
+#'   vector of two-sided type I error levels spent at each look, which must sum to the total
+#'   two-sided type I error
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the
+#'   sample size re-estimation; 0 < beta < 1
+#' @param theta_cut Lack-of-efficacy threshold on the effect-size scale: a test arm is
+#'   dropped at the interim analysis when its observed effect size is below this value
+#' @param samsz Sample size of the control arm used in the simulation; must be > 0
+#' @param N_max Maximum sample size for the control arm allowed by the sample size
+#'   re-estimation; must be >= samsz
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A named list containing the following elements: 'simulation summary', 'planned control', 'planned total'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Design}{Matrix with one row per look giving the look number, the information fraction, the critical boundary, the rejection rate by look and the rate of sample size increase}
+#'   \item{Summary by arm}{Matrix with one row per test arm giving the test-arm mean, the control-arm mean, the drop rate by arm and the rejection rate by arm}
+#'   \item{simulation results}{Named numeric vector holding the rejection rate without and with sample size re-estimation, the rate of sample size increase, the rejection rates conditional on meeting the sample size increase criteria, the simulated type I error rate, the non-type I error rejection rate, the futility rate, the planned and maximum control sample sizes, the mean simulated control sample size and the mean simulated control sample size conditional on an increase}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
@@ -6600,6 +6866,14 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej_nossr=0; rej=0; stg=0
+    samsz_simu_control=N[length(s)]; samsz_simu_tot=N[length(s)]*(comp+1); futi=0
+    arm_drop=rep(0,comp); arm_rej=rep(0,comp)
       #########################################################
       ### Step 1: Generate random samples fro phae 2 stage ####
       #########################################################
@@ -6674,7 +6948,7 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
 
       arm_drop=rep(0,length(lambda_t))
       for (i in 1:comp){
-        if ( theta_hat_inter_m1[i]<theta_cut){
+        if (isTRUE(theta_hat_inter_m1[i]<theta_cut)){
           arm_drop[i]=1
         }else{
           arm_drop[i]=0
@@ -6692,9 +6966,9 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -6702,20 +6976,20 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
       test_max=wald_max_m1-c_bry
       test_max_1=test_max[1:length(s)-1]
 
-      if (max( theta_hat_inter_m1)<theta_cut) {futi=1}else {futi=0}
+      if (isTRUE(max( theta_hat_inter_m1)<theta_cut)) {futi=1}else {futi=0}
 
       # test compares the Wald statistics with the critical boundaries
       #any value of test>0 indicates that the Wald statistics crossed the critical boundaries at up to length(s)-1
       ############################################################################################
       ### step 3. If Wald statistics cross the boundary at up to length(s)-1, terminte trial ##
       ############################################################################################
-      if ( max(test_max)>=0){
+      if (isTRUE(max(test_max)>=0)){
         rej_nossr=1
-      }else if ( max(test_max)<0){
+      }else if (isTRUE(max(test_max)<0)){
         rej_nossr=0
       }
 
-      if ( max(test_max_1)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max_1)>=0)){ ##null hypothesis rejected, no more random sampling
         futi=0
         rej=1
         #If max(test)>0, te nulll hypothesis is rejected
@@ -6727,7 +7001,7 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
         samsz_simu_control=N[last_vt]
         samsz_simu_tot=N[last_vt]*(comp+1)
 
-      }else if (max(test_max_1)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max_1)<0)) {   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -6736,7 +7010,7 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
 
         if (futi==1) { # If TRUE, thiere is not satisfactory efficacy, stop trial at planned sample size
 
-          if (test_max[length(s)]>0){
+          if (isTRUE(test_max[length(s)]>0)){
             rej=1
             stg=length(s)
           } else {
@@ -6774,7 +7048,7 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
           c_power_m2=masd_c_power_com(s=s,c_bry=c_bry,theta=theta_hat_inter_m2,theta_hat_inter_m1=theta_hat_inter_m2,theta_hat_inter_m1_sd=theta_hat_inter_m2_sd,dist=dist)
           c_alpha_m1=masd_c_power_com(s=s,c_bry=c_bry,theta=rep(0,length(theta_hat_inter_m1)),theta_hat_inter_m1=theta_hat_inter_m1,theta_hat_inter_m1_sd=theta_hat_inter_m1_sd,dist=dist)
 
-          if (c_power_m2>= 1-beta){
+          if (isTRUE(c_power_m2>= 1-beta)){
             #########################################
             ### Proceed to planned sample size  #####
             ### and conduct final testing       #####
@@ -6783,18 +7057,18 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
 
             wald_m2=wald_m1[mu_keep,]
 
-            if (length(mu_keep)==1){
+            if (isTRUE(length(mu_keep)==1)){
               wald_m2_last=wald_m2[last_vt]
               wald_max_m2=wald_m2_last
 
-            }else if (length(mu_keep)>1){
+            }else if (isTRUE(length(mu_keep)>1)){
               wald_m2_last=wald_m2[,last_vt]
               wald_max_m2=max(wald_m2_last)
             }
 
             test_m2=wald_max_m2-c_bry[length(s)]
             arm_test_m2=wald_m2_last-c_bry[length(s)]
-            if (test_m2>0) {
+            if (isTRUE(test_m2>0)) {
               rej=1
               stg=length(s)
               last_vt=stg
@@ -6805,14 +7079,16 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
             }
             samsz_simu_control=N[last_vt]
             samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)   #For q-th (collumn number is q) simulation,
-          }else if (c_power_m2<1-beta){
+          }else if (isTRUE(c_power_m2<1-beta)){
 
             t_new_0=masd_new_info_time_com(theta=theta_hat_inter_m2,s=s,c_alpha=c_alpha_m1,theta_hat_inter_m2=theta_hat_inter_m2,
                                            theta_hat_inter_m2_sd=theta_hat_inter_m2_sd,beta=beta,dist=1)
 
-            if (as.numeric(t_new_0[2])<=1){
+            ## default when the re-estimation is not evaluable
+            N_new_t=samsz
+            if (isTRUE(as.numeric(t_new_0[2])<=1)){
               N_new_t=samsz
-            }else if (as.numeric(t_new_0[2])>1){
+            }else if (isTRUE(as.numeric(t_new_0[2])>1)){
               T_new_0=as.numeric(t_new_0[[1]])
 
               N_new_t_0=max(ceiling(n_control_inter*(T_new_0/T_inter)))
@@ -6820,9 +7096,9 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
               N_new_t= min(N_new_t_1,N_max)
             }
 
-            if(N_new_t==samsz){
+            if(isTRUE(N_new_t==samsz)){
 
-              if (test_max[length(s)]>0){
+              if (isTRUE(test_max[length(s)]>0)){
                 rej=1
                 stg=length(s)
               } else {
@@ -6833,7 +7109,7 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
               samsz_simu_control=N[last_vt]
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)
 
-            }else  if(N_new_t>samsz){
+            }else  if(isTRUE(N_new_t>samsz)){
 
               ####################################################################################
               ###  Step 4.2.1.3.1: Generate new random samples according to the new sample size ##
@@ -6847,7 +7123,7 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
               x_new=x[c(mu_keep),1:N_new_t]
               #x0 is the random sample at the first interim analysis for the control
 
-              if (length(mu_keep)==1){
+              if (isTRUE(length(mu_keep)==1)){
 
                 if (direction==1){
 
@@ -6865,7 +7141,7 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
 
                 wald_max_m2_new=max(wald_m2_new)
 
-              }else if (length(mu_keep)>1){
+              }else if (isTRUE(length(mu_keep)>1)){
 
                 t_hat_m2_new=NULL
                 theta_hat_m2_new=NULL
@@ -6929,7 +7205,7 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
               samsz_simu_control=N_new_t
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N_new_t-N[length(s)-1])*(length(mu_keep)+1)
 
-              if ( max(test_new)>0){
+              if (isTRUE(max(test_new)>0)){
 
                 rej=1
 
@@ -6947,7 +7223,7 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
 
               for (i in 1:length(mu_keep)){
 
-                if (test_new[i]>=0){
+                if (isTRUE(test_new[i]>=0)){
                   arm_rej_new[i]=1
                 }else {
                   arm_rej_new[i]=0
@@ -6965,9 +7241,9 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
 
       }
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
       out=c(rej_nossr,rej,stg,samsz_simu_control,samsz_simu_tot,futi,arm_drop,arm_rej)
@@ -7006,7 +7282,7 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -7031,7 +7307,7 @@ masd_rej_OC_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -7105,9 +7381,9 @@ masd_OC_power_simu_adapt_poisson<-function(lambda_t,lambda_c,direction,s,bry_typ
   }
   simu_out=masd_rej_OC_simu_adapt_com_poisson(lambda_t,lambda_c,direction=direction,s=s,c_bry=c_bry,theta_cut=theta_cut,beta=beta,samsz=samsz,N_max=N_max,dist=1,sim_num=sim_num)
   #masd_rej_simu_adapt_com_normal(mu,s,c_bry,sigma,theta_cut,beta,samsz,N_max ,sim_num,dist)
-  lambda_t_names=paste(paste("lambda_t","[",c(1:length(lambda_t)),"]",sep=""))
+  lambda_t_names=paste(paste(LABEL()$lambda_t,"[",c(1:length(lambda_t)),"]",sep=""))
   out= round(c(lambda_t,lambda_c,as.numeric(simu_out)),4)
-  names(out)=c(lambda_t_names,"lambda_c", names(simu_out))
+  names(out)=c(lambda_t_names,LABEL()$lambda_c, names(simu_out))
   return(out)
 }
 
@@ -7123,37 +7399,45 @@ masd_OC_power_simu_adapt_poisson<-function(lambda_t,lambda_c,direction,s,bry_typ
 ###################
 #' Multiple comparisons Group sequential design: Simulations, Poisson distribution, Optimizing adaptive sequential design
 #'
-#' @param groups Vector of group labels used in the simulation
-#' @param lambda_c Event rate in the control arm (Poisson / negative binomial endpoint)
-#' @param direction Test direction: 1 = larger lambda is better, 0 = smaller lambda is better
-#' @param s1 Information fractions for the first stage / first group
-#' @param s2 Information fractions for the second stage / second group
-#' @param alpha_2 Type I error for the two-sided test
-#' @param alpha_2_alps_s1 Type I error spent up to the interim analysis (stage 1 / group 1)
-#' @param alpha_2_alps_s2 Cumulative type I error spent at the final analysis (stage 2 / group 2)
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param samsz_1 Planned sample size (control arm) of the first stage / group
-#' @param samsz_2 Planned sample size (control arm) of the second stage / group
-#' @param N_max_1 Maximum allowed sample size (control arm) of the first stage / group
-#' @param N_max_2 Maximum allowed sample size (control arm) of the second stage / group
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param groups Matrix of true mean event counts of the test arms: each row is one simulation scenario and each column one test arm/dose; must be > 0
+#' @param lambda_c Mean event count of the control arm; must be > 0
+#' @param direction Test direction: 1 = larger lambda is better, otherwise smaller lambda is better
+#' @param s1 Vector of information fractions of the first interim analysis schedule, e.g. c(1/3, 2/3, 1); the last element must be 1
+#' @param s2 Vector of information fractions of the second interim analysis schedule, e.g. c(0.5, 1); the last element must be 1
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param alpha_2_alps_s1 Two-sided type I error levels spent at each look of the schedule s1; must sum to alpha_2
+#' @param alpha_2_alps_s2 Two-sided type I error levels spent at each look of the schedule s2; must sum to alpha_2
+#' @param theta_cut Lack-of-efficacy threshold on the effect-size scale: a test arm is
+#'   dropped at the interim analysis when its observed effect size is below this value
+#' @param samsz_1 Sample size of the control arm used in the simulation for the first sample size scenario; must be > 0
+#' @param samsz_2 Sample size of the control arm used in the simulation for the second sample size scenario; must be > 0
+#' @param N_max_1 Maximum sample size for the control arm allowed by the sample size re-estimation in the first N_max scenario; must be >= samsz_1
+#' @param N_max_2 Maximum sample size for the control arm allowed by the sample size re-estimation in the second N_max scenario; must be >= samsz_2
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the
+#'   sample size re-estimation; 0 < beta < 1
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{List holding the O'Brien-Fleming group sequential design for the schedule s1 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{List holding the O'Brien-Fleming group sequential design for the schedule s2 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s1}{List holding the alpha-spending group sequential design for the schedule s1 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s2}{List holding the alpha-spending group sequential design for the schedule s2 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
 #' \donttest{
+#' set.seed(1)
 #' masd_simu_OC_poisson(
-#' groups = rbind(c(0.2,0.3,0.4),c(0.3,0.4,0.5),c(0.4,0.5,0.6),c(0.5,0.6,0.7)),
-#' lambda_c = 0, direction = 1, s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05,
-#' alpha_2_alps_s1 = c(0.001,0.001,0.048), alpha_2_alps_s2 = c(0.001,0.049),
-#' theta_cut = 0.01, samsz_1 = 100, samsz_2 = 150, N_max_1 = 200, N_max_2 = 300,
-#' beta = 0.1, sim_num = 2)
+#' groups = rbind(c(0.2,0.3,0.4),c(0.3,0.4,0.5),c(0.4,0.5,0.6),c(0.5,0.6,0.7)), lambda_c = 0.3,
+#' direction = 1, s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05,
+#' alpha_2_alps_s1 = c(0.001,0.001,0.048), alpha_2_alps_s2 = c(0.001,0.049), theta_cut = 0.01,
+#' samsz_1 = 50, samsz_2 = 75, N_max_1 = 1000, N_max_2 = 1500, beta = 0.1, sim_num = 2)
 #' }
 #'
 #' @export
@@ -7196,7 +7480,7 @@ masd_simu_OC_poisson<-function(groups,lambda_c,direction,s1,s2,alpha_2,alpha_2_a
   lambda_t_vec=groups
   rownames( lambda_t_vec)=NULL
 
-  lambda_t_group_names=paste(paste("lambda_t group",c(1:dim(lambda_t_vec)[1]),sep=" "))
+  lambda_t_group_names=paste(paste(LABEL()$lambda_t_group,c(1:dim(lambda_t_vec)[1]),sep=" "))
   #########################################
   #### OC simulations for OF boundaries ###
   #########################################
@@ -7541,6 +7825,13 @@ msd_rej_rate_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,samsz,sim_nu
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej=0; stg=0; samsz_simu_control=N[length(s)]
+    samsz_simu_tot=N[length(s)]*(comp+1); arm_rej=rep(0,comp)
       #########################################################
       ### Step 1: Generate random samples fro phae 2 stage ####
       #########################################################
@@ -7571,9 +7862,9 @@ msd_rej_rate_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,samsz,sim_nu
 
           x_temp=rbind(x_c_temp,x_t_temp)
 
-          negglm_temp=glm.nb(as.numeric(x_temp[,2])~as.factor(x_temp[,1]),link="log")
-          sum_temp=summary(negglm_temp)
-          se_temp=sum_temp$coefficients[2,2]
+          negglm_temp=tryCatch(glm.nb(as.numeric(x_temp[,2])~as.factor(x_temp[,1]),link="log"), error=function(e) NULL)  ## a failed fit is reported as NA
+          sum_temp=if (is.null(negglm_temp)) NULL else summary(negglm_temp)
+          se_temp=if (is.null(sum_temp)) NA_real_ else sum_temp$coefficients[2,2]
           r_c_temp=mean(x_c_temp[,2])
           r_t_temp=mean(x_t_temp[,2])
 
@@ -7606,9 +7897,9 @@ msd_rej_rate_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,samsz,sim_nu
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -7620,7 +7911,7 @@ msd_rej_rate_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,samsz,sim_nu
       ############################################################################################
       ### step 3. If Wald statistics cross the boundary at up to length(s)-1, terminte trial ##
       ############################################################################################
-      if ( max(test_max)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max)>=0)){ ##null hypothesis rejected, no more random sampling
 
         rej=1
         #If max(test)>0, te nulll hypothesis is rejected
@@ -7632,7 +7923,7 @@ msd_rej_rate_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,samsz,sim_nu
         samsz_simu_control=N[last_vt]
         samsz_simu_tot=N[last_vt]*(comp+1)
 
-      }else  if ( max(test_max)<0){   #beginnin of step 4
+      }else  if (isTRUE(max(test_max)<0)){   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -7646,9 +7937,9 @@ msd_rej_rate_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,samsz,sim_nu
           samsz_simu_tot=N[last_vt]*(comp+1)
 
         }
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
       out=c(rej,stg,samsz_simu_control,samsz_simu_tot,arm_rej)
@@ -7692,7 +7983,7 @@ msd_rej_rate_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,samsz,sim_nu
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -7717,7 +8008,7 @@ msd_rej_rate_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,samsz,sim_nu
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -7765,28 +8056,33 @@ msd_rej_rate_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,samsz,sim_nu
 
 #' Multiple comparisons Group sequential design: Simulations, Negative binomial distribution, Type I error and power
 #'
-#' @param r_t Rate parameter of the test arm (negative binomial endpoint)
-#' @param r_c Rate parameter of the control arm (negative binomial endpoint)
-#' @param kappa Dispersion (size) parameter of the negative binomial distribution
-#' @param direction Test direction: 1 = larger r is better, 0 = smaller r is better
+#' @param r_t Vector of true mean rates of the test arms, one per dose; must be > 0
+#' @param r_c Mean rate of the control arm; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
+#' @param direction Test direction: 1 = larger r is better, otherwise smaller r is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
+#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = alpha-spending
+#' @param alpha_2 Type I error for the two-sided test; when bry_type = 2 this is instead the
+#'   vector of two-sided type I error levels spent at each look, which must sum to the total
+#'   two-sided type I error
+#' @param samsz Sample size of the control arm used in the simulation; must be > 0
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A named list containing the following elements: 'simulation summary', 'planned control', 'planned total'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Design}{Matrix with one row per look giving the look number, the information fraction, the critical boundary and the rejection rate by look}
+#'   \item{Summary by arm}{Matrix with one row per test arm giving the test-arm mean rate, the control-arm mean rate and the rejection rate by arm}
+#'   \item{simulation results}{Named numeric vector holding the rejection rate, the simulated type I error rate, the non-type I error rejection rate, the planned control and total sample sizes and the mean simulated control and total sample sizes}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
-#' \donttest{
 #' msd_power_simu_neg_binomial(r_t = c(1.1,1.1,1.1), r_c = 1.1, kappa = 1, direction = 1,
 #' s = c(1/3,2/3,1), bry_type = 1, alpha_2 = 0.05, samsz = 100, sim_num = 20)
-#' }
 #'
 #' @export
 msd_power_simu_neg_binomial<-function(r_t,r_c,kappa,direction,s,bry_type,alpha_2,samsz,sim_num){
@@ -7846,6 +8142,14 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
   ##   Simulation loops using parallel computing            ##
   ############################################################
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej_nossr=0; rej=0; stg=0
+    samsz_simu_control=N[length(s)]; samsz_simu_tot=N[length(s)]*(comp+1); futi=0
+    arm_drop=rep(0,comp); arm_rej=rep(0,comp)
       #########################################################
       ### Step 1: Generate random samples fro phae 2 stage ####
       #########################################################
@@ -7876,9 +8180,9 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
 
           x_temp=rbind(x_c_temp,x_t_temp)
 
-          negglm_temp=glm.nb(as.numeric(x_temp[,2])~as.factor(x_temp[,1]),link="log")
-          sum_temp=summary(negglm_temp)
-          se_temp=sum_temp$coefficients[2,2]
+          negglm_temp=tryCatch(glm.nb(as.numeric(x_temp[,2])~as.factor(x_temp[,1]),link="log"), error=function(e) NULL)  ## a failed fit is reported as NA
+          sum_temp=if (is.null(negglm_temp)) NULL else summary(negglm_temp)
+          se_temp=if (is.null(sum_temp)) NA_real_ else sum_temp$coefficients[2,2]
           r_c_temp=mean(x_c_temp[,2])
           r_t_temp=mean(x_t_temp[,2])
 
@@ -7907,7 +8211,7 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
 
       arm_drop=rep(0,length(r_t))
       for (i in 1:comp){
-        if ( theta_hat_inter_m1[i]<theta_cut){
+        if (isTRUE(theta_hat_inter_m1[i]<theta_cut)){
           arm_drop[i]=1
         }else{
           arm_drop[i]=0
@@ -7925,9 +8229,9 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -7936,7 +8240,7 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
 
       test_max_1=test_max[1:length(s)-1]
 
-      if (max( theta_hat_inter_m1)<theta_cut) {futi=1}else {futi=0}
+      if (isTRUE(max( theta_hat_inter_m1)<theta_cut)) {futi=1}else {futi=0}
 
       # test compares the Wald statistics with the critical boundaries
       #any value of test>0 indicates that the Wald statistics crossed the critical boundaries at up to length(s)-1
@@ -7944,14 +8248,14 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
       ### step 3. If Wald statistics cross the boundary at up to length(s)-1, terminte trial ##
       ############################################################################################
 
-      if ( max(test_max)>=0){
+      if (isTRUE(max(test_max)>=0)){
         rej_nossr=1  ## rejection rate withoput SSR
-      }else if ( max(test_max)<0){
+      }else if (isTRUE(max(test_max)<0)){
         rej_nossr=0
       }
 
 
-      if ( max(test_max_1)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max_1)>=0)){ ##null hypothesis rejected, no more random sampling
 
         futi=0
         rej=1
@@ -7964,7 +8268,7 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
         samsz_simu_control=N[last_vt]
         samsz_simu_tot=N[last_vt]*(comp+1)
 
-      }else if (max(test_max_1)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max_1)<0)) {   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -7978,7 +8282,7 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
 
         if (futi==1) { # If TRUE, thiere is not satisfactory efficacy, stop trial at planned sample size
 
-          if (test_max[length(s)]>0){
+          if (isTRUE(test_max[length(s)]>0)){
             rej=1
             stg=length(s)
           } else {
@@ -8026,7 +8330,7 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
 
           c_power_m2=masd_c_power_com(s=s,c_bry=c_bry,theta=theta_hat_inter_m2,theta_hat_inter_m1=theta_hat_inter_m2,theta_hat_inter_m1_sd=theta_hat_inter_m2_sd,dist=dist)
           c_alpha_m1=masd_c_power_com(s=s,c_bry=c_bry,theta=rep(0,length(theta_hat_inter_m2)),theta_hat_inter_m1=theta_hat_inter_m2,theta_hat_inter_m1_sd=theta_hat_inter_m2_sd,dist=dist)
-          if (c_power_m2>= 1-beta){
+          if (isTRUE(c_power_m2>= 1-beta)){
             #########################################
             ### Proceed to planned sample size  #####
             ### and conduct final testing       #####
@@ -8035,18 +8339,18 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
 
             wald_m2=wald_m1[mu_keep,]
 
-            if (length(mu_keep)==1){
+            if (isTRUE(length(mu_keep)==1)){
               wald_m2_last=wald_m2[last_vt]
               wald_max_m2=wald_m2_last
 
-            }else if (length(mu_keep)>1){
+            }else if (isTRUE(length(mu_keep)>1)){
               wald_m2_last=wald_m2[,last_vt]
               wald_max_m2=max(wald_m2_last)
             }
 
             test_m2=wald_max_m2-c_bry[length(s)]
             arm_test_m2=wald_m2_last-c_bry[length(s)]
-            if (test_m2>0) {
+            if (isTRUE(test_m2>0)) {
               rej=1
               stg=length(s)
               last_vt=stg
@@ -8059,14 +8363,16 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
             samsz_simu_control=N[last_vt]
             samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)   #For q-th (collumn number is q) simulation,
 
-          }else if (c_power_m2<1-beta){
+          }else if (isTRUE(c_power_m2<1-beta)){
 
               t_new_0=masd_new_info_time_com(theta=theta_hat_inter_m2,s=s,c_alpha=c_alpha_m1,theta_hat_inter_m2=theta_hat_inter_m2,
                                              theta_hat_inter_m2_sd=theta_hat_inter_m2_sd,beta=beta,dist=1)
 
-              if (as.numeric(t_new_0[2])<=1){
+              ## default when the re-estimation is not evaluable
+              N_new_t=samsz
+              if (isTRUE(as.numeric(t_new_0[2])<=1)){
                 N_new_t=samsz
-              }else if (as.numeric(t_new_0[2])>1){
+              }else if (isTRUE(as.numeric(t_new_0[2])>1)){
                 T_new_0=as.numeric(t_new_0[[1]])
 
                 N_new_t_0=max(ceiling(n_control_inter*(T_new_0/T_inter)))
@@ -8074,9 +8380,9 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
                 N_new_t= min(N_new_t_1,N_max)
               }
 
-            if(N_new_t==samsz){
+            if(isTRUE(N_new_t==samsz)){
 
-              if (test_max[length(s)]>0){
+              if (isTRUE(test_max[length(s)]>0)){
                 rej=1
                 stg=length(s)
               } else {
@@ -8087,7 +8393,7 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
               samsz_simu_control=N[last_vt]
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)
 
-            }else  if(N_new_t>samsz){
+            }else  if(isTRUE(N_new_t>samsz)){
               ####################################################################################
               ###  Step 4.2.1.3.1: Generate new random samples according to the new sample size ##
               ####################################################################################
@@ -8108,9 +8414,9 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
 
                 x_temp=rbind(x_c_new,x_t_temp)
 
-                negglm_temp=glm.nb(as.numeric(x_temp[,2])~as.factor(x_temp[,1]),link="log")
-                sum_temp=summary(negglm_temp)
-                s_e_temp=as.numeric(sum_temp$coefficients[2,2])
+                negglm_temp=tryCatch(glm.nb(as.numeric(x_temp[,2])~as.factor(x_temp[,1]),link="log"), error=function(e) NULL)  ## a failed fit is reported as NA
+                sum_temp=if (is.null(negglm_temp)) NULL else summary(negglm_temp)
+                s_e_temp=if (is.null(sum_temp)) NA_real_ else as.numeric(sum_temp$coefficients[2,2])  ## NA se, not a crash
 
                 r_t_temp=mean(x_t_temp[,2])
 
@@ -8162,7 +8468,7 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
               samsz_simu_control=N_new_t
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N_new_t-N[length(s)-1])*(length(mu_keep)+1)
 
-              if ( max(test_new)>0){
+              if (isTRUE(max(test_new)>0)){
                 rej=1
                 stg=length(s)
               }else{
@@ -8177,7 +8483,7 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
 
               for (i in 1:length(mu_keep)){
 
-                if (test_new[i]>=0){
+                if (isTRUE(test_new[i]>=0)){
                   arm_rej_new[i]=1
                 }else {
                   arm_rej_new[i]=0
@@ -8195,9 +8501,9 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
 
       }
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
       out=c(rej_nossr,rej,stg,samsz_simu_control,samsz_simu_tot,futi,arm_drop,arm_rej)
@@ -8252,7 +8558,7 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -8277,7 +8583,7 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -8352,25 +8658,34 @@ masd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,t
 
 #' Multiple comparisons Group sequential design: Simulations, Negative binomial distribution, Operating characteristics
 #'
-#' @param r_t Rate parameter of the test arm (negative binomial endpoint)
-#' @param r_c Rate parameter of the control arm (negative binomial endpoint)
-#' @param kappa Dispersion (size) parameter of the negative binomial distribution
-#' @param direction Test direction: 1 = larger r is better, 0 = smaller r is better
+#' @param r_t Vector of true mean rates of the test arms, one per dose; must be > 0
+#' @param r_c Mean rate of the control arm; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
+#' @param direction Test direction: 1 = larger r is better, otherwise smaller r is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param samsz Planned sample size of the control arm used in the simulation
-#' @param N_max Maximum allowed sample size (control arm)
+#' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = alpha-spending
+#' @param alpha_2 Type I error for the two-sided test; when bry_type = 2 this is instead the
+#'   vector of two-sided type I error levels spent at each look, which must sum to the total
+#'   two-sided type I error
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the
+#'   sample size re-estimation; 0 < beta < 1
+#' @param theta_cut Lack-of-efficacy threshold on the effect-size scale: a test arm is
+#'   dropped at the interim analysis when its observed effect size is below this value
+#' @param samsz Sample size of the control arm used in the simulation; must be > 0
+#' @param N_max Maximum sample size for the control arm allowed by the sample size
+#'   re-estimation; must be >= samsz
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A matrix in which each row corresponds to one simulation replicate and the columns hold the simulated operating characteristics
-#' (e.g. rejection indicators, sample sizes and stopping stages).
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Design}{Matrix with one row per look giving the look number, the information fraction, the critical boundary, the rejection rate by look and the rate of sample size increase}
+#'   \item{Summary by arm}{Matrix with one row per test arm giving the test-arm mean rate, the control-arm mean rate, the drop rate by arm and the rejection rate by arm}
+#'   \item{simulation results}{Named numeric vector holding the rejection rate without and with sample size re-estimation, the rate of sample size increase, the rejection rates conditional on meeting the sample size increase criteria, the simulated type I error rate, the non-type I error rejection rate, the futility rate, the planned and maximum control sample sizes, the mean simulated control sample size and the mean simulated control sample size conditional on an increase}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
@@ -8440,6 +8755,14 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
   ############################################################
 
   simr <- simuloop(sim_num, "MASD", function() {
+    ## ---- non-evaluable default (added 2026-10-31) ----------------------
+    ## A replicate whose statistics cannot be evaluated is recorded as
+    ## 'no rejection, no sample size increase, finish at the planned size'.
+    ## Without these defaults an NA decision left the output variables
+    ## undefined and aborted the whole batch.
+    rej_nossr=0; rej=0; stg=0
+    samsz_simu_control=N[length(s)]; samsz_simu_tot=N[length(s)]*(comp+1); futi=0
+    arm_drop=rep(0,comp); arm_rej=rep(0,comp)
       #########################################################
       ### Step 1: Generate random samples fro phae 2 stage ####
       #########################################################
@@ -8470,9 +8793,9 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
 
           x_temp=rbind(x_c_temp,x_t_temp)
 
-          negglm_temp=glm.nb(as.numeric(x_temp[,2])~as.factor(x_temp[,1]),link="log")
-          sum_temp=summary(negglm_temp)
-          se_temp=sum_temp$coefficients[2,2]
+          negglm_temp=tryCatch(glm.nb(as.numeric(x_temp[,2])~as.factor(x_temp[,1]),link="log"), error=function(e) NULL)  ## a failed fit is reported as NA
+          sum_temp=if (is.null(negglm_temp)) NULL else summary(negglm_temp)
+          se_temp=if (is.null(sum_temp)) NA_real_ else sum_temp$coefficients[2,2]
           r_c_temp=mean(x_c_temp[,2])
           r_t_temp=mean(x_t_temp[,2])
 
@@ -8500,7 +8823,7 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
 
       arm_drop=rep(0,length(r_t))
       for (i in 1:comp){
-        if ( theta_hat_inter_m1[i]<theta_cut){
+        if (isTRUE(theta_hat_inter_m1[i]<theta_cut)){
           arm_drop[i]=1
         }else{
           arm_drop[i]=0
@@ -8518,9 +8841,9 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
       rej_all=matrix(nrow=comp,ncol=length(s))
       for (i in 1:comp){
         for (j in 1:length(s)){
-          if (test_all[i,j]>=0){
+          if (isTRUE(test_all[i,j]>=0)){
             rej_all[i,j]=1
-          }else if (test_all[i,j]<0){
+          }else if (isTRUE(test_all[i,j]<0)){
             rej_all[i,j]=0
           }
         }
@@ -8529,7 +8852,7 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
 
       test_max_1=test_max[1:length(s)-1]
 
-      if (max( theta_hat_inter_m1)<theta_cut) {futi=1}else {futi=0}
+      if (isTRUE(max( theta_hat_inter_m1)<theta_cut)) {futi=1}else {futi=0}
 
       # test compares the Wald statistics with the critical boundaries
       #any value of test>0 indicates that the Wald statistics crossed the critical boundaries at up to length(s)-1
@@ -8537,13 +8860,13 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
       ### step 3. If Wald statistics cross the boundary at up to length(s)-1, terminte trial ##
       ############################################################################################
 
-      if ( max(test_max)>=0){
+      if (isTRUE(max(test_max)>=0)){
         rej_nossr=1  ## rejection rate withoput SSR
-      }else if ( max(test_max)<0){
+      }else if (isTRUE(max(test_max)<0)){
         rej_nossr=0
       }
       #############################
-      if ( max(test_max_1)>=0){ ##null hypothesis rejected, no more random sampling
+      if (isTRUE(max(test_max_1)>=0)){ ##null hypothesis rejected, no more random sampling
 
         futi=0
         rej=1
@@ -8556,7 +8879,7 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
         samsz_simu_control=N[last_vt]
         samsz_simu_tot=N[last_vt]*(comp+1)
 
-      }else if (max(test_max_1)<0) {   #beginnin of step 4
+      }else if (isTRUE(max(test_max_1)<0)) {   #beginnin of step 4
         ############################################################################################
         ### Step 4: If Wald statistics does not cross the boundary at up to length(s)-1         ##
         ## Calculate conditional power. If conditional power > 1-beta, no sample size change      ##
@@ -8570,7 +8893,7 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
 
         if (futi==1) { # If TRUE, thiere is not satisfactory efficacy, stop trial at planned sample size
 
-          if (test_max[length(s)]>0){
+          if (isTRUE(test_max[length(s)]>0)){
             rej=1
             stg=length(s)
           } else {
@@ -8618,7 +8941,7 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
 
           c_power_m2=masd_c_power_com(s=s,c_bry=c_bry,theta=theta_hat_inter_m2,theta_hat_inter_m1=theta_hat_inter_m2,theta_hat_inter_m1_sd=theta_hat_inter_m2_sd,dist=dist)
           c_alpha_m1=masd_c_power_com(s=s,c_bry=c_bry,theta=rep(0,length(theta_hat_inter_m2)),theta_hat_inter_m1=theta_hat_inter_m2,theta_hat_inter_m1_sd=theta_hat_inter_m2_sd,dist=dist)
-          if (c_power_m2>= 1-beta){
+          if (isTRUE(c_power_m2>= 1-beta)){
             #########################################
             ### Proceed to planned sample size  #####
             ### and conduct final testing       #####
@@ -8627,18 +8950,18 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
 
             wald_m2=wald_m1[mu_keep,]
 
-            if (length(mu_keep)==1){
+            if (isTRUE(length(mu_keep)==1)){
               wald_m2_last=wald_m2[last_vt]
               wald_max_m2=wald_m2_last
 
-            }else if (length(mu_keep)>1){
+            }else if (isTRUE(length(mu_keep)>1)){
               wald_m2_last=wald_m2[,last_vt]
               wald_max_m2=max(wald_m2_last)
             }
 
             test_m2=wald_max_m2-c_bry[length(s)]
             arm_test_m2=wald_m2_last-c_bry[length(s)]
-            if (test_m2>0) {
+            if (isTRUE(test_m2>0)) {
               rej=1
               stg=length(s)
               last_vt=stg
@@ -8651,14 +8974,16 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
             samsz_simu_control=N[last_vt]
             samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)   #For q-th (collumn number is q) simulation,
 
-          }else if (c_power_m2<1-beta){
+          }else if (isTRUE(c_power_m2<1-beta)){
 
             t_new_0=masd_new_info_time_com(theta=theta_hat_inter_m2,s=s,c_alpha=c_alpha_m1,theta_hat_inter_m2=theta_hat_inter_m2,
                                            theta_hat_inter_m2_sd=theta_hat_inter_m2_sd,beta=beta,dist=1)
 
-            if (as.numeric(t_new_0[2])<=1){
+            ## default when the re-estimation is not evaluable
+            N_new_t=samsz
+            if (isTRUE(as.numeric(t_new_0[2])<=1)){
               N_new_t=samsz
-            }else if (as.numeric(t_new_0[2])>1){
+            }else if (isTRUE(as.numeric(t_new_0[2])>1)){
               T_new_0=as.numeric(t_new_0[[1]])
 
               N_new_t_0=max(ceiling(n_control_inter*(T_new_0/T_inter)))
@@ -8666,9 +8991,9 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
               N_new_t= min(N_new_t_1,N_max)
             }
 
-            if(N_new_t==samsz){
+            if(isTRUE(N_new_t==samsz)){
 
-              if (test_max[length(s)]>0){
+              if (isTRUE(test_max[length(s)]>0)){
                 rej=1
                 stg=length(s)
               } else {
@@ -8679,7 +9004,7 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
               samsz_simu_control=N[last_vt]
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N[last_vt]-N[length(s)-1])*(length(mu_keep)+1)
 
-            }else  if(N_new_t>samsz){
+            }else  if(isTRUE(N_new_t>samsz)){
               ####################################################################################
               ###  Step 4.2.1.3.1: Generate new random samples according to the new sample size ##
               ####################################################################################
@@ -8700,9 +9025,9 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
 
                 x_temp=rbind(x_c_new,x_t_temp)
 
-                negglm_temp=glm.nb(as.numeric(x_temp[,2])~as.factor(x_temp[,1]),link="log")
-                sum_temp=summary(negglm_temp)
-                s_e_temp=as.numeric(sum_temp$coefficients[2,2])
+                negglm_temp=tryCatch(glm.nb(as.numeric(x_temp[,2])~as.factor(x_temp[,1]),link="log"), error=function(e) NULL)  ## a failed fit is reported as NA
+                sum_temp=if (is.null(negglm_temp)) NULL else summary(negglm_temp)
+                s_e_temp=if (is.null(sum_temp)) NA_real_ else as.numeric(sum_temp$coefficients[2,2])  ## NA se, not a crash
 
                 r_t_temp=mean(x_t_temp[,2])
 
@@ -8754,7 +9079,7 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
               samsz_simu_control=N_new_t
               samsz_simu_tot=N[length(s)-1]*(comp+1)+(N_new_t-N[length(s)-1])*(length(mu_keep)+1)
 
-              if ( max(test_new)>0){
+              if (isTRUE(max(test_new)>0)){
                 rej=1
                 stg=length(s)
               }else{
@@ -8769,7 +9094,7 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
 
               for (i in 1:length(mu_keep)){
 
-                if (test_new[i]>=0){
+                if (isTRUE(test_new[i]>=0)){
                   arm_rej_new[i]=1
                 }else {
                   arm_rej_new[i]=0
@@ -8787,9 +9112,9 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
 
       }
 
-      if (stg==0) {
+      if (isTRUE(stg==0)) {
         arm_rej=rep(0,comp)
-      }else if (stg>0) {
+      }else if (isTRUE(stg>0)) {
         arm_rej=rej_all[,stg]
       }
       out=c(rej_nossr,rej,stg,samsz_simu_control,samsz_simu_tot,futi,arm_drop,arm_rej)
@@ -8827,7 +9152,7 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
 
-      if ((arm_rej[j,i]==1)&(mu[i]>0)){
+      if (isTRUE((arm_rej[j,i]==1)&(mu[i]>0))){
 
         arm_pos_rej[j,i]=1
 
@@ -8852,7 +9177,7 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
   arm_tyI_er=matrix(ncol=comp,nrow=dim(simr)[1])
   for (i in 1:comp){
     for (j in 1: dim(simr)[1]){
-      if (arm_rej[j,i]==1&mu[i]<=0){
+      if (isTRUE(arm_rej[j,i]==1&mu[i]<=0)){
         arm_tyI_er[j,i]=1
       }else {
         arm_tyI_er[j,i]=0
@@ -8944,37 +9269,46 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
   ###################
 #' Multiple comparisons Group sequential design: Simulations, Negative binomial distribution, Optimizing adaptive sequential design
 #'
-#' @param groups Vector of group labels used in the simulation
-#' @param r_c Rate parameter of the control arm (negative binomial endpoint)
-#' @param kappa Dispersion (size) parameter of the negative binomial distribution
-#' @param direction Test direction: 1 = larger r is better, 0 = smaller r is better
-#' @param s1 Information fractions for the first stage / first group
-#' @param s2 Information fractions for the second stage / second group
-#' @param alpha_2 Type I error for the two-sided test
-#' @param alpha_2_alps_s1 Type I error spent up to the interim analysis (stage 1 / group 1)
-#' @param alpha_2_alps_s2 Cumulative type I error spent at the final analysis (stage 2 / group 2)
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param samsz_1 Planned sample size (control arm) of the first stage / group
-#' @param samsz_2 Planned sample size (control arm) of the second stage / group
-#' @param N_max_1 Maximum allowed sample size (control arm) of the first stage / group
-#' @param N_max_2 Maximum allowed sample size (control arm) of the second stage / group
-#' @param beta Type II error rate, i.e. 1 - power
+#' @param groups Matrix of true mean rates of the test arms: each row is one simulation scenario and each column one test arm/dose; must be > 0
+#' @param r_c Mean rate of the control arm; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
+#' @param direction Test direction: 1 = larger r is better, otherwise smaller r is better
+#' @param s1 Vector of information fractions of the first interim analysis schedule, e.g. c(1/3, 2/3, 1); the last element must be 1
+#' @param s2 Vector of information fractions of the second interim analysis schedule, e.g. c(0.5, 1); the last element must be 1
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param alpha_2_alps_s1 Two-sided type I error levels spent at each look of the schedule s1; must sum to alpha_2
+#' @param alpha_2_alps_s2 Two-sided type I error levels spent at each look of the schedule s2; must sum to alpha_2
+#' @param theta_cut Lack-of-efficacy threshold on the effect-size scale: a test arm is
+#'   dropped at the interim analysis when its observed effect size is below this value
+#' @param samsz_1 Sample size of the control arm used in the simulation for the first sample size scenario; must be > 0
+#' @param samsz_2 Sample size of the control arm used in the simulation for the second sample size scenario; must be > 0
+#' @param N_max_1 Maximum sample size for the control arm allowed by the sample size re-estimation in the first N_max scenario; must be >= samsz_1
+#' @param N_max_2 Maximum sample size for the control arm allowed by the sample size re-estimation in the second N_max scenario; must be >= samsz_2
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the
+#'   sample size re-estimation; 0 < beta < 1
 #' @param sim_num Number of simulation replicates
 #'
-#' @return A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{List holding the O'Brien-Fleming group sequential design for the schedule s1 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{List holding the O'Brien-Fleming group sequential design for the schedule s2 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s1}{List holding the alpha-spending group sequential design for the schedule s1 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s2}{List holding the alpha-spending group sequential design for the schedule s2 and the simulation results for the four combinations of the two planned control sample sizes and the two maximum control sample sizes}
+#' }
 #'
 #' @references P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for clinical trials, Journal of Biopharmaceutical Statistics, 34:3, 424-440, DOI:10.1080/10543406.2023.2233590. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2023.2233590}
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #'
 #' @examples
 #' \donttest{
+#' set.seed(1)
 #' masd_simu_OC_neg_binomial(
-#' groups = rbind(c(0.2,0.3,0.4),c(0.3,0.4,0.5),c(0.4,0.5,0.6),c(0.5,0.6,0.7)), r_c = 0.1,
+#' groups = rbind(c(0.2,0.3,0.4),c(0.3,0.4,0.5),c(0.4,0.5,0.6),c(0.5,0.6,0.7)), r_c = 0.35,
 #' kappa = 1, direction = 1, s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05,
 #' alpha_2_alps_s1 = c(0.001,0.001,0.048), alpha_2_alps_s2 = c(0.001,0.049), theta_cut = 0.01,
-#' samsz_1 = 100, samsz_2 = 150, N_max_1 = 200, N_max_2 = 300, beta = 0.1, sim_num = 2)
+#' samsz_1 = 50, samsz_2 = 75, N_max_1 = 1000, N_max_2 = 1500, beta = 0.1, sim_num = 2)
 #' }
 #'
 #' @export
@@ -9315,3 +9649,4 @@ masd_rej_OC_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_br
  #                                   theta_cut=0.01,samsz_1=100,samsz_2=150,N_max_1=200,N_max_2=300,beta=0.1,sim_num=10)
 
 
+  

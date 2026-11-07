@@ -20,42 +20,50 @@ MSD_Sample_size_OF_boundary_normal(
 )
 }
 \arguments{
-\item{mu_t}{Means of the test arm}
+\item{mu_t}{Vector of means of the test arms, one entry per dose or endpoint; the function returns NA
+if the largest effect size is below 1e-4}
 
-\item{mu_c}{Means of the control arm}
+\item{mu_c}{Mean of the common control arm}
 
-\item{std_t}{Standard deviation of the test arm}
+\item{std_t}{Common standard deviation of the test arms; must be > 0}
 
-\item{std_c}{Standard deviation of the control arm}
+\item{std_c}{Standard deviation of the control arm; must be > 0}
 
-\item{margin}{Non-inferiority / superiority margin}
+\item{margin}{Non-inferiority margin; must be >= 0, set to 0 for a superiority trial and > 0 for a non-inferiority trial}
 
-\item{direction}{Test direction: 1 = larger mu is better, 0 = smaller mu is better}
+\item{direction}{Test direction: 1 = larger mu is better, otherwise smaller mu is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{alpha}{One-sided significance level (type I error rate)}
+\item{alpha}{Type I error for the one-sided test; 0 < alpha < 1}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Type II error rate, i.e. 1 - power; 0 < beta < 1}
 
-\item{rand_ratio}{Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
-\item{dist1}{Endpoint / distribution indicator for the first stage}
+\item{dist1}{Distribution indicator for the first stage: 1 = the sample size calculation is for multiple
+dose vs. a common control, with normal distributions; 2 = otherwise}
 
-\item{dist2}{Endpoint / distribution indicator for the second stage}
+\item{dist2}{Distribution indicator for the second stage: 1 = the sample size calculation is for multiple
+dose vs. a common control, with normal distributions; 2 = otherwise}
 }
 \value{
-A named list containing the following elements: 'test arm sample size', 'control arm sample size',
-'sample size for each dose in a two arm study with same critical boudary',
-'sample size for control arm corresponding to each dose in a two arm study with same critical boudary', 'Type I error control'.
+A named list with the following components:
+\describe{
+  \item{test arm sample size}{Sample size required for a test arm; equal to rand_ratio times the control arm sample size}
+  \item{control arm sample size}{Sample size required for the common control arm}
+  \item{sample size for each dose in a two arm study with same critical boudary}{Vector with one test arm sample size per dose or endpoint, as if a separate two arm trial were conducted for that dose with the same critical boundary}
+  \item{sample size for control arm corresponding to each dose in a two arm study with same critical boudary}{Vector with the matching control arm sample size for each dose or endpoint}
+  \item{Type I error control}{Boundary output of the closed testing procedure: a list with one element per comparison level (the M-level boundary first, down to the 1-level boundary), each element a list containing the vectors 'critical bounadry', 'alpha spent at each interim analysis', 'cumulative alpha' and 'nominal p-value' for the analyses}
+}
 }
 \description{
 Multiple comparisons Group sequential design: Normal distribution, Sample size calculation, O'Brien-Fleming boundary
 }
 \examples{
-MSD_Sample_size_OF_boundary_normal(mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86,
-margin = 0.1, direction = 0, s = c(1/3, 2/3, 1),
-alpha = 0.025, beta = 0.1, rand_ratio = 1, dist1 = 1, dist2 = 1)
+MSD_Sample_size_OF_boundary_normal( mu_t = 2.6, mu_c = 0.6, std_t = 9.43, std_c = 9.86,
+  margin = 0.1, direction = 1, s = c(1/3, 2/3, 1), alpha = 0.025, beta = 0.1, rand_ratio = 1,
+  dist1 = 1, dist2 = 1)
 
 }
 \references{
@@ -63,7 +71,7 @@ P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

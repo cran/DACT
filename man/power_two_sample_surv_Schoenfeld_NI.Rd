@@ -14,20 +14,24 @@ power_two_sample_surv_Schoenfeld_NI(
 )
 }
 \arguments{
-\item{HR}{The hazards ratio of test arm vs. the control arm}
+\item{HR}{Hazards ratio of test arm vs. the control arm; must be > 0}
 
-\item{margin}{The non-inferiority margin}
+\item{margin}{Non-inferiority margin; set to 0 for a superiority trial}
 
-\item{direction}{Test direction: 1 = smaller HR is better, 0 = larger HR is better}
+\item{direction}{Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better}
 
-\item{alpha}{The type I error for the one-sided test}
+\item{alpha}{Type I error for the one-sided test; 0 < alpha < 1}
 
-\item{event_tot}{Total number of events}
+\item{event_tot}{Total number of events across both arms}
 
-\item{rand_ratio}{The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 }
 \value{
-The output will show the power
+A named list with the following components:
+\describe{
+  \item{Power}{Power of the non-inferiority test comparing the hazard ratio with the margin}
+  \item{Reference}{Character string giving the reference for the Schoenfeld sample size formula}
+}
 }
 \description{
 Fixed sample designs: Survival analysis, Non-inferiority trial, Power calculation

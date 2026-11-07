@@ -29,55 +29,94 @@ asd_simu_OC_normal(
 
 \item{mu_c}{Mean of the control arm}
 
-\item{sigma_t}{Standard deviation of the test arm}
+\item{sigma_t}{Common standard deviation of the test arm and the control arm; must be > 0}
 
-\item{sigma_c}{Standard deviation of the control arm}
+\item{sigma_c}{Common standard deviation of the test arm and the control arm; must be > 0}
 
-\item{direction}{Test direction: 1 = larger mu is better, 0 = smaller mu is better}
+\item{direction}{Test direction: 1 = larger mu is better, otherwise smaller mu is better}
 
-\item{s1}{Information fractions for the first stage / first group}
+\item{s1}{Vector of information fractions of the first interim analysis schedule, e.g.
+c(1/3, 2/3, 1); the last element must be 1}
 
-\item{s2}{Information fractions for the second stage / second group}
+\item{s2}{Vector of information fractions of the second interim analysis schedule, e.g.
+c(0.5, 1); the last element must be 1}
 
-\item{alpha_2}{Type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+one-sided type I error used for the critical boundaries}
 
-\item{alpha_2_alps_s1}{Type I error spent up to the interim analysis (stage 1 / group 1)}
+\item{alpha_2_alps_s1}{Two-sided type I error spent at the interim analyses of schedule s1 with
+the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+alpha_2}
 
-\item{alpha_2_alps_s2}{Cumulative type I error spent at the final analysis (stage 2 / group 2)}
+\item{alpha_2_alps_s2}{Two-sided type I error spent at the interim analyses of schedule s2 with
+the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+alpha_2}
 
-\item{theta_cut}{Efficacy cut-off on the effect-size scale applied at the interim analysis}
+\item{theta_cut}{Lack of efficacy threshold on the effect-size scale: if the observed interim
+effect size is below theta_cut, the trial continues to the planned sample size with no
+sample size increase and no early termination for futility}
 
-\item{samsz_1}{Planned sample size (control arm) of the first stage / group}
+\item{samsz_1}{Planned sample size of the control arm for the first stage of the simulation grid}
 
-\item{samsz_2}{Planned sample size (control arm) of the second stage / group}
+\item{samsz_2}{Planned sample size of the control arm for the second stage of the simulation grid}
 
-\item{N_max_1}{Maximum allowed sample size (control arm) of the first stage / group}
+\item{N_max_1}{Maximum sample size of the control arm allowed for the sample size change in the
+first scenario of the simulation grid}
 
-\item{N_max_2}{Maximum allowed sample size (control arm) of the second stage / group}
+\item{N_max_2}{Maximum sample size of the control arm allowed for the sample size change in the
+second scenario of the simulation grid}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Conditional type II error; 1 - beta is the target conditional power for the sample
+size re-estimation; must be between 0 and 1}
 
-\item{sim_num}{Number of simulation replicates}
+\item{sim_num}{Number of simulation replicates; must be > 0}
 }
 \value{
-A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+A named list with six components, one for each combination of critical boundary type
+(O'Brien-Fleming, Pocock, alpha-spending) and interim analysis schedule (s1, s2):
+\describe{
+  \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{Named list with the group
+    sequential design (Looks, Information fractions, O'Brien-Fleming boundaries) and the
+    simulation results for the four combinations of planned sample size (samsz_1, samsz_2) and
+    maximum sample size (N_max_1, N_max_2), each a data frame with one row per test-arm mean and
+    the columns mu_t1,..., mu_c, sample size for fixed design, Rejection rate without SSR,
+    Rejection rate with SSR, Rate of sample size increase,
+    Rejection rate without SSR/(meeting sample size incerase criteria),
+    Rejection rate with SSR/(sample size incerase), Futility rate, Planned control sample size,
+    Maximum control sample size, Mean control sample size,
+    mean control sample size conditional on increase and
+    Ratio of adaptive sample size over fixed sample size}
+  \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{The same group sequential
+    design and simulation results computed with the information fractions s2}
+  \item{Pocock boundaries, interim analysis schedule=s1}{The same group sequential design and
+    simulation results computed with Pocock boundaries and the information fractions s1}
+  \item{Pocock boundaries, interim analysis schedule=s2}{The same group sequential design and
+    simulation results computed with Pocock boundaries and the information fractions s2}
+  \item{Alpha-spending boundaries, interim analysis schedule=s1}{The same group sequential
+    design and simulation results computed with alpha-spending boundaries and the information
+    fractions s1}
+  \item{Alpha-spending boundaries, interim analysis schedule=s2}{The same group sequential
+    design and simulation results computed with alpha-spending boundaries and the information
+    fractions s2}
+}
 }
 \description{
 Group sequential designs / Adaptive sequential designs: Simulations, Normal distribution, Optimizing adaptive sequential design
 }
 \examples{
 \donttest{
-asd_simu_OC_normal(mu_t = c(0.3,0.4,0.5), mu_c = 0, sigma_t = 1, sigma_c = 1, direction = 1,
+set.seed(1)
+asd_simu_OC_normal(mu_t = c(0.3,0.4,0.5), mu_c = 0.2, sigma_t = 1, sigma_c = 1, direction = 1,
 s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05, alpha_2_alps_s1 = c(0.001,0.001,0.048),
-alpha_2_alps_s2 = c(0.001,0.049), theta_cut = 0.01, samsz_1 = 100,
-samsz_2 = 150, N_max_1 = 200, N_max_2 = 300, beta = 0.1, sim_num = 20)
+alpha_2_alps_s2 = c(0.001,0.049), theta_cut = 0.01, samsz_1 = 100, samsz_2 = 150,
+N_max_1 = 1000, N_max_2 = 1500, beta = 0.1, sim_num = 20)
 }
 
 }
 \references{
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 

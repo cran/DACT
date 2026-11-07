@@ -16,34 +16,37 @@ two_stg_power_simu_poisson(
 )
 }
 \arguments{
-\item{lambda_t}{Event rate in the test arm (Poisson / negative binomial endpoint)}
+\item{lambda_t}{Mean of the test arm; each element must be > 0}
 
-\item{lambda_c}{Event rate in the control arm (Poisson / negative binomial endpoint)}
+\item{lambda_c}{Mean of the control arm; must be > 0}
 
-\item{direction}{Test direction: 1 = larger lambda is better, 0 = smaller lambda is better}
+\item{direction}{Test direction: 1 = larger lambda is better, otherwise smaller lambda is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{bry_type}{Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending}
+\item{bry_type}{Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock; any other value leaves the boundaries undefined}
 
-\item{alpha_2}{Type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; 0 < alpha_2 < 1}
 
 \item{samsz}{Planned sample size of the control arm used in the simulation}
 
 \item{sim_num}{Number of simulation replicates}
 }
 \value{
-A named list containing the following elements: 'simulation summary', 'planned control sample size ', 'planned total sample size'.
+A named list with the following components:
+\describe{
+  \item{Sequential design}{Matrix of the planned group sequential design, with one row per analysis and the columns "Look", "Information fraction", "Critical boundaries" and "rejection by look"}
+  \item{Results by arm}{Matrix with one row per dose and the columns "lambda_t1,...", "lambda_c", "selection rate", "rejection rate by each lambda_t" and "conditional rejection rate"; the selection rate is the probability that the dose is selected to proceed to phase 3, the rejection rate is the probability that the dose is selected and the null hypothesis is rejected, and the conditional rejection rate is the rejection rate divided by the selection rate}
+  \item{Simulation results}{Named vector of the overall "rejection rate", the "Type I error", the "Non-Type I error rejection rate", the "Planned control sample size", the "Mean control sample size", the "Planned total sample size" and the "Mean total sample size"}
+}
 }
 \description{
 Phase 2/3 seamless combination Group sequential design: Simulations, Poisson distribution, Type I error and power
 }
 \examples{
-\donttest{
 two_stg_power_simu_poisson(lambda_t = c(1.1,1.3,1.4), lambda_c = 1.1, direction = 1,
 s = c(1/3,1), bry_type = 1, alpha_2 = 0.05,
 samsz = 100, sim_num = 20)
-}
 
 }
 \references{
@@ -51,7 +54,7 @@ P. Gao, Y. Li (05 May 2024): Adaptive two-stage seamless sequential design for c
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

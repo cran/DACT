@@ -4,19 +4,31 @@
 
 #########Interim analysis , sample size re-estimation ######
 
-#' The interim analysis can be conducted for both two-stage and three-stage designs
+#' Single arm phase 2 oncology trial: The interim analysis can be conducted for both two-stage and three-stage designs
 #'
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param r_final For two-stage designs, r_final=r2. For the three-stage design, r_final=r3.
-#' @param n_inter Number of patients at the interim look. For two-stage designs, n_inter=n1. For the three-stage design, n_inter=n2.
-#' @param n_final For two-stage designs, n_inter=n2. For the three-stage design, n_inter=n3.
-#' @param x_inter Number of responses observed at the interim look.
-#' @param beta    The conditional type II error. 1-beta is the desired conditional power.
-#' @param N_max   Pre-selected maximum sample size.
+#' @param p_0 Response rate indicating low activity with insufficient clinical benefit
+#' @param r_final Rejection threshold of the original design in terms of the number of
+#'   responses: r_final = r_2 for a two-stage design and r_final = r_3 for a three-stage design
+#' @param n_inter Number of patients at the interim look: n_inter = n_1 for a two-stage design
+#'   and n_inter = n_2 for a three-stage design
+#' @param n_final Number of patients at the final look: n_final = n_2 for a two-stage design and
+#'   n_final = n_3 for a three-stage design; must be greater than n_inter
+#' @param x_inter Number of responses observed at the interim look
+#' @param beta Conditional type II error rate: 1 - beta is the desired conditional power, which
+#'   drives the re-estimated sample size
+#' @param N_max Pre-selected maximum sample size for the trial; the new sample size is truncated
+#'   at N_max
 #'
-#' @return n_new: is the new sample size.
-#' @return r_new (without continuity correction) and r_new (with continuity correction) are thresholds such that the null hypothesis will be
-#' rejected at n_new if at least r_new responses are observed. Simulations on type I error will help to determine if continuity correction is needed.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{new sample size}{Re-estimated total sample size N_new, obtained by converting the
+#'     required information time into a number of patients and truncating at N_max}
+#'   \item{new discrete rejection boundary without continuity correction}{Threshold r_new such
+#'     that the null hypothesis is rejected at the new sample size if at least r_new responses
+#'     are observed; no continuity correction}
+#'   \item{new discrete rejection boundary with continuity correction}{The same rejection
+#'     threshold computed with the 0.5 continuity correction applied to the response count}
+#' }
 #'
 #' @references R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials: an expansion of Simon’s design,
@@ -94,22 +106,38 @@ interim_analysis<-function(p_0,r_final,n_inter,n_final,x_inter,beta,N_max){
 
 #########Final analysis , with/without sample size change ######
 
-#' Final analysis: two stage design, no sample size change
+#' Single arm phase 2 oncology trial: Final analysis: two stage design, no sample size change
 #'
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param n_1   Number of patients at first look.
-#' @param n_2   Number of patients at second look.
-#' @param r_1_e   The trial would be stopped for superiority if at least r2e responses are observed
-#' at the second look.
-#' @param r_2    If no more than r_2 responses are observed at the second look, then the null hypothesis will not be rejected.
-#' @param x_last Number of responses at the final visit.
-#' @param last_vt 1.
-#' @param alpha    One-sided type I error.
+#' @param p_0 Response rate indicating low activity with insufficient clinical benefit
+#' @param n_1 Number of patients at first look
+#' @param n_2 Number of patients at second look
+#' @param r_1_e Superiority-stopping threshold at the first look: the trial would be stopped for
+#'   superiority if at least r_1_e responses are observed at the first look. Enter NA when the
+#'   design uses no efficacy boundary at the first look; the function then substitutes a
+#'   boundary that cannot be crossed
+#' @param r_2 If no more than r_2 responses are observed at the second look, then the null
+#'   hypothesis will not be rejected
+#' @param x_last Number of responses at the final visit
+#' @param last_vt Index of the analysis at which the trial stopped: 1 = first look, 2 = second
+#'   (final) look
+#' @param alpha Type I error for the one-sided test
 #'
-#' @return UL: upper limit of confidence interval.
-#' @return LL: lower limit of confidence interval.
-#' @return The results with continuity correction are not necessarily different from those with continuity correction.
-#' @return The need for continuity correction can be determined through simulations on type I error (see Gao, Zhang, 2004).
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{p_no_correction}{P-value of the test of the null hypothesis that the response rate
+#'     equals p_0, calculated at the analysis at which the trial stopped without continuity
+#'     correction}
+#'   \item{p_correction}{The same p-value calculated with the 0.5 continuity correction}
+#'   \item{CI_without_correction}{Numeric vector of length 3 holding the lower limit, the point
+#'     estimate and the upper limit of the two-sided (1 - 2*alpha) confidence interval for the
+#'     response rate, computed without continuity correction}
+#'   \item{CI_with_correction}{The same confidence interval computed with the 0.5 continuity
+#'     correction}
+#' }
+#'
+#' @details The results with continuity correction are not necessarily different from those
+#' without continuity correction. The need for continuity correction can be determined through
+#' simulations on the type I error (see Gao and Zhang, 2004).
 #'
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials: an expansion of Simon’s design,
 #' Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
@@ -204,7 +232,7 @@ gsd_ci_est_2_stage<-function(p_0,n_1,n_2,r_1_e,r_2,x_last,last_vt,alpha){
   CI_withot_correction=c(theta_ll+p_0,theta_pt+p_0,theta_ul+p_0)
   CI_with_correction=c(theta_ll_0+p_0,theta_pt_0+p_0,theta_ul_0+p_0)
   out=list(p_no_correction,p_correction,CI_withot_correction,CI_with_correction)
-  names(out)=c(" p_no_correction","p_correction","CI_without_correction","CI_with_correction")
+names(out)=c("p_no_correction","p_correction","CI_without_correction","CI_with_correction")
   # out_1=list(out,e_bry_f_0)
   return(out)
 }
@@ -216,22 +244,39 @@ gsd_ci_est_2_stage<-function(p_0,n_1,n_2,r_1_e,r_2,x_last,last_vt,alpha){
 #gsd_ci_est_2_stage(p_0=0.2,n_1=100,n_2=105,r_1_e=NA,r_2=29,x_last=31,last_vt=1,alpha=0.025)
 ######################################################
 
-#' Final analysis: three stage design, no sample size change
+#' Single arm phase 2 oncology trial: Final analysis: three stage design, no sample size change
 #'
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param n_2   Number of patients at second look.
-#' @param n_3   Number of patients at third look.
-#' @param r_2_e   The trial would be stopped for superiority if at least r_2_e responses are observed
-#' at the second look. If r_2_e was not used in the design, enter NA.
-#' @param r_3    If no more than r_3 responses are observed at the third look, then the null hypothesis will not be rejected.
-#' @param x_last  Number of responses at the final visit.
-#' @param last_vt 1.
-#' @param alpha    One-sided type I error.
+#' @param p_0 Response rate indicating low activity with insufficient clinical benefit
+#' @param n_2 Number of patients at second look; because the trial has proceeded to the third
+#'   look, n_1, r_1 and r_2 of the original design are not needed for the final analysis
+#' @param n_3 Number of patients at third look
+#' @param r_2_e Superiority-stopping threshold at the second look: the trial would be stopped for
+#'   superiority if at least r_2_e responses are observed at the second look. If r_2_e was not
+#'   used in the design, enter NA; the function then substitutes a boundary that cannot be
+#'   crossed
+#' @param r_3 If no more than r_3 responses are observed at the third look, then the null
+#'   hypothesis will not be rejected
+#' @param x_last Number of responses at the final visit
+#' @param last_vt Index of the analysis at which the trial stopped: 2 = second look, 3 = third
+#'   (final) look
+#' @param alpha Type I error for the one-sided test
 #'
-#' @return UL: upper limit of confidence interval.
-#' @return LL: lower limit of confidence interval.
-#' @return The results with continuity correction are not necessarily different from those with continuity correction.
-#' @return The need for continuity correction can be determined through simulations on type I error (see Gao, Zhang, 2004).
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{p_no_correction}{P-value of the test of the null hypothesis that the response rate
+#'     equals p_0, calculated at the analysis at which the trial stopped without continuity
+#'     correction}
+#'   \item{p_correction}{The same p-value calculated with the 0.5 continuity correction}
+#'   \item{CI_withot_correction}{Numeric vector of length 3 holding the lower limit, the point
+#'     estimate and the upper limit of the two-sided (1 - 2*alpha) confidence interval for the
+#'     response rate, computed without continuity correction}
+#'   \item{CI_with_correction}{The same confidence interval computed with the 0.5 continuity
+#'     correction}
+#' }
+#'
+#' @details The results with continuity correction are not necessarily different from those
+#' without continuity correction. The need for continuity correction can be determined through
+#' simulations on the type I error (see Gao and Zhang, 2004).
 #'
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials: an expansion of Simon’s design,
 #' Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
@@ -323,7 +368,7 @@ gsd_ci_est_3_stage<-function(p_0,n_2,n_3,r_2_e,r_3,x_last,last_vt,alpha){
   CI_withot_correction=c(theta_ll+p_0,theta_pt+p_0,theta_ul+p_0)
   CI_with_correction=c(theta_ll_0+p_0,theta_pt_0+p_0,theta_ul_0+p_0)
   out=list(p_no_correction,p_correction,CI_withot_correction,CI_with_correction)
-  names(out)=c(" p_no_correction","p_correction","CI_withot_correction","CI_with_correction")
+names(out)=c("p_no_correction","p_correction","CI_withot_correction","CI_with_correction")
   return(out)
 }
 ########################
@@ -334,23 +379,43 @@ gsd_ci_est_3_stage<-function(p_0,n_2,n_3,r_2_e,r_3,x_last,last_vt,alpha){
 ######################################################
 ##############################################
 
-#' Final analysis: two stage design, with sample size change
+#' Single arm phase 2 oncology trial: Final analysis: two stage design, with sample size change
 #'
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param n_1   Number of patients at first look.
-#' @param n_2   Number of patients at second look.
-#' @param r_1_e   The trial would be stopped for superiority if at least r_1_e responses are observed
-#' at the first look.
-#' @param r_2    If no more than r_2 responses are observed at the second look, then the null hypothesis will not be rejected.
-#' @param n_new  New sample size after the interim analysis.
-#' @param x_1    Number of responses at the first look.
-#' @param x_new  Number of responses at the final visit.
-#' @param alpha    One-sided type I error.
+#' @param p_0 Response rate indicating low activity with insufficient clinical benefit
+#' @param n_1 Number of patients at first look
+#' @param n_2 Number of patients at second look in the original design
+#' @param r_1_e Superiority-stopping threshold at the first look: the trial would be stopped for
+#'   superiority if at least r_1_e responses are observed at the first look. Enter NA when the
+#'   design uses no efficacy boundary at the first look; the function then bases the final
+#'   boundary on r_2 alone
+#' @param r_2 If no more than r_2 responses are observed at the second look, then the null
+#'   hypothesis will not be rejected
+#' @param n_new New sample size after the interim analysis, used as the final sample size
+#' @param x_1 Number of responses at the first look
+#' @param x_new Number of responses at the final visit
+#' @param alpha Type I error for the one-sided test
 #'
-#' @return UL: upper limit of confidence interval.
-#' @return LL: lower limit of confidence interval.
-#' @return The results with continuity correction are not necessarily different from those with continuity correction.
-#' @return The need for continuity correction can be determined through simulations on type I error (see Gao, Zhang, 2004).
+#' @return A named list whose components depend on whether a first-look efficacy boundary was
+#'   supplied. When r_1_e is NA the list contains p_value and Confidence interval; otherwise it
+#'   contains four components, reported without and with continuity correction:
+#' \describe{
+#'   \item{p_value}{P-value of the test of the null hypothesis that the response rate equals p_0
+#'     at the final analysis; returned when r_1_e is NA}
+#'   \item{Confidence interval}{Numeric vector of length 3 holding the lower limit, the point
+#'     estimate and the upper limit of the two-sided (1 - 2*alpha) confidence interval for the
+#'     response rate; returned when r_1_e is NA}
+#'   \item{p_no_correction}{P-value at the final analysis computed without continuity correction}
+#'   \item{p_correction}{The same p-value computed with the 0.5 continuity correction}
+#'   \item{CI_withot_correction}{Numeric vector of length 3 holding the lower limit, the point
+#'     estimate and the upper limit of the two-sided (1 - 2*alpha) confidence interval for the
+#'     response rate, computed without continuity correction}
+#'   \item{CI_with_correction}{The same confidence interval computed with the 0.5 continuity
+#'     correction}
+#' }
+#'
+#' @details The results with continuity correction are not necessarily different from those
+#' without continuity correction. The need for continuity correction can be determined through
+#' simulations on the type I error (see Gao and Zhang, 2004).
 #'
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials: an expansion of Simon’s design,
 #' Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
@@ -424,7 +489,7 @@ asd_ci_est_one_arm_2_stage<-function(p_0,n_1,n_2,r_1_e,r_2,n_new,x_1,x_new,alpha
     CI_1=c(theta_ll+p_0,theta_pt+p_0,theta_ul+p_0)
 
     out=list(p_value,CI_1)
-    names(out)=c(" p_value","Confidence interval")
+names(out)=c("p_value","Confidence interval")
   }else{
     r=c(r_1_e,r_2)
     c_bry=(r/N-p_0)*sqrt(N^3/(r*(N-r)))
@@ -472,7 +537,7 @@ asd_ci_est_one_arm_2_stage<-function(p_0,n_1,n_2,r_1_e,r_2,n_new,x_1,x_new,alpha
     CI_1=c(theta_ll+p_0,theta_pt+p_0,theta_ul+p_0)
     CI_1_0=c(theta_ll_0+p_0,theta_pt_0+p_0,theta_ul_0+p_0)
     out=list(p_no_correction,p_correction,CI_1,CI_1_0)
-    names(out)=c(" p_no_correction","p_correction","CI_withot_correction","CI_with_correction")
+names(out)=c("p_no_correction","p_correction","CI_withot_correction","CI_with_correction")
   }
   return(out)
 }
@@ -484,24 +549,46 @@ asd_ci_est_one_arm_2_stage<-function(p_0,n_1,n_2,r_1_e,r_2,n_new,x_1,x_new,alpha
 ##########################################################################
 ##############################################
 
-#' Final analysis: three stage design, with sample size change
+#' Single arm phase 2 oncology trial: Final analysis: three stage design, with sample size change
 #'
-#' @param p_0   Response rate indicating low activity with insufficient clinical benefit.
-#' @param n_2   Number of patients at second look.
-#' @param n_3   Number of patients at third look.
-#' @param r_2_e   The trial would be stopped for superiority if at least r_2_e responses are observed
-#' at the second look. If r_2_e was not used in the design, enter NA.
-#' @param r_2    If no more than r_2 responses are observed at the second look, then the trial would be stopped for futility.
-#' @param r_3    If no more than r_3 responses are observed at the third look, then the null hypothesis will not be rejected.
-#' @param n_new  New sample size after the interim analysis (at the second look).
-#' @param x_2    Number of responses at the second look.
-#' @param x_new  Number of responses at the final visit.
-#' @param alpha    One-sided type I error.
+#' @param p_0 Response rate indicating low activity with insufficient clinical benefit
+#' @param n_2 Number of patients at second look
+#' @param n_3 Number of patients at third look
+#' @param r_2_e Superiority-stopping threshold at the second look: the trial would be stopped for
+#'   superiority if at least r_2_e responses are observed at the second look. If r_2_e was not
+#'   used in the design, enter NA; the function then bases the final boundary on r_3 alone
+#' @param r_2 If no more than r_2 responses are observed at the second look, then the trial would
+#'   be stopped for futility; kept for consistency with the design of the trial and not used by
+#'   this function, which conditions on the observed responses at the second look
+#' @param r_3 If no more than r_3 responses are observed at the third look, then the null
+#'   hypothesis will not be rejected
+#' @param n_new New sample size after the interim analysis, taken at the second look and used as
+#'   the final sample size
+#' @param x_2 Number of responses at the second look
+#' @param x_new Number of responses at the final visit
+#' @param alpha Type I error for the one-sided test
 #'
-#' @return UL: upper limit of confidence interval.
-#' @return LL: lower limit of confidence interval.
-#' @return The results with continuity correction are not necessarily different from those with continuity correction.
-#' @return The need for continuity correction can be determined through simulations on type I error (see Gao, Zhang, 2004).
+#' @return A named list whose components depend on whether a second-look efficacy boundary was
+#'   supplied. When r_2_e is NA the list contains p_value and Confidence interval; otherwise it
+#'   contains four components, reported without and with continuity correction:
+#' \describe{
+#'   \item{p_value}{P-value of the test of the null hypothesis that the response rate equals p_0
+#'     at the final analysis; returned when r_2_e is NA}
+#'   \item{Confidence interval}{Numeric vector of length 3 holding the lower limit, the point
+#'     estimate and the upper limit of the two-sided (1 - 2*alpha) confidence interval for the
+#'     response rate; returned when r_2_e is NA}
+#'   \item{p_no_correction}{P-value at the final analysis computed without continuity correction}
+#'   \item{p_correction}{The same p-value computed with the 0.5 continuity correction}
+#'   \item{CI_withot_correction}{Numeric vector of length 3 holding the lower limit, the point
+#'     estimate and the upper limit of the two-sided (1 - 2*alpha) confidence interval for the
+#'     response rate, computed without continuity correction}
+#'   \item{CI_with_correction}{The same confidence interval computed with the 0.5 continuity
+#'     correction}
+#' }
+#'
+#' @details The results with continuity correction are not necessarily different from those
+#' without continuity correction. The need for continuity correction can be determined through
+#' simulations on the type I error (see Gao and Zhang, 2004).
 #'
 #' @references P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials: an expansion of Simon’s design,
 #' Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
@@ -575,7 +662,7 @@ asd_ci_est_one_arm_3_stage<-function(p_0,n_2,n_3,r_2_e,r_2,r_3,n_new,x_2,x_new,a
     CI_1=c(theta_ll+p_0,theta_pt+p_0,theta_ul+p_0)
 
     out=list(p_value,CI_1)
-    names(out)=c(" p_value","Confidence interval")
+names(out)=c("p_value","Confidence interval")
   }else{
     r=c(r_2_e,r_3)
     c_bry=(r/N-p_0)*sqrt(N^3/(r*(N-r)))
@@ -619,7 +706,7 @@ asd_ci_est_one_arm_3_stage<-function(p_0,n_2,n_3,r_2_e,r_2,r_3,n_new,x_2,x_new,a
     CI_1=c(theta_ll+p_0,theta_pt+p_0,theta_ul+p_0)
     CI_1_0=c(theta_ll_0+p_0,theta_pt_0+p_0,theta_ul_0+p_0)
     out=list(p_no_correction,p_correction,CI_1,CI_1_0)
-    names(out)=c(" p_no_correction","p_correction","CI_withot_correction","CI_with_correction")
+names(out)=c("p_no_correction","p_correction","CI_withot_correction","CI_with_correction")
   }
   return(out)
 }

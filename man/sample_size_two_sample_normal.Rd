@@ -15,22 +15,26 @@ sample_size_two_sample_normal(
 )
 }
 \arguments{
-\item{mu_t}{The mean of the test arm.}
+\item{mu_t}{Mean of the test arm}
 
-\item{mu_c}{The mean of the control arm.}
+\item{mu_c}{Mean of the control arm}
 
-\item{sigma_t}{The standard deviation for the test arm.}
+\item{sigma_t}{Standard deviation of the test arm; must be > 0}
 
-\item{sigma_c}{The standard deviation for the control arm.}
+\item{sigma_c}{Standard deviation of the control arm; must be > 0}
 
-\item{alpha_2}{The type I error for the two-sided test.}
+\item{alpha_2}{Type I error for the two-sided test; 0 < alpha_2 < 1}
 
-\item{beta}{Type II error.}
+\item{beta}{Type II error rate, i.e. 1 - power}
 
-\item{rand_ratio}{The randomization ratio of test arm:control arm.}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 }
 \value{
-The output will show the sample size for the control arm and the test arm.
+A named list with the following components:
+\describe{
+  \item{Sample size for control arm}{Sample size required for the control arm}
+  \item{Sample size for test arm}{Sample size required for the test arm}
+}
 }
 \description{
 Fixed sample designs: Normal distribution, Superiority trial, Sample size calculation

@@ -7,18 +7,18 @@
 power_binary_diff(p_t, p_c, alpha_2, n_control, rand_ratio)
 }
 \arguments{
-\item{p_t}{The event rate of the test arm}
+\item{p_t}{Event rate of the test arm; 0 < p_t < 1}
 
-\item{p_c}{The event rate of the control arm}
+\item{p_c}{Event rate of the control arm; 0 < p_c < 1}
 
-\item{alpha_2}{One-sided type I error rate used for boundary calibration}
+\item{alpha_2}{Type I error for the two-sided test; 0 < alpha_2 < 1}
 
 \item{n_control}{Sample size of the control arm}
 
-\item{rand_ratio}{Randomization ratio is the ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 }
 \value{
-The output will show the power
+A numeric value giving the power.
 }
 \description{
 Fixed sample designs: Binary distribution, Superiority trial, Power calculation

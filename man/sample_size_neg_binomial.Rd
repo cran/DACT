@@ -7,22 +7,30 @@
 sample_size_neg_binomial(r_t, r_c, alpha_2, beta, rand_ratio, nu_t, kappa)
 }
 \arguments{
-\item{r_t}{The event rate of the test arm}
+\item{r_t}{Event rate of the test arm for the negative binomial endpoint; must be > 0}
 
-\item{r_c}{The event rate of the control arm}
+\item{r_c}{Event rate of the control arm for the negative binomial endpoint; must be > 0}
 
-\item{alpha_2}{The type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; 0 < alpha_2 < 1}
 
 \item{beta}{Type II error rate, i.e. 1 - power}
 
-\item{rand_ratio}{The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
-\item{nu_t}{The exposure time}
+\item{nu_t}{Exposure time of the test arm; the Poisson part of the variance of the log rate ratio is
+(1 / nu_t) * (1 / r_c + 1 / (rand_ratio * r_t)), so nu_t must be > 0}
 
-\item{kappa}{The dispersion parameter}
+\item{kappa}{Dispersion parameter of the negative binomial model; adds the over-dispersion term
+(1 + rand_ratio) * kappa / rand_ratio to the variance of the log rate ratio; must be > 0}
 }
 \value{
-The output will show the sample size for the control arm and the test arm
+A named list with the following components:
+\describe{
+  \item{Standardized effect size}{Standardized effect size, i.e. the absolute log rate ratio divided by the square root of the variance}
+  \item{Sample size for test arm}{Sample size required for the test (experimental) arm}
+  \item{Sample size for control arm}{Sample size required for the control arm}
+  \item{Reference}{Character string giving the reference for the Zhu and Lakkis sample size formula}
+}
 }
 \description{
 Fixed sample designs: Negative binomial distribution, Superiority trial, Sample size calculation

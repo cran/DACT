@@ -14,22 +14,26 @@
 ##############################################
 #' Group sequential designs / Adaptive sequential designs: Final analysis, With one sample size change
 #'
-#' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
-#' @param c_bry Vector of critical boundaries for each analysis
-#' @param snew Vector of new information fractions after the sample size is changed
-#' @param c_bry_new Critical boundaries after the sample size is changed
-#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis
-#' @param theta_hat_inter_sd Standard error of 'theta_hat_inter'
-#' @param inter_vt Index of the interim analysis at which the sample size is re-estimated (1-based)
+#' @param s Vector of information fractions of the original design, e.g. c(0.3, 0.7, 1); the last element must be 1
+#' @param c_bry Vector of critical boundaries of the original design, one per analysis
+#' @param snew Vector of information fractions after the sample size is changed; the last element must be 1
+#' @param c_bry_new Vector of critical boundaries after the sample size is changed, one per remaining analysis
+#' @param theta_hat_inter Treatment effect estimate observed at the interim analysis at which the sample size was re-estimated
+#' @param theta_hat_inter_sd Standard error of theta_hat_inter
+#' @param inter_vt Index (1-based) of the interim analysis at which the sample size was re-estimated
 #' @param theta_hat_last_ad Treatment effect estimate observed at the last analysis after the sample size change
-#' @param theta_hat_last_ad_sd Standard error of 'theta_hat_last_ad'
-#' @param last_vt_ad Index of the last analysis after the sample size change
-#' @param alpha_2 Type I error for the two-sided test
+#' @param theta_hat_last_ad_sd Standard error of theta_hat_last_ad
+#' @param last_vt_ad Index (1-based) of the last analysis after the sample size change
+#' @param alpha_2 Type I error for the two-sided test; the confidence interval has coverage 1 - alpha_2
 #'
-#' @return A named list containing the following elements: 'p-value', 'confidence interval'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{p-value}{Two-sided p-value for the null hypothesis of no treatment effect, obtained by inverting the adaptive sequential boundary under the Brownian motion approximation}
+#'   \item{confidence interval}{Numeric vector of length 3 giving the lower confidence limit, the point estimate and the upper confidence limit of the two-sided (1 - alpha_2) confidence interval}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'

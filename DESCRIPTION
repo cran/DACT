@@ -1,5 +1,5 @@
 Package: DACT
-Version: 1.0.0
+Version: 1.0.4
 Title: Design and Analysis for Clinical Trials
 Author: Ping Gao [aut, cre]
 Maintainer: Ping Gao <support@innovatiostat.com>
@@ -20,11 +20,12 @@ Description: The applications and evaluation of the operating characteristics of
 Depends: clinfun, mvtnorm, doParallel
 License: MIT + file LICENSE
 Encoding: UTF-8
-Imports: foreach, dplyr, jsonlite, MASS, survival
+Imports: foreach, dplyr, jsonlite, MASS, survival, parallel, stats,
+        utils
 Config/roxygen2/version: 8.0.0
 URL: https://github.com/innovatiostat/rcode
 BugReports: https://github.com/innovatiostat/rcode/issues
 NeedsCompilation: no
-Packaged: 2026-09-27 12:32:06 UTC; chengboqin
+Packaged: 2026-11-06 13:02:07 UTC; chengboqin
 Repository: CRAN
-Date/Publication: 2026-09-28 12:30:08 UTC
+Date/Publication: 2026-11-07 23:20:08 UTC

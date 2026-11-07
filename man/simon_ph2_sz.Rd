@@ -2,47 +2,40 @@
 % Please edit documentation in R/one_arm_asd.R
 \name{simon_ph2_sz}
 \alias{simon_ph2_sz}
-\title{Two-stage design: Simon's design}
+\title{Single arm phase 2 oncology trial: Two-stage design, Simon's design}
 \usage{
 simon_ph2_sz(alpha, beta, p_0, p_1)
 }
 \arguments{
-\item{alpha}{One-sided type I error.}
+\item{alpha}{Type I error for the one-sided test}
 
-\item{beta}{Type II error.}
+\item{beta}{Type II error rate, i.e. 1 - power}
 
-\item{p_0}{Response rate indicating low activity with insufficient clinical benefit.}
+\item{p_0}{Response rate indicating low activity with insufficient clinical benefit}
 
-\item{p_1}{Assumed response rate.}
+\item{p_1}{Assumed response rate}
 }
 \value{
-r1: If no more than r1 responses are observed at the first look, then the trial would be stopped for futility.
-
-n1: Number of patients at first look.
-
-r_2: The null hypothesis will be rejected if at least r_2 responses are observed at the end of the trial.
-
-n_2: Number of patients at second look. n_2 is also the total sample size.
-
-EN(p_0) is the expected sample size under the null hypothesis.
-
-PET(p_0) is the probability of early termination under the null hypothesis.
-
-PET_p_1 is the probability of early termination under p=p_1.
-
-power_p_1 is the power under p=p_1.
-
-Type I error is the probability of rejecting the null hypothesis under p<=p_0.
-
-The minimax design has the smallest n_2 among all possible choices of (n1,r1,n_2,r_2).
-
-The optimal design has the smallest EN(p_0) among all possible choices of (n1,r1,n_2,r_2).
-
-The average design is an augmentation of the original Simon’s design (Gao, Zhang. 2024).
-The n1 for the average design is the average of n1's from the minimax and the optimal designs.
+A matrix with one row for each of the minimax design (smallest n_2), the optimal
+  design (smallest EN(p_0)) and the average design (an augmentation of the original
+  Simon's design, Gao and Zhang 2024), and one column per design quantity:
+\describe{
+  \item{r1}{If no more than r1 responses are observed at the first look, then the trial
+    would be stopped for futility}
+  \item{n1}{Number of patients at first look}
+  \item{r_2}{The null hypothesis will be rejected if at least r_2 responses are observed
+    at the end of the trial}
+  \item{n_2}{Number of patients at second look; n_2 is also the total sample size}
+  \item{EN(p_0)}{Expected sample size under the null hypothesis}
+  \item{PET(p_0)}{Probability of early termination under the null hypothesis}
+  \item{t1_err}{Type I error, the probability of rejecting the null hypothesis under
+    p <= p_0}
+  \item{PET_p_1}{Probability of early termination under p = p_1}
+  \item{power_p_1}{Power under p = p_1}
+}
 }
 \description{
-Two-stage design: Simon's design
+Single arm phase 2 oncology trial: Two-stage design, Simon's design
 }
 \examples{
 simon_ph2_sz(alpha=0.025,beta=0.1,p_0=0.2,p_1=0.33)
@@ -52,6 +45,6 @@ simon_ph2_sz(alpha=0.025,beta=0.1,p_0=0.2,p_1=0.33)
 R. Simon. Optimal Two-Stage Designs for Phase II Clinical Trials. Controlled Clinical Trials 10:1-10 (1989).
 
 P. Gao & W. Zhang (15 Apr 2024): Adaptive sequential design for phase II single-arm oncology trials:
-an expansion of Simon’s design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
+an expansion of Simon's design, Journal of Biopharmaceutical Statistics, DOI: 10.1080/10543406.2024.2341673.
 To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2341673}.
 }

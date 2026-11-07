@@ -7,22 +7,22 @@
 power_binary_diff_NI(p_t, p_c, margin, direction, alpha, n_control, rand_ratio)
 }
 \arguments{
-\item{p_t}{The event rate of the test arm}
+\item{p_t}{Event rate of the test arm; 0 < p_t < 1}
 
-\item{p_c}{The event rate of the control arm}
+\item{p_c}{Event rate of the control arm; 0 < p_c < 1}
 
-\item{margin}{the non-inferiority margin}
+\item{margin}{Non-inferiority margin; set to 0 for a superiority trial}
 
-\item{direction}{Test direction: 1 = larger p_t,p_c are better, 0 = smaller p_t,p_c are better}
+\item{direction}{Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better}
 
-\item{alpha}{The type I error for the one-sided test}
+\item{alpha}{Type I error for the one-sided test; 0 < alpha < 1}
 
 \item{n_control}{Sample size of the control arm}
 
-\item{rand_ratio}{Randomization ratio is the ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 }
 \value{
-The output will show the power
+A numeric value giving the power.
 }
 \description{
 Fixed sample designs: Binary distribution, Non-inferiority trial, Power calculation

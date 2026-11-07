@@ -2,43 +2,42 @@
 % Please edit documentation in R/one_arm_asd_simulations.R
 \name{one_arm_rej_2_stg_binary}
 \alias{one_arm_rej_2_stg_binary}
-\title{Simulations: Two stage fixed expanded Simon's design: either hybrid or mid-point design}
+\title{Single arm phase 2 oncology trial: Simulations, Two stage fixed expanded Simon's design: either hybrid or mid-point design}
 \usage{
 one_arm_rej_2_stg_binary(p_1, p_0, n_1, r_1_f, r_1_e = NA, n_2, r_2, sim_num)
 }
 \arguments{
-\item{p_1}{The assumed response rate.}
+\item{p_1}{Assumed response rate}
 
-\item{p_0}{Response rate indicating low activity with insufficient clinical benefit.}
+\item{p_0}{Response rate indicating low activity with insufficient clinical benefit, i.e. the response rate under the null hypothesis}
 
-\item{n_1}{Number of patients at first look.}
+\item{n_1}{Number of patients at first look}
 
-\item{r_1_f}{If no more than r_1 responses are observed at the first look, then the trial would be stopped for futility.}
+\item{r_1_f}{If no more than r_1_f responses are observed at the first look, then the trial would be stopped for futility}
 
-\item{r_1_e}{The trial would be stopped for superiority if at least r_1_e responses are observed at the first look.
-If r_1_e is not used in the design, enter NA.}
+\item{r_1_e}{If at least r_1_e responses are observed at the first look, the trial would be
+stopped early for superiority; if r_1_e is not used in the design, enter NA}
 
-\item{n_2}{Number of patients at second look.}
+\item{n_2}{Number of patients at second look}
 
-\item{r_2}{If no more than r_2 responses are observed at the second look, then the null hypothesis will be rejected.}
+\item{r_2}{If more than r_2 responses are observed at the second look, then the null hypothesis will be rejected}
 
-\item{sim_num}{Purpose of simulation: To verify type I error control by setting p_1=p_0,
-To verify the parameters n_1,r_1_f,r_1_e,n_2,r_2 are correctly chosen, such that the rejection rate matches that
-from the design table from either the hybrid design or the mid-point design.}
+\item{sim_num}{Number of simulation replicates}
 }
 \value{
-Average sample size is EN(p_1).
-
-Rate of termination is PET(p_1)
+A named list with the following components:
+\describe{
+  \item{Rate of rejection}{Rate of rejection of the null hypothesis over the simulation replicates}
+  \item{Average sample size}{Average sample size over the simulation replicates, EN(p_1)}
+  \item{Rate of early termination for futility}{Rate of early termination for futility over the simulation replicates, PET(p_1)}
+}
 }
 \description{
-Simulations: Two stage fixed expanded Simon's design: either hybrid or mid-point design
+Single arm phase 2 oncology trial: Simulations, Two stage fixed expanded Simon's design: either hybrid or mid-point design
 }
 \examples{
-\donttest{
 one_arm_rej_2_stg_binary(p_1=0.2,p_0=0.2,n_1=100,r_1_f=25,r_1_e=33,
 n_2=105,r_2=29,sim_num=20)
-}
 
 }
 \references{

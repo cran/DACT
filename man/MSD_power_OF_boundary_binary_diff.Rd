@@ -18,28 +18,34 @@ MSD_power_OF_boundary_binary_diff(
 )
 }
 \arguments{
-\item{p_t}{Event (response) proportion in the test arm}
+\item{p_t}{Vector of event rates of the test arms, one entry per dose or endpoint; 0 < p_t < 1}
 
-\item{p_c}{Event (response) proportion in the control arm}
+\item{p_c}{Event rate of the common control arm; 0 < p_c < 1}
 
-\item{margin}{Non-inferiority / superiority margin}
+\item{margin}{Non-inferiority margin; must be >= 0, set to 0 for a superiority trial and > 0 for a non-inferiority trial}
 
-\item{direction}{Test direction: 1 = larger p is better, 0 = smaller p is better}
+\item{direction}{Test direction: 1 = larger p is better, otherwise smaller p is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{alpha}{One-sided significance level (type I error rate)}
+\item{alpha}{Type I error for the one-sided test; 0 < alpha < 1}
 
-\item{sampsz_control}{Control arm sample size}
+\item{sampsz_control}{Sample size of the control arm}
 
-\item{rand_ratio}{Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 
-\item{dist1}{Endpoint / distribution indicator for the first stage}
+\item{dist1}{Distribution indicator for the first stage: 1 = the sample size calculation is for multiple
+dose vs. a common control, with normal distributions; 2 = otherwise}
 
-\item{dist2}{Endpoint / distribution indicator for the second stage}
+\item{dist2}{Distribution indicator for the second stage: 1 = the sample size calculation is for multiple
+dose vs. a common control, with normal distributions; 2 = otherwise}
 }
 \value{
-A named list containing the following elements: 'power', 'Type I error control'.
+A named list with the following components:
+\describe{
+  \item{power}{Power of the trial for the given control arm sample size}
+  \item{Type I error control}{Boundary output of the closed testing procedure: a list with one element per comparison level (the M-level boundary first, down to the 1-level boundary), each element a list containing the vectors 'critical bounadry', 'alpha spent at each interim analysis', 'cumulative alpha' and 'nominal p-value' for the analyses}
+}
 }
 \description{
 Multiple comparisons Group sequential design: Binary distribution, Power calculation, O'Brien-Fleming boundary
@@ -55,7 +61,7 @@ P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

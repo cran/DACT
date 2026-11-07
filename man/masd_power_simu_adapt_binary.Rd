@@ -19,31 +19,40 @@ masd_power_simu_adapt_binary(
 )
 }
 \arguments{
-\item{p_t}{Event (response) proportion in the test arm}
+\item{p_t}{Vector of true event rates of the test arms, one per dose; 0 < p_t < 1}
 
-\item{p_c}{Event (response) proportion in the control arm}
+\item{p_c}{Event rate of the control arm; 0 < p_c < 1}
 
-\item{direction}{Test direction: 1 = larger p is better, 0 = smaller p is better}
+\item{direction}{Test direction: 1 = larger p is better, otherwise smaller p is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{bry_type}{Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending}
+\item{bry_type}{Critical boundary type: 1 = O'Brien-Fleming, 2 = alpha-spending}
 
-\item{alpha_2}{Type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; when bry_type = 2 this is instead the
+vector of two-sided type I error levels spent at each look, which must sum to the total
+two-sided type I error}
 
-\item{theta_cut}{Efficacy cut-off on the effect-size scale applied at the interim analysis}
+\item{theta_cut}{Lack-of-efficacy threshold on the effect-size scale: a test arm is
+dropped at the interim analysis when its observed effect size is below this value}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Conditional type II error; 1 - beta is the target conditional power for the
+sample size re-estimation; 0 < beta < 1}
 
-\item{samsz}{Planned sample size of the control arm used in the simulation}
+\item{samsz}{Sample size of the control arm used in the simulation; must be > 0}
 
-\item{N_max}{Maximum allowed sample size (control arm)}
+\item{N_max}{Maximum sample size for the control arm allowed by the sample size
+re-estimation; must be >= samsz}
 
 \item{sim_num}{Number of simulation replicates}
 }
 \value{
-A matrix in which each row corresponds to one simulation replicate and the columns hold the simulated operating characteristics
-(e.g. rejection indicators, sample sizes and stopping stages).
+A named list with the following components:
+\describe{
+  \item{Design}{Matrix with one row per look giving the look number, the information fraction, the critical boundary, the rejection rate by look and the rate of sample size increase}
+  \item{Summary by arm}{Matrix with one row per test arm giving the test-arm event rate, the control-arm event rate, the drop rate by arm and the rejection rate by arm}
+  \item{simulation results}{Named numeric vector holding the rejection rate without and with sample size re-estimation, the rate of sample size increase, the rejection rates conditional on meeting the sample size increase criteria, the simulated type I error rate, the non-type I error rejection rate, the futility rate, the planned and maximum control sample sizes, the mean simulated control sample size and the mean simulated control sample size conditional on an increase}
+}
 }
 \description{
 Multiple comparisons Group sequential design: Simulations, Binary distribution, Operating characteristics
@@ -61,7 +70,7 @@ P. Gao & Y. Li (2024) Adaptive Multiple Comparison Sequential Design (AMCSD) for
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

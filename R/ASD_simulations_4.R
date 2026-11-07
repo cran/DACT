@@ -134,27 +134,35 @@ gsd_rej_rate_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c_bry,samsz,
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param sigma_t Standard deviation of the test arm
-#' @param sigma_c Standard deviation of the control arm
-#' @param direction Test direction: 1 = larger mu is better, 0 = smaller mu is better
+#' @param sigma_t Common standard deviation of the test arm and the control arm; must be > 0
+#' @param sigma_c Common standard deviation of the test arm and the control arm; must be > 0
+#' @param direction Test direction: 1 = larger mu is better, otherwise smaller mu is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
-#' @param sim_num Number of simulation replicates
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param samsz Planned sample size of the control arm used in the simulation; must be > 0
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A named list containing the following elements: 'Planned control sample size', 'rejection rate', 'Mean control sample size'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sequential design and rejection by look}{Data frame with one row per analysis and the
+#'     columns Looks, Information fraction, Critical boundaries and Rejection by look (the
+#'     rejection rate at each interim analysis)}
+#'   \item{Power and sample size}{Named vector with the components Rejection rate (the simulated
+#'     power, i.e. the type I error rate when mu_t = mu_c), Planned control sample size (the
+#'     sample size used in the simulation) and Mean control sample size (the mean simulated
+#'     sample size)}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
-#' \donttest{
 #' gsd_power_simu_normal(mu_t = 0.4, mu_c = 0, sigma_t = 1, sigma_c = 1, direction = 1,
 #' s = c(1/4,1/3,2/3,1), bry_type = 1, alpha_2 = 0.05, samsz = 100, sim_num = 20)
-#' }
 #'
 #' @export
 gsd_power_simu_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,bry_type,alpha_2,samsz,sim_num){
@@ -501,31 +509,47 @@ asd_rej_simu_adapt_com_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c_
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param sigma_t Standard deviation of the test arm
-#' @param sigma_c Standard deviation of the control arm
-#' @param direction Test direction: 1 = larger mu is better, 0 = smaller mu is better
+#' @param sigma_t Common standard deviation of the test arm and the control arm; must be > 0
+#' @param sigma_c Common standard deviation of the test arm and the control arm; must be > 0
+#' @param direction Test direction: 1 = larger mu is better, otherwise smaller mu is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
-#' @param N_max Maximum allowed sample size (control arm)
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param sim_num Number of simulation replicates
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param samsz Planned sample size of the control arm; the trial starts from this sample size and
+#'   it is increased only if the conditional power at the interim analysis is below the target
+#' @param N_max Maximum sample size of the control arm allowed for the sample size change; the
+#'   re-estimated sample size is truncated at N_max
+#' @param theta_cut Lack of efficacy threshold on the effect-size scale: if the observed interim
+#'   effect size is below theta_cut, the trial continues to the planned sample size with no
+#'   sample size increase and no early termination for futility
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample
+#'   size re-estimation; must be between 0 and 1
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A named list containing the following elements: 'Power at planned sample size', 'names(unlist(simu_out[[2]]'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sequential design and rejection by look}{Data frame with one row per analysis and the
+#'     columns Looks, Information fraction, Critical boundaries, Sample size increase (the rate of
+#'     sample size increase attributed to each look) and Rejection by look (the rejection rate at
+#'     each interim analysis)}
+#'   \item{Power and sample size}{Named vector with the components Rejection rate without SSR,
+#'     Rejection rate with SSR, Rate of sample size increase,
+#'     Rejection rate without SSR/(meeting sample size incerase criteria),
+#'     Rejection rate with SSR/(sample size incerase), Futility rate, Planned control sample size,
+#'     Maximum control sample size, Mean control sample size and
+#'     mean control sample size conditional on increase}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
-#' \donttest{
 #' asd_power_simu_normal(mu_t = 0, mu_c = 0, sigma_t = 1, sigma_c = 1, direction = 1,
 #' s = c(1/3,2/3,1), bry_type = 1, alpha_2 = 0.05, samsz = 100, N_max = 500, theta_cut = 0.05,
 #' beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 asd_power_simu_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,bry_type,alpha_2,samsz,N_max,theta_cut,beta,sim_num){
@@ -862,35 +886,74 @@ asd_rej_simu_adapt_OC_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s,c_b
 #'
 #' @param mu_t Mean of the test arm
 #' @param mu_c Mean of the control arm
-#' @param sigma_t Standard deviation of the test arm
-#' @param sigma_c Standard deviation of the control arm
-#' @param direction Test direction: 1 = larger mu is better, 0 = smaller mu is better
-#' @param s1 Information fractions for the first stage / first group
-#' @param s2 Information fractions for the second stage / second group
-#' @param alpha_2 Type I error for the two-sided test
-#' @param alpha_2_alps_s1 Type I error spent up to the interim analysis (stage 1 / group 1)
-#' @param alpha_2_alps_s2 Cumulative type I error spent at the final analysis (stage 2 / group 2)
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param samsz_1 Planned sample size (control arm) of the first stage / group
-#' @param samsz_2 Planned sample size (control arm) of the second stage / group
-#' @param N_max_1 Maximum allowed sample size (control arm) of the first stage / group
-#' @param N_max_2 Maximum allowed sample size (control arm) of the second stage / group
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param sim_num Number of simulation replicates
+#' @param sigma_t Common standard deviation of the test arm and the control arm; must be > 0
+#' @param sigma_c Common standard deviation of the test arm and the control arm; must be > 0
+#' @param direction Test direction: 1 = larger mu is better, otherwise smaller mu is better
+#' @param s1 Vector of information fractions of the first interim analysis schedule, e.g.
+#'   c(1/3, 2/3, 1); the last element must be 1
+#' @param s2 Vector of information fractions of the second interim analysis schedule, e.g.
+#'   c(0.5, 1); the last element must be 1
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param alpha_2_alps_s1 Two-sided type I error spent at the interim analyses of schedule s1 with
+#'   the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+#'   alpha_2
+#' @param alpha_2_alps_s2 Two-sided type I error spent at the interim analyses of schedule s2 with
+#'   the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+#'   alpha_2
+#' @param theta_cut Lack of efficacy threshold on the effect-size scale: if the observed interim
+#'   effect size is below theta_cut, the trial continues to the planned sample size with no
+#'   sample size increase and no early termination for futility
+#' @param samsz_1 Planned sample size of the control arm for the first stage of the simulation grid
+#' @param samsz_2 Planned sample size of the control arm for the second stage of the simulation grid
+#' @param N_max_1 Maximum sample size of the control arm allowed for the sample size change in the
+#'   first scenario of the simulation grid
+#' @param N_max_2 Maximum sample size of the control arm allowed for the sample size change in the
+#'   second scenario of the simulation grid
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample
+#'   size re-estimation; must be between 0 and 1
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+#' @return A named list with six components, one for each combination of critical boundary type
+#' (O'Brien-Fleming, Pocock, alpha-spending) and interim analysis schedule (s1, s2):
+#' \describe{
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{Named list with the group
+#'     sequential design (Looks, Information fractions, O'Brien-Fleming boundaries) and the
+#'     simulation results for the four combinations of planned sample size (samsz_1, samsz_2) and
+#'     maximum sample size (N_max_1, N_max_2), each a data frame with one row per test-arm mean and
+#'     the columns mu_t1,..., mu_c, sample size for fixed design, Rejection rate without SSR,
+#'     Rejection rate with SSR, Rate of sample size increase,
+#'     Rejection rate without SSR/(meeting sample size incerase criteria),
+#'     Rejection rate with SSR/(sample size incerase), Futility rate, Planned control sample size,
+#'     Maximum control sample size, Mean control sample size,
+#'     mean control sample size conditional on increase and
+#'     Ratio of adaptive sample size over fixed sample size}
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{The same group sequential
+#'     design and simulation results computed with the information fractions s2}
+#'   \item{Pocock boundaries, interim analysis schedule=s1}{The same group sequential design and
+#'     simulation results computed with Pocock boundaries and the information fractions s1}
+#'   \item{Pocock boundaries, interim analysis schedule=s2}{The same group sequential design and
+#'     simulation results computed with Pocock boundaries and the information fractions s2}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s1}{The same group sequential
+#'     design and simulation results computed with alpha-spending boundaries and the information
+#'     fractions s1}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s2}{The same group sequential
+#'     design and simulation results computed with alpha-spending boundaries and the information
+#'     fractions s2}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
 #' \donttest{
-#' asd_simu_OC_normal(mu_t = c(0.3,0.4,0.5), mu_c = 0, sigma_t = 1, sigma_c = 1, direction = 1,
+#' set.seed(1)
+#' asd_simu_OC_normal(mu_t = c(0.3,0.4,0.5), mu_c = 0.2, sigma_t = 1, sigma_c = 1, direction = 1,
 #' s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05, alpha_2_alps_s1 = c(0.001,0.001,0.048),
-#' alpha_2_alps_s2 = c(0.001,0.049), theta_cut = 0.01, samsz_1 = 100,
-#' samsz_2 = 150, N_max_1 = 200, N_max_2 = 300, beta = 0.1, sim_num = 20)
+#' alpha_2_alps_s2 = c(0.001,0.049), theta_cut = 0.01, samsz_1 = 100, samsz_2 = 150,
+#' N_max_1 = 1000, N_max_2 = 1500, beta = 0.1, sim_num = 20)
 #' }
 #'
 #' @export
@@ -962,7 +1025,7 @@ asd_simu_OC_normal<-function(mu_t,mu_c,sigma_t,sigma_c,direction,s1,s2,alpha_2,a
   ## samsz_1###
 
   ##### s1 ####
-  simu_result_title = c("mu_t1,...","mu_c","sample size  for fixed design", "Rejection rate without SSR","Rejection rate with SSR","Rate of sample size increase",
+  simu_result_title = c(LABEL()$lambda_t1,LABEL()$lambda_c,"sample size  for fixed design", "Rejection rate without SSR","Rejection rate with SSR","Rate of sample size increase",
                         "Rejection rate without SSR/(meeting sample size incerase criteria)","Rejection rate with SSR/(sample size incerase)",
                         "Futility rate","Planned control sample size","Maximum control sample size",
                         "Mean control sample size","mean control sample size conditional on increase",
@@ -1688,26 +1751,34 @@ gsd_rej_rate_survival<-function(HR,lambda,s,c_bry,surv_rate,evt_num,samp_multip,
 
 #' Group sequential designs / Adaptive sequential designs: Simulations, Survival analysis, Type I error and power
 #'
-#' @param HR Hazard ratio (test vs control)
+#' @param HR Hazards ratio of the test arm vs. the control arm; HR < 1 favours the test arm
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param surv_rate Survival rate used to translate the number of events into a sample size
-#' @param evt_num Total number of events at the final analysis
-#' @param sim_num Number of simulation replicates
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param surv_rate Survival rate at the end of the trial, used together with the number of events
+#'   to derive the sample size; must be between 0 and 1
+#' @param evt_num Planned total number of events at the final analysis; must be > 0
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A named list containing the following elements: 'Planned sample size', 'Rejection rate', 'Mean sample size'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sequential design and rejection by look}{Data frame with one row per analysis and the
+#'     columns Looks, Information fraction, Critical boundaries and Rejection by look (the
+#'     rejection rate at each interim analysis)}
+#'   \item{Power and sample size}{Named vector with the components Rejection rate (the simulated
+#'     power, i.e. the type I error rate when HR = 1), Planned sample size (the planned number of
+#'     events) and Mean sample size (the mean simulated number of events)}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
-#' \donttest{
 #' gsd_power_simu_survival(HR = 0.8, s = c(1/3,2/3,1), bry_type = 1, alpha_2 = 0.05,
 #' surv_rate = 0.5, evt_num = 845, sim_num = 20)
-#' }
 #'
 #' @export
 gsd_power_simu_survival<-function(HR,s,bry_type,alpha_2,surv_rate,evt_num,sim_num){
@@ -2086,30 +2157,50 @@ asd_rej_simu_adapt_com_survival<-function(HR,lambda,s,c_bry,surv_rate,evt_num,ev
 
 #' Group sequential designs / Adaptive sequential designs: Simulations, Survival analysis, Operating characteristics
 #'
-#' @param HR Hazard ratio (test vs control)
+#' @param HR Hazards ratio of the test arm vs. the control arm; HR < 1 favours the test arm
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param evt_num Total number of events at the final analysis
-#' @param evt_max Maximum number of events
-#' @param HR_cut Hazard-ratio cut-off for early stopping at the interim analysis
-#' @param surv_rate Survival rate used to translate the number of events into a sample size
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param sim_num Number of simulation replicates
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param evt_num Planned total number of events at the final analysis; the trial starts from this
+#'   number of events and it is increased only if the conditional power at the interim analysis is
+#'   below the target
+#' @param evt_max Maximum number of events allowed for the sample size change; the re-estimated
+#'   number of events is truncated at evt_max
+#' @param HR_cut Lack of efficacy threshold on the hazards-ratio scale; the corresponding
+#'   threshold on the log-hazards-ratio scale is theta_cut = -log(HR_cut). If the observed interim
+#'   log-hazards-ratio is below theta_cut (i.e. the observed HR is greater than HR_cut), the trial
+#'   continues to the planned number of events with no sample size increase and no early
+#'   termination for futility
+#' @param surv_rate Survival rate at the end of the trial, used together with the number of events
+#'   to derive the sample size; must be between 0 and 1
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample
+#'   size re-estimation; must be between 0 and 1
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A matrix in which each row corresponds to one simulation replicate and the columns hold the simulated operating characteristics
-#' (e.g. rejection indicators, sample sizes and stopping stages).
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sequential design and rejection by look}{Data frame with one row per analysis and the
+#'     columns Looks, Information fraction, Critical boundaries, Sample size increase (the rate of
+#'     sample size increase attributed to each look) and Rejection by look (the rejection rate at
+#'     each interim analysis)}
+#'   \item{Power and sample size}{Named vector with the components Rejection rate without SSR,
+#'     Rejection rate with SSR, Rate of sample size increase,
+#'     Rejection rate without SSR/(meeting sample size incerase criteria),
+#'     Rejection rate with SSR/(sample size incerase), Futility rate, Planned control sample size
+#'     (the planned number of events), Maximum control sample size (the maximum number of events
+#'     allowed), Mean control sample size (the mean simulated number of events) and
+#'     mean control sample size conditional on increase}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
-#' \donttest{
 #' asd_power_simu_survival(HR = 0.8, s = c(1/3,2/3,1), bry_type = 1, alpha_2 = 0.05, evt_num = 845,
 #' evt_max = 1500, HR_cut = 0.95, surv_rate = 0.5, beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 asd_power_simu_survival<-function(HR,s,bry_type,alpha_2,evt_num,evt_max,HR_cut,surv_rate,beta,sim_num){
@@ -2464,34 +2555,78 @@ asd_rej_simu_adapt_OC_survival<-function(HR,lambda,s,c_bry,surv_rate,evt_num,evt
 
 #' Group sequential designs / Adaptive sequential designs: Simulations, Survival analysis, Optimizing adaptive sequential design
 #'
-#' @param HR Hazard ratio (test vs control)
-#' @param s1 Information fractions for the first stage / first group
-#' @param s2 Information fractions for the second stage / second group
-#' @param alpha_2 Type I error for the two-sided test
-#' @param alpha_2_alps_s1 Type I error spent up to the interim analysis (stage 1 / group 1)
-#' @param alpha_2_alps_s2 Cumulative type I error spent at the final analysis (stage 2 / group 2)
-#' @param surv_rate Survival rate used to translate the number of events into a sample size
-#' @param evt_num_1 Number of events for the first stage / group
-#' @param evt_num_2 Number of events for the second stage / group
-#' @param evt_max_1 Maximum number of events for the first stage / group
-#' @param evt_max_2 Maximum number of events for the second stage / group
-#' @param HR_cut Hazard-ratio cut-off for early stopping at the interim analysis
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param sim_num Number of simulation replicates
+#' @param HR Hazards ratio of the test arm vs. the control arm; HR < 1 favours the test arm. The
+#'   simulation grid varies HR over the values supplied
+#' @param s1 Vector of information fractions of the first interim analysis schedule, e.g.
+#'   c(1/3, 2/3, 1); the last element must be 1
+#' @param s2 Vector of information fractions of the second interim analysis schedule, e.g.
+#'   c(0.5, 1); the last element must be 1
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param alpha_2_alps_s1 Two-sided type I error spent at the interim analyses of schedule s1 with
+#'   the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+#'   alpha_2
+#' @param alpha_2_alps_s2 Two-sided type I error spent at the interim analyses of schedule s2 with
+#'   the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+#'   alpha_2
+#' @param surv_rate Survival rate at the end of the trial, used together with the number of events
+#'   to derive the sample size; must be between 0 and 1
+#' @param evt_num_1 Planned number of events for the first scenario of the simulation grid
+#' @param evt_num_2 Planned number of events for the second scenario of the simulation grid
+#' @param evt_max_1 Maximum number of events allowed for the sample size change in the first
+#'   scenario of the simulation grid
+#' @param evt_max_2 Maximum number of events allowed for the sample size change in the second
+#'   scenario of the simulation grid
+#' @param HR_cut Lack of efficacy threshold on the hazards-ratio scale; the corresponding
+#'   threshold on the log-hazards-ratio scale is theta_cut = -log(HR_cut). If the observed interim
+#'   log-hazards-ratio is below theta_cut (i.e. the observed HR is greater than HR_cut), the trial
+#'   continues to the planned number of events with no sample size increase and no early
+#'   termination for futility
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample
+#'   size re-estimation; must be between 0 and 1
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+#' @return A named list with six components, one for each combination of critical boundary type
+#' (O'Brien-Fleming, Pocock, alpha-spending) and interim analysis schedule (s1, s2):
+#' \describe{
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{Named list with the group
+#'     sequential design (Looks, Information fractions, O'Brien-Fleming boundaries) and the
+#'     simulation results for the four combinations of planned number of events (evt_num_1,
+#'     evt_num_2) and maximum number of events (evt_max_1, evt_max_2), each a data frame with one
+#'     row per hazards ratio and the columns HR<sub>1</sub>,..., sample size for fixed design,
+#'     Rejection rate without SSR, Rejection rate with SSR, Rate of sample size increase,
+#'     Rejection rate without SSR/(meeting sample size incerase criteria),
+#'     Rejection rate with SSR/(sample size incerase), Futility rate, Planned sample size
+#'     (the planned number of events), Maximum sample size (the maximum number of events allowed),
+#'     Mean sample size (the mean simulated number of events),
+#'     mean sample size conditional on increase and
+#'     Ratio of adaptive sample size over fixed sample size}
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{The same group sequential
+#'     design and simulation results computed with the information fractions s2}
+#'   \item{Pocock boundaries, interim analysis schedule=s1}{The same group sequential design and
+#'     simulation results computed with Pocock boundaries and the information fractions s1}
+#'   \item{Pocock boundaries, interim analysis schedule=s2}{The same group sequential design and
+#'     simulation results computed with Pocock boundaries and the information fractions s2}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s1}{The same group sequential
+#'     design and simulation results computed with alpha-spending boundaries and the information
+#'     fractions s1}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s2}{The same group sequential
+#'     design and simulation results computed with alpha-spending boundaries and the information
+#'     fractions s2}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
 #' \donttest{
-#' asd_simu_OC_survival(HR = c(0.7,0.78,0.8), s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05,
+#' set.seed(1)
+#' asd_simu_OC_survival(HR = c(0.75,0.8,0.85), s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05,
 #' alpha_2_alps_s1 = c(0.001,0.001,0.048), alpha_2_alps_s2 = c(0.001,0.049), surv_rate = 0.5,
-#' evt_num_1 = 600, evt_num_2 = 800, evt_max_1 = 1000, evt_max_2 = 1500,
-#' HR_cut = 0.95, beta = 0.1, sim_num = 20)
+#' evt_num_1 = 200, evt_num_2 = 300, evt_max_1 = 2000, evt_max_2 = 3000, HR_cut = 0.95, beta = 0.1,
+#' sim_num = 20)
 #' }
 #'
 #' @export
@@ -3258,27 +3393,34 @@ gsd_rej_rate_binary<-function(p_t,p_c,direction,s,c_bry,samsz,sim_num){
 
 #' Group sequential designs / Adaptive sequential designs: Simulations, Binary distribution, Type I error and power
 #'
-#' @param p_t Event (response) proportion in the test arm
-#' @param p_c Event (response) proportion in the control arm
-#' @param direction Test direction: 1 = larger p is better, 0 = smaller p is better
+#' @param p_t Event rate of the test arm; must be between 0 and 1
+#' @param p_c Event rate of the control arm; must be between 0 and 1
+#' @param direction Test direction: 1 = larger p is better, otherwise smaller p is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
-#' @param sim_num Number of simulation replicates
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param samsz Planned sample size of the control arm used in the simulation; must be > 0
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A named list containing the following elements: 'Planned sample size', 'rejection rate', 'Mean sample size'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sequential design and rejection by look}{Data frame with one row per analysis and the
+#'     columns Looks, Information fraction, Critical boundaries and Rejection by look (the
+#'     rejection rate at each interim analysis)}
+#'   \item{Power and sample size}{Named vector with the components Planned control sample size (the
+#'     sample size used in the simulation), Rejection rate (the simulated power, i.e. the type I
+#'     error rate when p_t = p_c) and Mean control sample size (the mean simulated sample size)}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
-#' \donttest{
 #' gsd_power_simu_binary(p_t = 0.4, p_c = 0.4, direction = 1, s = c(1/3,2/3,1), bry_type = 1,
 #' alpha_2 = 0.05, samsz = 100, sim_num = 20)
-#' }
 #'
 #' @export
 gsd_power_simu_binary<-function(p_t,p_c,direction,s,bry_type,alpha_2,samsz,sim_num){
@@ -3620,31 +3762,46 @@ asd_rej_simu_adapt_com_binary<-function(p_t,p_c,direction,s,c_bry,samsz,N_max,th
 
 #' Group sequential designs / Adaptive sequential designs: Simulations, Binary distribution, Operating characteristics
 #'
-#' @param p_t Event (response) proportion in the test arm
-#' @param p_c Event (response) proportion in the control arm
-#' @param direction Test direction: 1 = larger p is better, 0 = smaller p is better
+#' @param p_t Event rate of the test arm; must be between 0 and 1
+#' @param p_c Event rate of the control arm; must be between 0 and 1
+#' @param direction Test direction: 1 = larger p is better, otherwise smaller p is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
-#' @param N_max Maximum allowed sample size (control arm)
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param sim_num Number of simulation replicates
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param samsz Planned sample size of the control arm; the trial starts from this sample size and
+#'   it is increased only if the conditional power at the interim analysis is below the target
+#' @param N_max Maximum sample size of the control arm allowed for the sample size change; the
+#'   re-estimated sample size is truncated at N_max
+#' @param theta_cut Lack of efficacy threshold on the effect-size scale: if the observed interim
+#'   effect size is below theta_cut, the trial continues to the planned sample size with no sample
+#'   size increase and no early termination for futility
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample
+#'   size re-estimation; must be between 0 and 1
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A matrix in which each row corresponds to one simulation replicate and the columns hold the simulated operating characteristics
-#' (e.g. rejection indicators, sample sizes and stopping stages).
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sequential design and rejection by look}{Data frame with one row per analysis and the
+#'     columns Looks, Information fraction, Critical boundaries, Sample size increase (the rate of
+#'     sample size increase attributed to each look) and Rejection by look (the rejection rate at
+#'     each interim analysis)}
+#'   \item{Power and sample size}{Named vector with the components Rejection rate without SSR,
+#'     Rejection rate with SSR, Rate of sample size increase,
+#'     Rejection rate without SSR/(meeting sample size incerase criteria),
+#'     Rejection rate with SSR/(sample size incerase), Futility rate, Planned control sample size,
+#'     Maximum control sample size, Mean control sample size and
+#'     mean control sample size conditional on increase}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
-#' \donttest{
 #' asd_power_simu_binary(p_t = 0.4, p_c = 0.2, direction = 1, s = c(1/3,2/3,1), bry_type = 1,
 #' alpha_2 = 0.05, samsz = 107, N_max = 500, theta_cut = 0.05, beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 asd_power_simu_binary<-function(p_t,p_c,direction,s,bry_type,alpha_2,samsz,N_max,theta_cut,beta,sim_num){
@@ -3971,35 +4128,76 @@ asd_rej_simu_adapt_OC_binary<-function(p_t,p_c,direction,s,c_bry,samsz,N_max,the
 ##############################
 #' Group sequential designs / Adaptive sequential designs: Simulations, Binary distribution, Optimizing adaptive sequential design
 #'
-#' @param p_t Event (response) proportion in the test arm
-#' @param p_c Event (response) proportion in the control arm
-#' @param direction Test direction: 1 = larger p is better, 0 = smaller p is better
-#' @param s1 Information fractions for the first stage / first group
-#' @param s2 Information fractions for the second stage / second group
-#' @param alpha_2 Type I error for the two-sided test
-#' @param alpha_2_alps_s1 Type I error spent up to the interim analysis (stage 1 / group 1)
-#' @param alpha_2_alps_s2 Cumulative type I error spent at the final analysis (stage 2 / group 2)
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param samsz_1 Planned sample size (control arm) of the first stage / group
-#' @param samsz_2 Planned sample size (control arm) of the second stage / group
-#' @param N_max_1 Maximum allowed sample size (control arm) of the first stage / group
-#' @param N_max_2 Maximum allowed sample size (control arm) of the second stage / group
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param sim_num Number of simulation replicates
+#' @param p_t Event rate of the test arm; must be between 0 and 1. The simulation grid varies p_t
+#'   over the values supplied
+#' @param p_c Event rate of the control arm; must be between 0 and 1
+#' @param direction Test direction: 1 = larger p is better, otherwise smaller p is better
+#' @param s1 Vector of information fractions of the first interim analysis schedule, e.g.
+#'   c(1/3, 2/3, 1); the last element must be 1
+#' @param s2 Vector of information fractions of the second interim analysis schedule, e.g.
+#'   c(0.5, 1); the last element must be 1
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param alpha_2_alps_s1 Two-sided type I error spent at the interim analyses of schedule s1 with
+#'   the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+#'   alpha_2
+#' @param alpha_2_alps_s2 Two-sided type I error spent at the interim analyses of schedule s2 with
+#'   the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+#'   alpha_2
+#' @param theta_cut Lack of efficacy threshold on the effect-size scale: if the observed interim
+#'   effect size is below theta_cut, the trial continues to the planned sample size with no sample
+#'   size increase and no early termination for futility
+#' @param samsz_1 Planned sample size of the control arm for the first scenario of the simulation
+#'   grid
+#' @param samsz_2 Planned sample size of the control arm for the second scenario of the simulation
+#'   grid
+#' @param N_max_1 Maximum sample size of the control arm allowed for the sample size change in the
+#'   first scenario of the simulation grid
+#' @param N_max_2 Maximum sample size of the control arm allowed for the sample size change in the
+#'   second scenario of the simulation grid
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample
+#'   size re-estimation; must be between 0 and 1
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+#' @return A named list with six components, one for each combination of critical boundary type
+#' (O'Brien-Fleming, Pocock, alpha-spending) and interim analysis schedule (s1, s2):
+#' \describe{
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{Named list with the group
+#'     sequential design (Looks, Information fractions, O'Brien-Fleming boundaries) and the
+#'     simulation results for the four combinations of planned sample size (samsz_1, samsz_2) and
+#'     maximum sample size (N_max_1, N_max_2), each a data frame with one row per test-arm event
+#'     rate and the columns p<sub>t1</sub>,..., p<sub>c</sub>, sample size for fixed design,
+#'     Rejection rate without SSR, Rejection rate with SSR, Rate of sample size increase,
+#'     Rejection rate without SSR/(meeting sample size incerase criteria),
+#'     Rejection rate with SSR/(sample size incerase), Futility rate, Planned control sample size,
+#'     Maximum control sample size, Mean control sample size and
+#'     mean control sample size conditional on increase}
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{The same group sequential
+#'     design and simulation results computed with the information fractions s2}
+#'   \item{Pocock boundaries, interim analysis schedule=s1}{The same group sequential design and
+#'     simulation results computed with Pocock boundaries and the information fractions s1}
+#'   \item{Pocock boundaries, interim analysis schedule=s2}{The same group sequential design and
+#'     simulation results computed with Pocock boundaries and the information fractions s2}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s1}{The same group sequential
+#'     design and simulation results computed with alpha-spending boundaries and the information
+#'     fractions s1}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s2}{The same group sequential
+#'     design and simulation results computed with alpha-spending boundaries and the information
+#'     fractions s2}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
 #' \donttest{
-#' asd_simu_OC_binary(p_t = c(0.3,0.4,0.5), p_c = 0.2, direction = 1, s1 = c(1/3,2/3,1),
+#' set.seed(1)
+#' asd_simu_OC_binary(p_t = c(0.3,0.35,0.4), p_c = 0.2, direction = 1, s1 = c(1/3,2/3,1),
 #' s2 = c(0.5,1), alpha_2 = 0.05, alpha_2_alps_s1 = c(0.001,0.001,0.048),
 #' alpha_2_alps_s2 = c(0.001,0.049), theta_cut = 0.01, samsz_1 = 100, samsz_2 = 150,
-#' N_max_1 = 200, N_max_2 = 300, beta = 0.1, sim_num = 20)
+#' N_max_1 = 1000, N_max_2 = 1500, beta = 0.1, sim_num = 20)
 #' }
 #'
 #' @export
@@ -4785,27 +4983,35 @@ gsd_rej_rate_poisson<-function(lambda_c,lambda_t,direction,s,c_bry,samsz,sim_num
 #############
 #' Group sequential designs / Adaptive sequential designs: Simulations, Poisson distribution, Type I error and power
 #'
-#' @param lambda_c Event rate in the control arm (Poisson / negative binomial endpoint)
-#' @param lambda_t Event rate in the test arm (Poisson / negative binomial endpoint)
-#' @param direction Test direction: 1 = larger lambda is better, 0 = smaller lambda is better
+#' @param lambda_c Mean event rate of the control arm; must be > 0
+#' @param lambda_t Mean event rate of the test arm; must be > 0
+#' @param direction Test direction: 1 = larger lambda is better, otherwise smaller lambda is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
-#' @param sim_num Number of simulation replicates
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param samsz Planned sample size of the control arm used in the simulation; must be > 0
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A named list containing the following elements: 'Planned sample size', 'rejection rate', 'Mean sample size'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sequential design and rejection by look}{Data frame with one row per analysis and the
+#'     columns Looks, Information fraction, Critical boundaries and Rejection by look (the
+#'     rejection rate at each interim analysis)}
+#'   \item{Power and sample size}{Named vector with the components Planned control sample size (the
+#'     sample size used in the simulation), Rejection rate (the simulated power, i.e. the type I
+#'     error rate when lambda_t = lambda_c) and Mean control sample size (the mean simulated
+#'     sample size)}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
-#' \donttest{
 #' gsd_power_simu_poisson(lambda_c = 0.5, lambda_t = 0.8, direction = 1, s = c(1/3,2/3,1),
 #' bry_type = 1, alpha_2 = 0.05, samsz = 100, sim_num = 20)
-#' }
 #'
 #' @export
 gsd_power_simu_poisson<-function(lambda_c,lambda_t,direction,s,bry_type,alpha_2,samsz,sim_num){
@@ -5156,31 +5362,47 @@ asd_rej_simu_adapt_com_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,sam
 
 #' Group sequential designs / Adaptive sequential designs: Simulations, Poisson distribution, Operating characteristics
 #'
-#' @param lambda_t Event rate in the test arm (Poisson / negative binomial endpoint)
-#' @param lambda_c Event rate in the control arm (Poisson / negative binomial endpoint)
-#' @param direction Test direction: 1 = larger lambda is better, 0 = smaller lambda is better
+#' @param lambda_t Mean event rate of the test arm; must be > 0
+#' @param lambda_c Mean event rate of the control arm; must be > 0
+#' @param direction Test direction: 1 = larger lambda is better, otherwise smaller lambda is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
-#' @param N_max Maximum allowed sample size (control arm)
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param sim_num Number of simulation replicates
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param samsz Planned sample size of the control arm; the trial starts from this sample size and
+#'   it is increased only if the conditional power at the interim analysis is below the target
+#' @param N_max Maximum sample size of the control arm allowed for the sample size change; the
+#'   re-estimated sample size is truncated at N_max
+#' @param theta_cut Lack of efficacy threshold on the effect-size scale: if the observed interim
+#'   effect size is below theta_cut, the trial continues to the planned sample size with no
+#'   sample size increase and no early termination for futility
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample
+#'   size re-estimation; must be between 0 and 1
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A named list containing the following elements: 'Sequential design', 'Simulation results'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sequential design and rejection by look}{Data frame with one row per analysis and the
+#'     columns Looks, Information fraction, Critical boundaries, Sample size increase (the rate of
+#'     sample size increase attributed to each look) and Rejection by look (the rejection rate at
+#'     each interim analysis)}
+#'   \item{Power and sample size}{Named vector with the components Rejection rate without SSR,
+#'     Rejection rate with SSR, Rate of sample size increase,
+#'     Rejection rate without SSR/(meeting sample size incerase criteria),
+#'     Rejection rate with SSR/(sample size incerase), Futility rate, Planned control sample size,
+#'     Maximum control sample size, Mean control sample size and
+#'     mean control sample size conditional on increase}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
-#' \donttest{
 #' asd_power_simu_poisson(lambda_t = 1.1, lambda_c = 0.8, direction = 1, s = c(1/3,2/3,1),
 #' bry_type = 1, alpha_2 = 0.05, samsz = 100, N_max = 200, theta_cut = 0.01,
 #' beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 asd_power_simu_poisson<-function(lambda_t,lambda_c,direction,s,bry_type,alpha_2,samsz,N_max,theta_cut,beta,sim_num){
@@ -5508,36 +5730,74 @@ asd_rej_simu_adapt_OC_poisson<-function(lambda_t,lambda_c,direction,s,c_bry,sams
 ##########################
 #' Group sequential designs / Adaptive sequential designs: Simulations, Poisson distribution, Optimizing adaptive sequential design
 #'
-#' @param lambda_t Event rate in the test arm (Poisson / negative binomial endpoint)
-#' @param lambda_c Event rate in the control arm (Poisson / negative binomial endpoint)
-#' @param direction Test direction: 1 = larger lambda is better, 0 = smaller lambda is better
-#' @param s1 Information fractions for the first stage / first group
-#' @param s2 Information fractions for the second stage / second group
-#' @param alpha_2 Type I error for the two-sided test
-#' @param alpha_2_alps_s1 Type I error spent up to the interim analysis (stage 1 / group 1)
-#' @param alpha_2_alps_s2 Cumulative type I error spent at the final analysis (stage 2 / group 2)
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param samsz_1 Planned sample size (control arm) of the first stage / group
-#' @param samsz_2 Planned sample size (control arm) of the second stage / group
-#' @param N_max_1 Maximum allowed sample size (control arm) of the first stage / group
-#' @param N_max_2 Maximum allowed sample size (control arm) of the second stage / group
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param sim_num Number of simulation replicates
+#' @param lambda_t Mean event rate of the test arm; must be > 0. The simulation grid varies
+#'   lambda_t over the values supplied
+#' @param lambda_c Mean event rate of the control arm; must be > 0
+#' @param direction Test direction: 1 = larger lambda is better, otherwise smaller lambda is better
+#' @param s1 Vector of information fractions of the first interim analysis schedule, e.g.
+#'   c(1/3, 2/3, 1); the last element must be 1
+#' @param s2 Vector of information fractions of the second interim analysis schedule, e.g.
+#'   c(0.5, 1); the last element must be 1
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param alpha_2_alps_s1 Two-sided type I error spent at the interim analyses of schedule s1 with
+#'   the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+#'   alpha_2
+#' @param alpha_2_alps_s2 Two-sided type I error spent at the interim analyses of schedule s2 with
+#'   the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+#'   alpha_2
+#' @param theta_cut Lack of efficacy threshold on the effect-size scale: if the observed interim
+#'   effect size is below theta_cut, the trial continues to the planned sample size with no
+#'   sample size increase and no early termination for futility
+#' @param samsz_1 Planned sample size of the control arm for the first scenario of the simulation
+#'   grid
+#' @param samsz_2 Planned sample size of the control arm for the second scenario of the simulation
+#'   grid
+#' @param N_max_1 Maximum sample size of the control arm allowed for the sample size change in the
+#'   first scenario of the simulation grid
+#' @param N_max_2 Maximum sample size of the control arm allowed for the sample size change in the
+#'   second scenario of the simulation grid
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample
+#'   size re-estimation; must be between 0 and 1
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+#' @return A named list with six components, one for each combination of critical boundary type
+#' (O'Brien-Fleming, Pocock, alpha-spending) and interim analysis schedule (s1, s2):
+#' \describe{
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{Named list with the group
+#'     sequential design (Looks, Information fractions, O'Brien-Fleming boundaries) and the
+#'     simulation results for the four combinations of planned sample size (samsz_1, samsz_2) and
+#'     maximum sample size (N_max_1, N_max_2), each a data frame with one row per test-arm event
+#'     rate and the columns lambda_t1,..., lambda_c, sample size for fixed design,
+#'     Rejection rate without SSR, Rejection rate with SSR, Rate of sample size increase,
+#'     Rejection rate without SSR/(meeting sample size incerase criteria),
+#'     Rejection rate with SSR/(sample size incerase), Futility rate, Planned control sample size,
+#'     Maximum control sample size, Mean control sample size and
+#'     mean control sample size conditional on increase}
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{The same group sequential
+#'     design and simulation results computed with the information fractions s2}
+#'   \item{Pocock boundaries, interim analysis schedule=s1}{The same group sequential design and
+#'     simulation results computed with Pocock boundaries and the information fractions s1}
+#'   \item{Pocock boundaries, interim analysis schedule=s2}{The same group sequential design and
+#'     simulation results computed with Pocock boundaries and the information fractions s2}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s1}{The same group sequential
+#'     design and simulation results computed with alpha-spending boundaries and the information
+#'     fractions s1}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s2}{The same group sequential
+#'     design and simulation results computed with alpha-spending boundaries and the information
+#'     fractions s2}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
-#' \donttest{
 #' asd_simu_OC_poisson(lambda_t = c(0.3,0.4,0.5), lambda_c = 0.2, direction = 1, s1 = c(1/3,2/3,1),
 #' s2 = c(0.5,1), alpha_2 = 0.05, alpha_2_alps_s1 = c(0.001,0.001,0.048),
 #' alpha_2_alps_s2 = c(0.001,0.049), theta_cut = 0.01, samsz_1 = 50, samsz_2 = 80,
 #' N_max_1 = 120, N_max_2 = 150, beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 asd_simu_OC_poisson<-function(lambda_t,lambda_c,direction,s1,s2,alpha_2,alpha_2_alps_s1,alpha_2_alps_s2,theta_cut,samsz_1,samsz_2,N_max_1,N_max_2,beta,sim_num){
@@ -5611,7 +5871,7 @@ asd_simu_OC_poisson<-function(lambda_t,lambda_c,direction,s1,s2,alpha_2,alpha_2_
   ## samsz_1###
 
   ##### s1 ####
-  simu_result_title = c("lambda_t1,...","lambda_c","sample size  for fixed design", "Rejection rate without SSR","Rejection rate with SSR","Rate of sample size increase",
+  simu_result_title = c(LABEL()$lambda_t1,LABEL()$lambda_c,"sample size  for fixed design", "Rejection rate without SSR","Rejection rate with SSR","Rate of sample size increase",
                         "Rejection rate without SSR/(meeting sample size incerase criteria)","Rejection rate with SSR/(sample size incerase)",
                         "Futility rate","Planned control sample size","Maximum control sample size",
                         "Mean control sample size","mean control sample size conditional on increase","Ratio of adaptive sample size over fixed sample size")
@@ -6306,28 +6566,36 @@ gsd_rej_rate_negbinom<-function(r_t,r_c,kappa,direction,s,c_bry,samsz,sim_num){
 
 #' Group sequential designs / Adaptive sequential designs: Simulations, Negative binomial distribution, Type I error and power
 #'
-#' @param r_t Rate parameter of the test arm (negative binomial endpoint)
-#' @param r_c Rate parameter of the control arm (negative binomial endpoint)
-#' @param kappa Dispersion (size) parameter of the negative binomial distribution
-#' @param direction Test direction: 1 = larger r is better, 0 = smaller r is better
+#' @param r_t Mean of the test arm; must be > 0
+#' @param r_c Mean of the control arm; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
+#' @param direction Test direction: 1 = larger r is better, otherwise smaller r is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
-#' @param sim_num Number of simulation replicates
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param samsz Planned sample size of the control arm used in the simulation; must be > 0
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A named list containing the following elements: 'Planned sample size', 'rejection rate', 'Mean sample size'.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sequential design and rejection by look}{Data frame with one row per analysis and the
+#'     columns Looks, Information fraction, Critical boundaries and Rejection by look (the
+#'     rejection rate at each interim analysis)}
+#'   \item{Power and sample size}{Named vector with the components Planned  control sample size
+#'     (the sample size used in the simulation), Rejection rate (the simulated power, i.e. the
+#'     type I error rate when r_t = r_c) and Mean control sample size (the mean simulated sample
+#'     size)}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
-#' \donttest{
 #' gsd_power_simu_negbinom(r_t = 1.1, r_c = 1.1, kappa = 1, direction = 1, s = c(1/3,2/3,1),
 #' bry_type = 1, alpha_2 = 0.05, samsz = 100, sim_num = 20)
-#' }
 #'
 #' @export
 gsd_power_simu_negbinom<-function(r_t,r_c,kappa,direction,s,bry_type,alpha_2,samsz,sim_num){
@@ -6699,33 +6967,48 @@ asd_rej_simu_adapt_com_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sa
 ########################################################################
 #' Group sequential designs / Adaptive sequential designs: Simulations, Negative binomial distribution, Operating characteristics
 #'
-#' @param r_t Rate parameter of the test arm (negative binomial endpoint)
-#' @param r_c Rate parameter of the control arm (negative binomial endpoint)
-#' @param kappa Dispersion (size) parameter of the negative binomial distribution
-#' @param direction Test direction: 1 = larger r is better, 0 = smaller r is better
+#' @param r_t Mean of the test arm; must be > 0
+#' @param r_c Mean of the control arm; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
+#' @param direction Test direction: 1 = larger r is better, otherwise smaller r is better
 #' @param s Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1
 #' @param bry_type Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending
-#' @param alpha_2 Type I error for the two-sided test
-#' @param samsz Planned sample size of the control arm used in the simulation
-#' @param N_max Maximum allowed sample size (control arm)
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param sim_num Number of simulation replicates
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param samsz Planned sample size of the control arm; the trial starts from this sample size and
+#'   it is increased only if the conditional power at the interim analysis is below the target
+#' @param N_max Maximum sample size of the control arm allowed for the sample size change; the
+#'   re-estimated sample size is truncated at N_max
+#' @param theta_cut Lack of efficacy threshold on the effect-size scale: if the observed interim
+#'   effect size is below theta_cut, the trial continues to the planned sample size with no
+#'   sample size increase and no early termination for futility
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample
+#'   size re-estimation; must be between 0 and 1
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A matrix in which each row corresponds to one simulation replicate and the columns hold the simulated operating characteristics
-#' (e.g. rejection indicators, sample sizes and stopping stages).
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sequential design and rejection by look}{Data frame with one row per analysis and the
+#'     columns Looks, Information fraction, Critical boundaries, Sample size increase (the rate of
+#'     sample size increase attributed to each look) and Rejection by look (the rejection rate at
+#'     each interim analysis)}
+#'   \item{Power and sample size}{Named vector with the components Rejection rate without SSR,
+#'     Rejection rate with SSR, Rate of sample size increase,
+#'     Rejection rate without SSR/(meeting sample size incerase criteria),
+#'     Rejection rate with SSR/(sample size incerase), Futility rate, Planned control sample size,
+#'     Maximum control sample size, Mean control sample size and
+#'     mean control sample size conditional on increase}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
-#' \donttest{
-#' asd_power_simu_neg_binomial(r_t = 1.1, r_c = 1.1, kappa = 1, direction = 1, s = c(1/3,2/3,1),
-#' bry_type = 1, alpha_2 = 0.05, samsz = 100, N_max = 200, theta_cut = 0.01,
+#' asd_power_simu_neg_binomial(r_t = 0.3, r_c = 0.2, kappa = 1, direction = 1, s = c(1/3,2/3,1),
+#' bry_type = 1, alpha_2 = 0.05, samsz = 112, N_max = 200, theta_cut = 0.01,
 #' beta = 0.1, sim_num = 20)
-#' }
 #'
 #' @export
 asd_power_simu_neg_binomial<-function(r_t,r_c,kappa,direction,s,bry_type,alpha_2,samsz,N_max,theta_cut,beta,sim_num){
@@ -6770,6 +7053,16 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
   #sim_num=simulation number
   #samsaz is sample size
   #N_max is themaximum sample size
+  #
+  # Numerical safeguards (2026-10-31):
+  # When a simulated replicate gives zero counts in one or both arms, the
+  # effect estimate is +/-Inf or NaN and the information may be NA. The
+  # original code then evaluated if (max(test) >= 0) etc. on an NA condition,
+  # which raises "missing value where TRUE/FALSE needed" and aborts the whole
+  # batch of simulations. All conditions below are therefore evaluated with
+  # base::isTRUE(), and a replicate that cannot be evaluated is recorded as
+  # "no rejection, no sample size increase, finish at the planned sample size".
+  # The arithmetic on well behaved replicates is unchanged.
 
   ######################################
   ###  Preparing the parameters ########
@@ -6777,6 +7070,10 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
   N=ceiling(samsz*s)  # N is the vetoc of sample sizes at which interim analysis will be conducted
   NF=samsz # is the sample size at the final analysis
   mu=abs(log(r_t/r_c))
+  # number of observations that must be generated: N_max only caps the
+  # re-estimated sample size; if N_max < planned sample size we still need the
+  # planned sample size, otherwise x_c[1:N[i],] would return NA rows
+  N_gen=max(N_max,max(N))
 
   ############################################
   ####  begining of the simulation loops  ####
@@ -6787,12 +7084,19 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
       ### Step 1: Generate random samples ####
       ########################################
       ### geting random sample ################
-      x_c=cbind(rep(1,N_max),stats::rnbinom(n=N_max, size=kappa, mu=r_c))
-      x_t=cbind(rep(2,N_max),stats::rnbinom(n=N_max, size=kappa, mu=r_t))
+      x_c=cbind(rep(1,N_gen),stats::rnbinom(n=N_gen, size=kappa, mu=r_c))
+      x_t=cbind(rep(2,N_gen),stats::rnbinom(n=N_gen, size=kappa, mu=r_t))
       ####  analysis parameters ###
       t_hat=NULL
       theta_hat=NULL
       theta_hat_sd=NULL
+
+      # defaults: a replicate that cannot be evaluated finishes at the planned
+      # sample size without rejection (keeps every output field well defined)
+      rej=0
+      stg=0
+      sampsz_simu=N[length(s)]
+      futi=0
 
       for (i in 1:length(s)){
 
@@ -6801,22 +7105,30 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
 
         x_temp=rbind(x_c_temp,x_t_temp)
 
-        negglm_temp=glm.nb(as.numeric(x_temp[,2])~as.factor(x_temp[,1]),link="log")
-        sum_temp=summary(negglm_temp)
+        negglm_temp=tryCatch(MASS::glm.nb(as.numeric(x_temp[,2])~as.factor(x_temp[,1]),link="log"),
+                             error=function(e) NULL)
 
-        se_temp=sum_temp$coefficients[2,2]
-        r_c_temp=mean(x_c_temp[,2])
-        r_t_temp=mean(x_t_temp[,2])
+        if (is.null(negglm_temp)) {
+          theta_hat[i]=NA
+          t_hat[i]=NA
+          theta_hat_sd[i]=NA
+        } else {
+          sum_temp=summary(negglm_temp)
 
-        if (direction ==1){ #higher rate r is better
-          theta_hat_temp=log(r_t_temp/r_c_temp)
-        } else if (direction ==2){ #lower rate r is better
-          theta_hat_temp=-log(r_t_temp/r_c_temp)
+          se_temp=sum_temp$coefficients[2,2]
+          r_c_temp=mean(x_c_temp[,2])
+          r_t_temp=mean(x_t_temp[,2])
+
+          if (direction ==1){ #higher rate r is better
+            theta_hat_temp=log(r_t_temp/r_c_temp)
+          } else if (direction ==2){ #lower rate r is better
+            theta_hat_temp=-log(r_t_temp/r_c_temp)
+          }
+
+          theta_hat[i]=theta_hat_temp
+          t_hat[i]=1/se_temp^2
+          theta_hat_sd[i]=1/sqrt(t_hat[i])
         }
-
-        theta_hat[i]=theta_hat_temp
-        t_hat[i]=1/se_temp^2
-        theta_hat_sd[i]=1/sqrt(t_hat[i])
       }
 
       #####################################################################
@@ -6831,7 +7143,7 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
 
       theta_hat_inter=theta_hat[length(s)-1]
       theta_hat_inter_sd= theta_hat_sd[length(s)-1]
-      if (theta_hat_inter<=theta_cut) {futi=1}else{futi=0}
+      futi=if (base::isTRUE(theta_hat_inter<=theta_cut)) 1 else 0
       ###################################################################################################
       ### Step 3: Hypothesis testing: comparing the Wald statistics with the critical boundary c_bry ####
       ###################################################################################################
@@ -6841,16 +7153,16 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
       test_1=test[1:length(s)-1]
       ##################################
 
-      if ( max(test)>=0){
+      if (base::isTRUE(max(test)>=0)){
         rej_nossr=1
-      }else if ( max(test)<0){
+      }else{
         rej_nossr=0
       }
       #################
 
       # test compares the Wald statistics with the critical boundaries
       #any value of test_1>0 indicates that the Wald statistics crossed the critical boundaries at up to length(s)-1
-      if ( max(test_1)>=0){#  if ( max(test_1)>0){ #null hypothesis rejected, no more random sampling
+      if (base::isTRUE(max(test_1)>=0)){#  if ( max(test_1)>0){ #null hypothesis rejected, no more random sampling
 
         rej=1
         test_t=test_1[test_1>0]
@@ -6867,7 +7179,7 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
         ### if theta_hat<=theta_cut, conplete trial to planned sample size and stop  ####
         ###              if theta_hat>theta_cut, re-estimate sampe size              ####
         #################################################################################
-      }else if ( max(test_1)<0){
+      }else{
 
         #################################################################################
         ###                   Step 4.1: Compare theta_hat with theta_cut             ####
@@ -6882,7 +7194,7 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
           theta_hat_last_sd=theta_hat_sd[last_vt]
 
 
-          if (test[length(s)]>0){ # the NULL hypothesis is rejected at the final analysis
+          if (base::isTRUE(test[length(s)]>0)){ # the NULL hypothesis is rejected at the final analysis
             rej=1
             stg=length(s)
           }else { # the NULL hypothesis is NOT rejected at the final analysis
@@ -6906,14 +7218,30 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
           T_f_1=max(t_hat[length(s)],(NF/N[inter_vt])*t_hat[inter_vt])
           cond_power=stats::pnorm(theta_hat_inter*sqrt(T_f_1-t_hat[inter_vt])-(c_bry[length(s)]*sqrt(t_hat[length(s)])-score_inter)/sqrt(T_f_1-t_hat[inter_vt]))
 
-          if (cond_power>=1-beta){
+          if (!is.finite(cond_power)) {
+            # conditional power cannot be evaluated (degenerate counts or
+            # unavailable information): do not increase, finish as planned
+            last_vt=length(s)
+            theta_hat_last=theta_hat[last_vt]
+            theta_hat_last_sd=theta_hat_sd[last_vt]
+
+            sampsz_simu=N[length(s)]
+            if (base::isTRUE(test[length(s)]>0)){
+              rej=1
+              stg=length(s)
+            }else{
+              rej=0
+              stg=0
+            }
+
+          } else if (cond_power>=1-beta){
 
             last_vt=length(s)
             theta_hat_last=theta_hat[last_vt]
             theta_hat_last_sd=1/sqrt(t_hat[last_vt])
 
             sampsz_simu=N[length(s)]
-            if (test[length(s)]>0){ # the NULL hypothesis is rejected at the final analysis
+            if (base::isTRUE(test[length(s)]>0)){ # the NULL hypothesis is rejected at the final analysis
               rej=1
               stg=length(s)
             }else { # the NULL hypothesis is NOT rejected at the final analysis
@@ -6921,7 +7249,7 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
               stg=0
             }
 
-          }else if (cond_power<1-beta){
+          }else{
 
             #################################################################################
             ###                   Step 4.2: Compare theta_hat with theta_cut             ####
@@ -6932,22 +7260,22 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
             T_new_0=theta_hat_inter^(-2)*((c_bry[length(s)]*sqrt(t_hat[length(s)])-score_inter)/sqrt(T_f_1-t_hat[inter_vt])+stats::qnorm(1-beta))^2+t_hat[inter_vt]
             new_sampsz=max(ceiling(N[inter_vt]*T_new_0/t_hat[inter_vt]),NF)
 
-            if  (new_sampsz>N_max){
+            if  (!is.finite(new_sampsz) || new_sampsz>N_max){
               #################################################################################
               ###                   Step 4.3: Compare theta_hat with theta_cut             ####
               ###     if new_sampsz>N_max, conplete trial to planned sample size and stop  ####
               ########                   and calculate confidenc einterval                 ####
               #################################################################################
 
-              if (last(test)>0){
+              if (base::isTRUE(test[length(s)]>0)){
                 rej=1
                 stg=length(s)
               }else{
                 rej=0
                 stg=0
               }
-              sampsz_simu=last(N)
-            } else if  (new_sampsz<=N_max){
+              sampsz_simu=N[length(s)]
+            } else {
               case=5
               #################################################################################
               ###                   Step 4.4: Compare theta_hat with theta_cut             ####
@@ -6967,50 +7295,58 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
 
               x_new=rbind(x_c_new,x_t_new)
 
-              negglm_new=glm.nb(as.numeric(x_new[,2])~as.factor(x_new[,1]),link="log")
-              sum_new=summary(negglm_new)
+              negglm_new=tryCatch(MASS::glm.nb(as.numeric(x_new[,2])~as.factor(x_new[,1]),link="log"),
+                                  error=function(e) NULL)
 
-              se_new=sum_new$coefficients[2,2]
-              r_c_new=mean(x_c_new[,2])
-              r_t_new=mean(x_t_new[,2])
-
-              if (direction ==1){ #higher rate r is better
-                theta_hat_new=log(r_t_new/r_c_new)
-              } else if (direction ==2){ #lower rate r is better
-                theta_hat_new=-log(r_t_new/r_c_new)
-              }
-
-              t_hat_new=1/se_new^2
-              T_new=t_hat_new
-
-              t_inter_1=(N[inter_vt]/new_sampsz)*t_hat_new
-              T_final_1= (NF/new_sampsz)*t_hat_new
-
-              # e_bry_new=
-              #   (sqrt(T_new-t_inter_1)/sqrt(T_final_1-t_inter_1))*(c_bry[length(s)]*sqrt(T_final_1)-score_inter)+ score_inter
-              e_bry_new=
-                (sqrt(new_sampsz-N[inter_vt])/sqrt(NF-N[inter_vt]))*(c_bry[length(s)]*sqrt(T_final_1)-score_inter)+ score_inter
-
-              c_bry_new=e_bry_new/sqrt(T_new)
-              ###############################################
-              ############## generate the parameters ########
-              ###############################################
-              score_new=theta_hat_new*t_hat_new
-              wald_new=theta_hat_new*sqrt(t_hat_new)
-
-              #################################################################################
-              ###                   Step 4.6: Hypothesis testing                           ####
-              ########                   and calculate confidenc einterval                 ####
-              #################################################################################
-
-              test_add=wald_new-c_bry_new
-
-              if (test_add>0){
-                rej=1
-                stg=length(s)
-              }else{
+              if (is.null(negglm_new)) {
+                # the refitted model is not available: report no rejection
                 rej=0
                 stg=0
+              } else {
+                sum_new=summary(negglm_new)
+
+                se_new=sum_new$coefficients[2,2]
+                r_c_new=mean(x_c_new[,2])
+                r_t_new=mean(x_t_new[,2])
+
+                if (direction ==1){ #higher rate r is better
+                  theta_hat_new=log(r_t_new/r_c_new)
+                } else if (direction ==2){ #lower rate r is better
+                  theta_hat_new=-log(r_t_new/r_c_new)
+                }
+
+                t_hat_new=1/se_new^2
+                T_new=t_hat_new
+
+                t_inter_1=(N[inter_vt]/new_sampsz)*t_hat_new
+                T_final_1= (NF/new_sampsz)*t_hat_new
+
+                # e_bry_new=
+                #   (sqrt(T_new-t_inter_1)/sqrt(T_final_1-t_inter_1))*(c_bry[length(s)]*sqrt(T_final_1)-score_inter)+ score_inter
+                e_bry_new=
+                  (sqrt(new_sampsz-N[inter_vt])/sqrt(NF-N[inter_vt]))*(c_bry[length(s)]*sqrt(T_final_1)-score_inter)+ score_inter
+
+                c_bry_new=e_bry_new/sqrt(T_new)
+                ###############################################
+                ############## generate the parameters ########
+                ###############################################
+                score_new=theta_hat_new*t_hat_new
+                wald_new=theta_hat_new*sqrt(t_hat_new)
+
+                #################################################################################
+                ###                   Step 4.6: Hypothesis testing                           ####
+                ########                   and calculate confidenc einterval                 ####
+                #################################################################################
+
+                test_add=wald_new-c_bry_new
+
+                if (base::isTRUE(test_add>0)){
+                  rej=1
+                  stg=length(s)
+                }else{
+                  rej=0
+                  stg=0
+                }
               }
 
             }
@@ -7053,9 +7389,9 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
   rej_sampsz_icr= rej[sampsz_icr==1]
   samsz_simu_sampsz_icr= sampsz_simu[sampsz_icr==1]
   rej_sampsz_icr= rej[sampsz_icr==1]
-  rej_nossr_rt_sampsz_icr=mean( rej_nossr_sampsz_icr)
-  rej_rt_sampsz_icr=mean(rej_sampsz_icr)
-  mean_samsz_simu_control_sampsz_icr=mean(samsz_simu_sampsz_icr)
+  rej_nossr_rt_sampsz_icr=if (length(rej_nossr_sampsz_icr)==0) NA_real_ else mean( rej_nossr_sampsz_icr)
+  rej_rt_sampsz_icr=if (length(rej_sampsz_icr)==0) NA_real_ else mean(rej_sampsz_icr)
+  mean_samsz_simu_control_sampsz_icr=if (length(samsz_simu_sampsz_icr)==0) NA_real_ else mean(samsz_simu_sampsz_icr)
   #############################
   ### Step 7: Final output ####
   #############################
@@ -7076,42 +7412,115 @@ asd_rej_simu_adapt_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s,c_bry,sam
 #######################
 #' Group sequential designs / Adaptive sequential designs: Simulations, Negative binomial distribution, Optimizing adaptive sequential design
 #'
-#' @param r_t Rate parameter of the test arm (negative binomial endpoint)
-#' @param r_c Rate parameter of the control arm (negative binomial endpoint)
-#' @param kappa Dispersion (size) parameter of the negative binomial distribution
-#' @param direction Test direction: 1 = larger r is better, 0 = smaller r is better
-#' @param s1 Information fractions for the first stage / first group
-#' @param s2 Information fractions for the second stage / second group
-#' @param alpha_2 Type I error for the two-sided test
-#' @param alpha_2_alps_s1 Type I error spent up to the interim analysis (stage 1 / group 1)
-#' @param alpha_2_alps_s2 Cumulative type I error spent at the final analysis (stage 2 / group 2)
-#' @param theta_cut Efficacy cut-off on the effect-size scale applied at the interim analysis
-#' @param samsz_1 Planned sample size (control arm) of the first stage / group
-#' @param samsz_2 Planned sample size (control arm) of the second stage / group
-#' @param N_max_1 Maximum allowed sample size (control arm) of the first stage / group
-#' @param N_max_2 Maximum allowed sample size (control arm) of the second stage / group
-#' @param beta Type II error rate, i.e. 1 - power
-#' @param sim_num Number of simulation replicates
+#' @param r_t Mean of the test arm; must be > 0. The simulation grid varies r_t over the values
+#'   supplied
+#' @param r_c Mean of the control arm; must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; must be > 0
+#' @param direction Test direction: 1 = larger r is better, otherwise smaller r is better
+#' @param s1 Vector of information fractions of the first interim analysis schedule, e.g.
+#'   c(1/3, 2/3, 1); the last element must be 1
+#' @param s2 Vector of information fractions of the second interim analysis schedule, e.g.
+#'   c(0.5, 1); the last element must be 1
+#' @param alpha_2 Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+#'   one-sided type I error used for the critical boundaries
+#' @param alpha_2_alps_s1 Two-sided type I error spent at the interim analyses of schedule s1 with
+#'   the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+#'   alpha_2
+#' @param alpha_2_alps_s2 Two-sided type I error spent at the interim analyses of schedule s2 with
+#'   the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+#'   alpha_2
+#' @param theta_cut Lack of efficacy threshold on the effect-size scale: if the observed interim
+#'   effect size is below theta_cut, the trial continues to the planned sample size with no
+#'   sample size increase and no early termination for futility
+#' @param samsz_1 Planned sample size of the control arm for the first scenario of the simulation
+#'   grid
+#' @param samsz_2 Planned sample size of the control arm for the second scenario of the simulation
+#'   grid
+#' @param N_max_1 Maximum sample size of the control arm allowed for the sample size change in the
+#'   first scenario of the simulation grid
+#' @param N_max_2 Maximum sample size of the control arm allowed for the sample size change in the
+#'   second scenario of the simulation grid
+#' @param beta Conditional type II error; 1 - beta is the target conditional power for the sample
+#'   size re-estimation; must be between 0 and 1
+#' @param sim_num Number of simulation replicates; must be > 0
 #'
-#' @return A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+#' @return A named list with six components, one for each combination of critical boundary type
+#' (O'Brien-Fleming, Pocock, alpha-spending) and interim analysis schedule (s1, s2):
+#' \describe{
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{Named list with the group
+#'     sequential design (Looks, Information fractions, O'Brien-Fleming boundaries) and the
+#'     simulation results for the four combinations of planned sample size (samsz_1, samsz_2) and
+#'     maximum sample size (N_max_1, N_max_2), each a data frame with one row per test-arm mean and
+#'     the columns r<sub>t1</sub>,..., r<sub>c</sub>, sample size  for fixed design,
+#'     Rejection rate without SSR, Rejection rate with SSR, Rate of sample size increase,
+#'     Rejection rate without SSR/(meeting sample size incerase criteria),
+#'     Rejection rate with SSR/(sample size incerase), Futility rate, Planned control sample size,
+#'     Maximum control sample size, Mean control sample size and
+#'     mean control sample size conditional on increase}
+#'   \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{The same group sequential
+#'     design and simulation results computed with the information fractions s2}
+#'   \item{Pocock boundaries, interim analysis schedule=s1}{The same group sequential design and
+#'     simulation results computed with Pocock boundaries and the information fractions s1}
+#'   \item{Pocock boundaries, interim analysis schedule=s2}{The same group sequential design and
+#'     simulation results computed with Pocock boundaries and the information fractions s2}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s1}{The same group sequential
+#'     design and simulation results computed with alpha-spending boundaries and the information
+#'     fractions s1}
+#'   \item{Alpha-spending boundaries, interim analysis schedule=s2}{The same group sequential
+#'     design and simulation results computed with alpha-spending boundaries and the information
+#'     fractions s2}
+#' }
 #'
 #' @references Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
-#' @references H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+#' @references H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 #' @references P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 #' @references Gao, P., L. Liu, and C. Mehta. 2013 Oct 15. Exact inference for adaptive group sequential designs. Statistics in Medicine 32(23):3991–4005. doi:10.1002/sim.5847.
 #'
 #' @examples
 #' \donttest{
+#' set.seed(1)
 #' asd_simu_OC_neg_binomial(r_t = c(0.3,0.4,0.5), r_c = 0.2, kappa = 1, direction = 1,
 #' s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05, alpha_2_alps_s1 = c(0.001,0.001,0.048),
-#' alpha_2_alps_s2 = c(0.001,0.049), theta_cut = 0.01, samsz_1 = 100,
-#' samsz_2 = 150, N_max_1 = 200, N_max_2 = 300, beta = 0.1, sim_num = 20)
+#' alpha_2_alps_s2 = c(0.001,0.049), theta_cut = 0.01, samsz_1 = 100, samsz_2 = 150,
+#' N_max_1 = 1000, N_max_2 = 1500, beta = 0.1, sim_num = 20)
 #' }
 #'
 #' @export
 asd_simu_OC_neg_binomial<-function(r_t,r_c,kappa,direction,s1,s2,alpha_2,alpha_2_alps_s1,alpha_2_alps_s2,theta_cut,samsz_1,samsz_2,N_max_1,N_max_2,beta,sim_num){
   # This simulation function checks the actua power and sample size for different scenerios##
   # alpha_s is two sided type I error rate
+
+  ## Input checks: fail early with an explicit message instead of producing
+  ## undefined boundaries or NA rows deep inside the simulation loop.
+  if (length(r_t) < 1 || any(!is.finite(r_t)) || any(r_t <= 0) ||
+      !is.finite(r_c) || r_c <= 0) {
+    stop("r_t and r_c must be positive finite values")
+  }
+  if (!is.finite(kappa) || kappa <= 0) {
+    stop("kappa must be a positive finite value")
+  }
+  if (!(length(direction) == 1 && direction %in% c(1, 2))) {
+    stop("direction must be 1 (larger r is better) or 2 (smaller r is better)")
+  }
+  if (length(s1) != length(alpha_2_alps_s1)) {
+    stop("length(s1) must equal length(alpha_2_alps_s1)")
+  }
+  if (length(s2) != length(alpha_2_alps_s2)) {
+    stop("length(s2) must equal length(alpha_2_alps_s2)")
+  }
+  if (any(diff(c(0, s1)) <= 0) || abs(s1[length(s1)] - 1) > 1e-8) {
+    stop("s1 must be strictly increasing and end at 1")
+  }
+  if (any(diff(c(0, s2)) <= 0) || abs(s2[length(s2)] - 1) > 1e-8) {
+    stop("s2 must be strictly increasing and end at 1")
+  }
+  if (any(alpha_2_alps_s1 < 0) || any(alpha_2_alps_s2 < 0)) {
+    stop("alpha spending values must be non-negative")
+  }
+  if (any(samsz_1 > N_max_1) || any(samsz_2 > N_max_2)) {
+    warning("planned sample size exceeds N_max in at least one scenario; ",
+            "no sample size increase is possible in that scenario")
+  }
 
   alpha=alpha_2/2
   alpha_alsp_s1=alpha_2_alps_s1/2

@@ -16,15 +16,19 @@
 
 #' Fixed sample designs: Normal distribution, Superiority trial, Sample size calculation
 #'
-#' @param mu_t The mean of the test arm.
-#' @param mu_c The mean of the control arm.
-#' @param sigma_t The standard deviation for the test arm.
-#' @param sigma_c The standard deviation for the control arm.
-#' @param alpha_2 The type I error for the two-sided test.
-#' @param beta Type II error.
-#' @param rand_ratio The randomization ratio of test arm:control arm.
+#' @param mu_t Mean of the test arm
+#' @param mu_c Mean of the control arm
+#' @param sigma_t Standard deviation of the test arm; must be > 0
+#' @param sigma_c Standard deviation of the control arm; must be > 0
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param beta Type II error rate, i.e. 1 - power
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sample size for control arm}{Sample size required for the control arm}
+#'   \item{Sample size for test arm}{Sample size required for the test arm}
+#' }
 #'
 #' @examples
 #' sample_size_two_sample_normal(mu_t = 2, mu_c = 0, sigma_t = 9.79, sigma_c = 9.79,
@@ -66,15 +70,15 @@ sample_size_two_sample_normal<-function(mu_t,mu_c,sigma_t, sigma_c,alpha_2, beta
 ####################################
 #' Fixed sample designs: Normal distribution, Superiority trial, Power calculation
 #'
-#' @param mu_t The mean of the test arm.
-#' @param mu_c The mean of the control arm.
-#' @param sigma_t The standard deviation for the test arm.
-#' @param sigma_c The standard deviation for the control arm.
-#' @param alpha_2 The type I error for the two-sided test.
-#' @param n_control The sample size for the control arm.
-#' @param rand_ratio The randomization ratio of test arm:control arm.
+#' @param mu_t Mean of the test arm
+#' @param mu_c Mean of the control arm
+#' @param sigma_t Standard deviation of the test arm; must be > 0
+#' @param sigma_c Standard deviation of the control arm; must be > 0
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param n_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the power.
+#' @return A numeric value giving the power.
 #'
 #' @examples
 #' power_two_sample_normal(mu_t = 2.6, mu_c = 0.6, sigma_t = 9.43, sigma_c = 9.86,
@@ -113,17 +117,21 @@ power_two_sample_normal<-function(mu_t,mu_c,sigma_t, sigma_c,alpha_2, n_control,
 ##########################################
 #' Fixed sample designs: Normal distribution, Non-inferiority trial, Sample size calculation
 #'
-#' @param mu_t The mean of the test arm.
-#' @param mu_c The mean of the control arm.
-#' @param sigma_t The standard deviation for the test arm.
-#' @param sigma_c The standard deviation for the control arm.
-#' @param margin The non-inferiority margin
-#' @param direction If larger mu is better
-#' @param alpha The type I error for the two-sided test.
-#' @param beta Type II error.
-#' @param rand_ratio The randomization ratio of test arm:control arm.
+#' @param mu_t Mean of the test arm
+#' @param mu_c Mean of the control arm
+#' @param sigma_t Standard deviation of the test arm; must be > 0
+#' @param sigma_c Standard deviation of the control arm; must be > 0
+#' @param margin Non-inferiority margin; set to 0 for a superiority trial
+#' @param direction Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param beta Type II error rate, i.e. 1 - power
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm.
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sample size for control arm}{Sample size required for the control arm}
+#'   \item{Sample size for test arm}{Sample size required for the test arm}
+#' }
 #'
 #' @examples
 #' sample_size_two_sample_normal_NI(mu_t = 2, mu_c = 2.5, sigma_t = 9.79, sigma_c = 9.79,
@@ -177,21 +185,21 @@ sample_size_two_sample_normal_NI<-function(mu_t,mu_c,sigma_t, sigma_c,margin,dir
 #######################################
 #' Fixed sample designs: Normal distribution, Non-inferiority trial, Power calculation
 #'
-#' @param mu_t The mean of the test arm.
-#' @param mu_c The mean of the control arm.
-#' @param sigma_t The standard deviation for the test arm.
-#' @param sigma_c The standard deviation for the control arm.
-#' @param margin The non-inferiority margin
-#' @param direction If larger mu is better
-#' @param alpha The type I error for the two-sided test.
-#' @param n_control The sample size for the control arm.
-#' @param rand_ratio The randomization ratio of test arm:control arm.
+#' @param mu_t Mean of the test arm
+#' @param mu_c Mean of the control arm
+#' @param sigma_t Standard deviation of the test arm; must be > 0
+#' @param sigma_c Standard deviation of the control arm; must be > 0
+#' @param margin Non-inferiority margin; set to 0 for a superiority trial
+#' @param direction Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param n_control Sample size of the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the power.
+#' @return A numeric value giving the power.
 #'
 #' @examples
-#' power_two_sample_normal_NI(mu_t = 0.3, mu_c = 2, sigma_t = 1, sigma_c = 1, margin = 0.4,
-#' direction = 1, alpha = 0.025, n_control = 100, rand_ratio = 1)
+#' power_two_sample_normal_NI( mu_t = 2.6, mu_c = 0.6, sigma_t = 9.43, sigma_c = 9.86,
+#'   margin = 0.1, direction = 1, alpha = 0.025, n_control = 53, rand_ratio = 1)
 #'
 #' @export
 power_two_sample_normal_NI<-function(mu_t,mu_c,sigma_t, sigma_c,margin,direction,alpha,n_control, rand_ratio){
@@ -244,13 +252,17 @@ power_two_sample_normal_NI<-function(mu_t,mu_c,sigma_t, sigma_c,margin,direction
 
 #' Fixed sample designs: Binary distribution, Superiority trial, Sample size calculation
 #'
-#' @param p_t The event rate of the test arm
-#' @param p_c The event rate of the control arm
-#' @param alpha_2 One-sided type I error rate used for boundary calibration
+#' @param p_t Event rate of the test arm; 0 < p_t < 1
+#' @param p_c Event rate of the control arm; 0 < p_c < 1
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
 #' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Randomization ratio is the ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sample size for control arm}{Sample size required for the control arm}
+#'   \item{sample size for experimental arm}{Sample size required for the experimental (test) arm}
+#' }
 #'
 #' @examples
 #' sample_size_binary_diff(p_t = 0.2, p_c = 0.4, alpha_2 = 0.05, beta = 0.1, rand_ratio = 1)
@@ -288,13 +300,13 @@ sample_size_binary_diff<-function(p_t,p_c,alpha_2,beta,rand_ratio){
 
 ############################################
 #' Fixed sample designs: Binary distribution, Superiority trial, Power calculation
-#' @param p_t The event rate of the test arm
-#' @param p_c The event rate of the control arm
-#' @param alpha_2 One-sided type I error rate used for boundary calibration
+#' @param p_t Event rate of the test arm; 0 < p_t < 1
+#' @param p_c Event rate of the control arm; 0 < p_c < 1
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
 #' @param n_control Sample size of the control arm
-#' @param rand_ratio Randomization ratio is the ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the power
+#' @return A numeric value giving the power.
 #'
 #' @examples
 #' power_binary_diff(p_t = 0.4, p_c = 0.3, alpha_2 = 0.05, n_control = 53, rand_ratio = 1)
@@ -333,19 +345,23 @@ power_binary_diff<-function(p_t,p_c,alpha_2,n_control,rand_ratio){
 
 #' Fixed sample designs: Binary distribution, Non-inferiority trial, Sample size calculation
 #'
-#' @param p_t The event rate of the test arm
-#' @param p_c The event rate of the control arm
-#' @param margin the non-inferiority margin
-#' @param direction Test direction: 1 = larger p_t,p_c are better, 0 = smaller p_t,p_c are better
-#' @param alpha The type I error for the one-sided test
+#' @param p_t Event rate of the test arm; 0 < p_t < 1
+#' @param p_c Event rate of the control arm; 0 < p_c < 1
+#' @param margin Non-inferiority margin; set to 0 for a superiority trial
+#' @param direction Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
 #' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio Randomization ratio is the ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sample size for control arm}{Sample size required for the control arm}
+#'   \item{sample size for experimental arm}{Sample size required for the experimental (test) arm}
+#' }
 #'
 #' @examples
-#' sample_size_binary_diff_NI(p_t = 0.4, p_c = 0.3, margin = 0.1, direction = 0, alpha = 0.025,
-#' beta = 0.1, rand_ratio = 1)
+#' sample_size_binary_diff_NI( p_t = 0.4, p_c = 0.3, margin = 0.1, direction = 1, alpha = 0.025,
+#'   beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 sample_size_binary_diff_NI<-function(p_t,p_c,margin,direction,alpha,beta,rand_ratio){
@@ -393,15 +409,15 @@ sample_size_binary_diff_NI<-function(p_t,p_c,margin,direction,alpha,beta,rand_ra
 
 #' Fixed sample designs: Binary distribution, Non-inferiority trial, Power calculation
 #'
-#' @param p_t The event rate of the test arm
-#' @param p_c The event rate of the control arm
-#' @param margin the non-inferiority margin
-#' @param direction Test direction: 1 = larger p_t,p_c are better, 0 = smaller p_t,p_c are better
-#' @param alpha The type I error for the one-sided test
+#' @param p_t Event rate of the test arm; 0 < p_t < 1
+#' @param p_c Event rate of the control arm; 0 < p_c < 1
+#' @param margin Non-inferiority margin; set to 0 for a superiority trial
+#' @param direction Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
 #' @param n_control Sample size of the control arm
-#' @param rand_ratio Randomization ratio is the ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the power
+#' @return A numeric value giving the power.
 #'
 #' @examples
 #' power_binary_diff_NI(p_t = 0.4, p_c = 0.3, margin = 0.1, direction = 0, alpha = 0.025,
@@ -459,12 +475,16 @@ power_binary_diff_NI<-function(p_t,p_c,margin,direction, alpha, n_control, rand_
 #################################################
 #' Fixed sample designs: Survival analysis, Superiority trial, Sample size calculation
 #'
-#' @param HR The hazards ratio of test arm vs. the control arm
-#' @param alpha_2 The type I error for the two-sided test
+#' @param HR Hazards ratio of test arm vs. the control arm; must be > 0
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
 #' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the total number of events for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Total number of events}{Total number of events required for the two-arm comparison}
+#'   \item{Reference}{Character string giving the reference for the Schoenfeld sample size formula}
+#' }
 #'
 #' @examples
 #' sample_size_two_sample_surv_Schoenfeld(HR = 0.7, alpha_2 = 0.05, beta = 0.1, rand_ratio = 1)
@@ -505,12 +525,16 @@ sample_size_two_sample_surv_Schoenfeld<-function(HR,alpha_2,beta,rand_ratio){
 
 #' Fixed sample designs: Survival analysis, Superiority trial, Power calculation
 #'
-#' @param HR The hazards ratio of test arm vs. the control arm
-#' @param alpha_2 The type I error for the two-sided test
-#' @param event_tot Total number of events
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param HR Hazards ratio of test arm vs. the control arm; must be > 0
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
+#' @param event_tot Total number of events across both arms
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Power}{Power of the two-sided test of HR = 1}
+#'   \item{Reference}{Character string giving the reference for the Schoenfeld sample size formula}
+#' }
 #'
 #' @examples
 #' power_two_sample_surv_Schoenfeld(HR = 0.7, alpha_2 = 0.05, event_tot = 100, rand_ratio = 1)
@@ -553,18 +577,22 @@ power_two_sample_surv_Schoenfeld<-function(HR,alpha_2,event_tot,rand_ratio){
 #################################################
 #' Fixed sample designs: Survival analysis, Non-inferiority trial, Sample size calculation
 #'
-#' @param HR The hazards ratio of test arm vs. the control arm
-#' @param margin The non-inferiority margin
-#' @param direction Test direction: 1 = smaller HR is better, 0 = larger HR is better
-#' @param alpha_2 The type I error for the one-sided test
+#' @param HR Hazards ratio of test arm vs. the control arm; must be > 0
+#' @param margin Non-inferiority margin; set to 0 for a superiority trial
+#' @param direction Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
 #' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the total number of events for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Total number of events}{Total number of events required for the two-arm comparison}
+#'   \item{Reference}{Character string giving the reference for the Schoenfeld sample size formula}
+#' }
 #'
 #' @examples
-#' sample_size_two_sample_surv_Schoenfeld_NI(HR = 0.7, margin = 0.1, direction = 0,
-#' alpha_2 = 0.05, beta = 0.1, rand_ratio = 1)
+#' sample_size_two_sample_surv_Schoenfeld_NI( HR = 0.7, margin = 0.1, direction = 1,
+#'   alpha_2 = 0.05, beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 sample_size_two_sample_surv_Schoenfeld_NI<-function(HR,margin,direction,alpha_2,beta, rand_ratio){
@@ -608,14 +636,18 @@ sample_size_two_sample_surv_Schoenfeld_NI<-function(HR,margin,direction,alpha_2,
 
 #' Fixed sample designs: Survival analysis, Non-inferiority trial, Power calculation
 #'
-#' @param HR The hazards ratio of test arm vs. the control arm
-#' @param margin The non-inferiority margin
-#' @param direction Test direction: 1 = smaller HR is better, 0 = larger HR is better
-#' @param alpha The type I error for the one-sided test
-#' @param event_tot Total number of events
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param HR Hazards ratio of test arm vs. the control arm; must be > 0
+#' @param margin Non-inferiority margin; set to 0 for a superiority trial
+#' @param direction Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
+#' @param event_tot Total number of events across both arms
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Power}{Power of the non-inferiority test comparing the hazard ratio with the margin}
+#'   \item{Reference}{Character string giving the reference for the Schoenfeld sample size formula}
+#' }
 #'
 #' @examples
 #' power_two_sample_surv_Schoenfeld_NI(HR = 0.7, margin = 0.1, direction = 0, alpha = 0.025,
@@ -671,13 +703,17 @@ power_two_sample_surv_Schoenfeld_NI<-function(HR,margin,direction,alpha,event_to
 #################################################
 #' Fixed sample designs: Poisson distribution, Superiority trial, Sample size calculation
 #'
-#' @param lambda_t The event rate of the test arm
-#' @param lambda_c The event rate of the control arm
-#' @param alpha_2 The type I error for the two-sided test
+#' @param lambda_t Event rate of the test arm under the Poisson model; must be > 0
+#' @param lambda_c Event rate of the control arm under the Poisson model; must be > 0
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
 #' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sample size for experimental arm}{Sample size required for the experimental (test) arm}
+#'   \item{Sample size for control arm}{Sample size required for the control arm}
+#' }
 #'
 #' @examples
 #' sample_size_two_sample_Poisson(lambda_t = 1.1, lambda_c = 1.0, alpha_2 = 0.05,
@@ -719,13 +755,13 @@ sample_size_two_sample_Poisson<-function(lambda_t,lambda_c,alpha_2, beta, rand_r
 ####################################
 #' Fixed sample designs: Poisson distribution, Superiority trial, Power calculation
 #'
-#' @param lambda_t The event rate of the test arm
-#' @param lambda_c The event rate of the control arm
-#' @param alpha_2 The type I error for the two-sided test
+#' @param lambda_t Event rate of the test arm under the Poisson model; must be > 0
+#' @param lambda_c Event rate of the control arm under the Poisson model; must be > 0
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
 #' @param n_control Sample size of the control arm
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the power
+#' @return A numeric value giving the power.
 #'
 #' @examples
 #' power_two_sample_Poisson(lambda_t = 1.1, lambda_c = 1.0, alpha_2 = 0.05,
@@ -766,19 +802,23 @@ power_two_sample_Poisson<-function(lambda_t, lambda_c,alpha_2, n_control, rand_r
 #################################################
 #' Fixed sample designs: Poisson distribution, Non-inferiority trial, Sample size calculation
 #'
-#' @param lambda_t The event rate of the test arm
-#' @param lambda_c The event rate of the control arm
-#' @param margin The non-inferiority margin
-#' @param direction Test direction: 1 = smaller lambda is better, 0 = larger lambda is better
-#' @param alpha The type I error for the one-sided test
+#' @param lambda_t Event rate of the test arm under the Poisson model; must be > 0
+#' @param lambda_c Event rate of the control arm under the Poisson model; must be > 0
+#' @param margin Non-inferiority margin; set to 0 for a superiority trial
+#' @param direction Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
 #' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Sample size for experimental arm}{Sample size required for the experimental (test) arm}
+#'   \item{Sample size for control arm}{Sample size required for the control arm}
+#' }
 #'
 #' @examples
-#' sample_size_two_sample_Poisson_NI(lambda_t = 1.1, lambda_c = 1.0, margin = 0.1, direction = 0,
-#' alpha = 0.025, beta = 0.1, rand_ratio = 1)
+#' sample_size_two_sample_Poisson_NI( lambda_t = 1.1, lambda_c = 1.0, margin = 0.1, direction = 1,
+#'   alpha = 0.025, beta = 0.1, rand_ratio = 1)
 #'
 #' @export
 sample_size_two_sample_Poisson_NI<-function(lambda_t,lambda_c,margin,direction,alpha, beta, rand_ratio){
@@ -823,15 +863,15 @@ sample_size_two_sample_Poisson_NI<-function(lambda_t,lambda_c,margin,direction,a
 ####################################
 #' Fixed sample designs: Poisson distribution, Non-inferiority trial, Power calculation
 #'
-#' @param lambda_t The event rate of the test arm
-#' @param lambda_c The event rate of the control arm
-#' @param margin The non-inferiority margin
-#' @param direction Test direction: 1 = smaller lambda is better, 0 = larger lambda is better
-#' @param alpha The type I error for the one-sided test
+#' @param lambda_t Event rate of the test arm under the Poisson model; must be > 0
+#' @param lambda_c Event rate of the control arm under the Poisson model; must be > 0
+#' @param margin Non-inferiority margin; set to 0 for a superiority trial
+#' @param direction Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
 #' @param n_control Sample size of the control arm
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
 #'
-#' @return the output will show the power
+#' @return A numeric value giving the power.
 #'
 #' @examples
 #' power_two_sample_Poisson_NI(lambda_t = 1.1, lambda_c = 1.0, margin = 0.1, direction = 0,
@@ -884,15 +924,23 @@ power_two_sample_Poisson_NI<-function(lambda_t, lambda_c,margin,direction, alpha
 
 #' Fixed sample designs: Negative binomial distribution, Superiority trial, Sample size calculation
 #'
-#' @param r_t The event rate of the test arm
-#' @param r_c The event rate of the control arm
-#' @param alpha_2 The type I error for the two-sided test
+#' @param r_t Event rate of the test arm for the negative binomial endpoint; must be > 0
+#' @param r_c Event rate of the control arm for the negative binomial endpoint; must be > 0
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
 #' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t The exposure time
-#' @param kappa The dispersion parameter
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time of the test arm; the Poisson part of the variance of the log rate ratio is
+#'   (1 / nu_t) * (1 / r_c + 1 / (rand_ratio * r_t)), so nu_t must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; adds the over-dispersion term
+#'   (1 + rand_ratio) * kappa / rand_ratio to the variance of the log rate ratio; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Standardized effect size}{Standardized effect size, i.e. the absolute log rate ratio divided by the square root of the variance}
+#'   \item{Sample size for test arm}{Sample size required for the test (experimental) arm}
+#'   \item{Sample size for control arm}{Sample size required for the control arm}
+#'   \item{Reference}{Character string giving the reference for the Zhu and Lakkis sample size formula}
+#' }
 #'
 #' @examples
 #' sample_size_neg_binomial(r_t = 0.85, r_c = 1.25, alpha_2 = 0.05, beta = 0.2, rand_ratio = 1,
@@ -942,15 +990,21 @@ sample_size_neg_binomial<-function(r_t,r_c,alpha_2,beta,rand_ratio,nu_t,kappa){
 ####################################################
 #' Fixed sample designs: Negative binomial distribution, Superiority trial, Power calculation
 #'
-#' @param r_t The event rate of the test arm
-#' @param r_c The event rate of the control arm
-#' @param alpha_2 The type I error for the two-sided test
+#' @param r_t Event rate of the test arm for the negative binomial endpoint; must be > 0
+#' @param r_c Event rate of the control arm for the negative binomial endpoint; must be > 0
+#' @param alpha_2 Type I error for the two-sided test; 0 < alpha_2 < 1
 #' @param n_control Sample size of the control arm
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t The exposure time
-#' @param kappa The dispersion parameter
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time of the test arm; the Poisson part of the variance of the log rate ratio is
+#'   (1 / nu_t) * (1 / r_c + 1 / (rand_ratio * r_t)), so nu_t must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; adds the over-dispersion term
+#'   (1 + rand_ratio) * kappa / rand_ratio to the variance of the log rate ratio; must be > 0
 #'
-#' @return The output will show the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{Power of the two-sided test of r_t = r_c}
+#'   \item{Reference}{Character string giving the reference for the Zhu and Lakkis sample size formula}
+#' }
 #'
 #' @examples
 #' power_two_sample_neg_binomial(r_t = c(1.1, 1.1, 1.1), r_c = 1.1, alpha_2 = 0.05,
@@ -1000,17 +1054,25 @@ power_two_sample_neg_binomial<-function(r_t,r_c,alpha_2,n_control,rand_ratio,nu_
 ##############################################################################
 #' Fixed sample designs: Negative binomial distribution, Non-inferiority trial, Sample size calculation
 #'
-#' @param r_t The event rate of the test arm
-#' @param r_c The event rate of the control arm
-#' @param margin The non-inferiority margin
-#' @param direction Test direction: 1 = larger r_t,r_c are better, 0 = smaller r_t,r_c are better
-#' @param alpha The type I error for the one-sided test
+#' @param r_t Event rate of the test arm for the negative binomial endpoint; must be > 0
+#' @param r_c Event rate of the control arm for the negative binomial endpoint; must be > 0
+#' @param margin Non-inferiority margin; set to 0 for a superiority trial
+#' @param direction Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
 #' @param beta Type II error rate, i.e. 1 - power
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t The exposure time
-#' @param kappa The dispersion parameter
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time of the test arm; the Poisson part of the variance of the log rate ratio is
+#'   (1 / nu_t) * (1 / r_c + 1 / (rand_ratio * r_t)), so nu_t must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; adds the over-dispersion term
+#'   (1 + rand_ratio) * kappa / rand_ratio to the variance of the log rate ratio; must be > 0
 #'
-#' @return The output will show the sample size for the control arm and the test arm
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{Standardized effect size}{Standardized effect size, i.e. the absolute log rate ratio divided by the square root of the variance}
+#'   \item{Sample size for test arm}{Sample size required for the test (experimental) arm}
+#'   \item{Sample size for control arm}{Sample size required for the control arm}
+#'   \item{Reference}{Character string giving the reference for the Zhu and Lakkis sample size formula}
+#' }
 #'
 #' @examples
 #' sample_size_neg_binomial_NI(r_t = 0.9, r_c = 1, margin = 0.3, direction = 1, alpha = 0.025,
@@ -1073,17 +1135,23 @@ sample_size_neg_binomial_NI<-function(r_t,r_c,margin,direction,alpha,beta,rand_r
 
 #' Fixed sample designs: Negative binomial distribution, Non-inferiority trial, Power calculation
 #'
-#' @param r_t The event rate of the test arm
-#' @param r_c The event rate of the control arm
-#' @param margin The non-inferiority margin
-#' @param direction Test direction: 1 = larger r_t,r_c are better, 0 = smaller r_t,r_c are better
-#' @param alpha The type I error for the one-sided test
+#' @param r_t Event rate of the test arm for the negative binomial endpoint; must be > 0
+#' @param r_c Event rate of the control arm for the negative binomial endpoint; must be > 0
+#' @param margin Non-inferiority margin; set to 0 for a superiority trial
+#' @param direction Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better
+#' @param alpha Type I error for the one-sided test; 0 < alpha < 1
 #' @param n_control Sample size of the control arm
-#' @param rand_ratio The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm
-#' @param nu_t The exposure time
-#' @param kappa The dispersion parameter
+#' @param rand_ratio Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0
+#' @param nu_t Exposure time of the test arm; the Poisson part of the variance of the log rate ratio is
+#'   (1 / nu_t) * (1 / r_c + 1 / (rand_ratio * r_t)), so nu_t must be > 0
+#' @param kappa Dispersion parameter of the negative binomial model; adds the over-dispersion term
+#'   (1 + rand_ratio) * kappa / rand_ratio to the variance of the log rate ratio; must be > 0
 #'
-#' @return The output will show the power
+#' @return A named list with the following components:
+#' \describe{
+#'   \item{power}{Power of the non-inferiority test comparing the event rates with the margin}
+#'   \item{Reference}{Character string giving the reference for the Zhu and Lakkis sample size formula}
+#' }
 #'
 #' @examples
 #' power_two_sample_neg_binomial_NI(r_t = c(1.1, 1.1, 1.1), r_c = 1.1, margin = 0.1, direction = 0,

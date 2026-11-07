@@ -2,7 +2,7 @@
 % Please edit documentation in R/one_arm_analysis.R
 \name{asd_ci_est_one_arm_3_stage}
 \alias{asd_ci_est_one_arm_3_stage}
-\title{Final analysis: three stage design, with sample size change}
+\title{Single arm phase 2 oncology trial: Final analysis: three stage design, with sample size change}
 \usage{
 asd_ci_est_one_arm_3_stage(
   p_0,
@@ -18,38 +18,58 @@ asd_ci_est_one_arm_3_stage(
 )
 }
 \arguments{
-\item{p_0}{Response rate indicating low activity with insufficient clinical benefit.}
+\item{p_0}{Response rate indicating low activity with insufficient clinical benefit}
 
-\item{n_2}{Number of patients at second look.}
+\item{n_2}{Number of patients at second look}
 
-\item{n_3}{Number of patients at third look.}
+\item{n_3}{Number of patients at third look}
 
-\item{r_2_e}{The trial would be stopped for superiority if at least r_2_e responses are observed
-at the second look. If r_2_e was not used in the design, enter NA.}
+\item{r_2_e}{Superiority-stopping threshold at the second look: the trial would be stopped for
+superiority if at least r_2_e responses are observed at the second look. If r_2_e was not
+used in the design, enter NA; the function then bases the final boundary on r_3 alone}
 
-\item{r_2}{If no more than r_2 responses are observed at the second look, then the trial would be stopped for futility.}
+\item{r_2}{If no more than r_2 responses are observed at the second look, then the trial would
+be stopped for futility; kept for consistency with the design of the trial and not used by
+this function, which conditions on the observed responses at the second look}
 
-\item{r_3}{If no more than r_3 responses are observed at the third look, then the null hypothesis will not be rejected.}
+\item{r_3}{If no more than r_3 responses are observed at the third look, then the null
+hypothesis will not be rejected}
 
-\item{n_new}{New sample size after the interim analysis (at the second look).}
+\item{n_new}{New sample size after the interim analysis, taken at the second look and used as
+the final sample size}
 
-\item{x_2}{Number of responses at the second look.}
+\item{x_2}{Number of responses at the second look}
 
-\item{x_new}{Number of responses at the final visit.}
+\item{x_new}{Number of responses at the final visit}
 
-\item{alpha}{One-sided type I error.}
+\item{alpha}{Type I error for the one-sided test}
 }
 \value{
-UL: upper limit of confidence interval.
-
-LL: lower limit of confidence interval.
-
-The results with continuity correction are not necessarily different from those with continuity correction.
-
-The need for continuity correction can be determined through simulations on type I error (see Gao, Zhang, 2004).
+A named list whose components depend on whether a second-look efficacy boundary was
+  supplied. When r_2_e is NA the list contains p_value and Confidence interval; otherwise it
+  contains four components, reported without and with continuity correction:
+\describe{
+  \item{p_value}{P-value of the test of the null hypothesis that the response rate equals p_0
+    at the final analysis; returned when r_2_e is NA}
+  \item{Confidence interval}{Numeric vector of length 3 holding the lower limit, the point
+    estimate and the upper limit of the two-sided (1 - 2*alpha) confidence interval for the
+    response rate; returned when r_2_e is NA}
+  \item{p_no_correction}{P-value at the final analysis computed without continuity correction}
+  \item{p_correction}{The same p-value computed with the 0.5 continuity correction}
+  \item{CI_withot_correction}{Numeric vector of length 3 holding the lower limit, the point
+    estimate and the upper limit of the two-sided (1 - 2*alpha) confidence interval for the
+    response rate, computed without continuity correction}
+  \item{CI_with_correction}{The same confidence interval computed with the 0.5 continuity
+    correction}
+}
 }
 \description{
-Final analysis: three stage design, with sample size change
+Single arm phase 2 oncology trial: Final analysis: three stage design, with sample size change
+}
+\details{
+The results with continuity correction are not necessarily different from those
+without continuity correction. The need for continuity correction can be determined through
+simulations on the type I error (see Gao and Zhang, 2004).
 }
 \examples{
 asd_ci_est_one_arm_3_stage( p_0=0.2,n_2=105,n_3=110,r_2_e=33,r_3=29,n_new=115,

@@ -7,18 +7,32 @@
 Sample_size_OF_boundary_survival_Schoenfeld(HR, s, alpha_2, beta, rand_ratio)
 }
 \arguments{
-\item{HR}{Hazards ratio of test arm vs. the control arm}
+\item{HR}{Hazard ratio of the test arm vs. the control arm; must be > 0}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{alpha_2}{Type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; 0 < alpha_2 < 1}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Type II error rate, i.e. 1 - power; 0 < beta < 1}
 
-\item{rand_ratio}{Ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 }
 \value{
-The output will show the sample size for the control arm and the test arm
+A named list with the following components:
+\describe{
+  \item{total number of events}{Total number of events required across both the test arm and the control arm}
+  \item{Critical boundaries}{Critical boundaries c_1, ..., c_K at the K analyses}
+  \item{1-sided nominal alpha}{One-sided nominal alpha at each analysis}
+  \item{1-sided alpha spending}{One-sided alpha spending at each analysis}
+  \item{1-sided cummulative alpha}{One-sided cumulative alpha spending at each analysis}
+  \item{1-sided sum_nom_alpha}{Sum of the one-sided nominal alphas}
+  \item{2-sided nominal alpha}{Two-sided nominal alpha at each analysis}
+  \item{2-sided alpha spending}{Two-sided alpha spending at each analysis}
+  \item{2-sided cummulative alpha}{Two-sided cumulative alpha spending at each analysis}
+  \item{2-sided sum_nom_alpha}{Sum of the two-sided nominal alphas}
+  \item{reference}{Reference for the sample size formula (Schoenfeld, 1983)}
+}
+Returns NA when the two arms have the same endpoint parameter.
 }
 \description{
 Group sequential designs / Adaptive sequential designs: Survival analysis, Superiority trial, Sample size calculation, O'Brien-Fleming boundary

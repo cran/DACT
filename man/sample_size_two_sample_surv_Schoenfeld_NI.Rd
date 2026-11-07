@@ -14,26 +14,30 @@ sample_size_two_sample_surv_Schoenfeld_NI(
 )
 }
 \arguments{
-\item{HR}{The hazards ratio of test arm vs. the control arm}
+\item{HR}{Hazards ratio of test arm vs. the control arm; must be > 0}
 
-\item{margin}{The non-inferiority margin}
+\item{margin}{Non-inferiority margin; set to 0 for a superiority trial}
 
-\item{direction}{Test direction: 1 = smaller HR is better, 0 = larger HR is better}
+\item{direction}{Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better}
 
-\item{alpha_2}{The type I error for the one-sided test}
+\item{alpha_2}{Type I error for the two-sided test; 0 < alpha_2 < 1}
 
 \item{beta}{Type II error rate, i.e. 1 - power}
 
-\item{rand_ratio}{The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 }
 \value{
-The output will show the total number of events for the control arm and the test arm
+A named list with the following components:
+\describe{
+  \item{Total number of events}{Total number of events required for the two-arm comparison}
+  \item{Reference}{Character string giving the reference for the Schoenfeld sample size formula}
+}
 }
 \description{
 Fixed sample designs: Survival analysis, Non-inferiority trial, Sample size calculation
 }
 \examples{
-sample_size_two_sample_surv_Schoenfeld_NI(HR = 0.7, margin = 0.1, direction = 0,
-alpha_2 = 0.05, beta = 0.1, rand_ratio = 1)
+sample_size_two_sample_surv_Schoenfeld_NI( HR = 0.7, margin = 0.1, direction = 1,
+  alpha_2 = 0.05, beta = 0.1, rand_ratio = 1)
 
 }

@@ -22,53 +22,97 @@ asd_simu_OC_survival(
 )
 }
 \arguments{
-\item{HR}{Hazard ratio (test vs control)}
+\item{HR}{Hazards ratio of the test arm vs. the control arm; HR < 1 favours the test arm. The
+simulation grid varies HR over the values supplied}
 
-\item{s1}{Information fractions for the first stage / first group}
+\item{s1}{Vector of information fractions of the first interim analysis schedule, e.g.
+c(1/3, 2/3, 1); the last element must be 1}
 
-\item{s2}{Information fractions for the second stage / second group}
+\item{s2}{Vector of information fractions of the second interim analysis schedule, e.g.
+c(0.5, 1); the last element must be 1}
 
-\item{alpha_2}{Type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; must be between 0 and 1, and alpha_2/2 is the
+one-sided type I error used for the critical boundaries}
 
-\item{alpha_2_alps_s1}{Type I error spent up to the interim analysis (stage 1 / group 1)}
+\item{alpha_2_alps_s1}{Two-sided type I error spent at the interim analyses of schedule s1 with
+the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+alpha_2}
 
-\item{alpha_2_alps_s2}{Cumulative type I error spent at the final analysis (stage 2 / group 2)}
+\item{alpha_2_alps_s2}{Two-sided type I error spent at the interim analyses of schedule s2 with
+the alpha-spending boundary; each element must be between 0 and 1 and the elements must sum to
+alpha_2}
 
-\item{surv_rate}{Survival rate used to translate the number of events into a sample size}
+\item{surv_rate}{Survival rate at the end of the trial, used together with the number of events
+to derive the sample size; must be between 0 and 1}
 
-\item{evt_num_1}{Number of events for the first stage / group}
+\item{evt_num_1}{Planned number of events for the first scenario of the simulation grid}
 
-\item{evt_num_2}{Number of events for the second stage / group}
+\item{evt_num_2}{Planned number of events for the second scenario of the simulation grid}
 
-\item{evt_max_1}{Maximum number of events for the first stage / group}
+\item{evt_max_1}{Maximum number of events allowed for the sample size change in the first
+scenario of the simulation grid}
 
-\item{evt_max_2}{Maximum number of events for the second stage / group}
+\item{evt_max_2}{Maximum number of events allowed for the sample size change in the second
+scenario of the simulation grid}
 
-\item{HR_cut}{Hazard-ratio cut-off for early stopping at the interim analysis}
+\item{HR_cut}{Lack of efficacy threshold on the hazards-ratio scale; the corresponding
+threshold on the log-hazards-ratio scale is theta_cut = -log(HR_cut). If the observed interim
+log-hazards-ratio is below theta_cut (i.e. the observed HR is greater than HR_cut), the trial
+continues to the planned number of events with no sample size increase and no early
+termination for futility}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Conditional type II error; 1 - beta is the target conditional power for the sample
+size re-estimation; must be between 0 and 1}
 
-\item{sim_num}{Number of simulation replicates}
+\item{sim_num}{Number of simulation replicates; must be > 0}
 }
 \value{
-A named list containing the following elements: 'Looks', 'Information fractions', 'O'Brien-Fleming boundaries'.
+A named list with six components, one for each combination of critical boundary type
+(O'Brien-Fleming, Pocock, alpha-spending) and interim analysis schedule (s1, s2):
+\describe{
+  \item{O'Brien-Fleming boundaries, interim analysis schedule=s1}{Named list with the group
+    sequential design (Looks, Information fractions, O'Brien-Fleming boundaries) and the
+    simulation results for the four combinations of planned number of events (evt_num_1,
+    evt_num_2) and maximum number of events (evt_max_1, evt_max_2), each a data frame with one
+    row per hazards ratio and the columns HR<sub>1</sub>,..., sample size for fixed design,
+    Rejection rate without SSR, Rejection rate with SSR, Rate of sample size increase,
+    Rejection rate without SSR/(meeting sample size incerase criteria),
+    Rejection rate with SSR/(sample size incerase), Futility rate, Planned sample size
+    (the planned number of events), Maximum sample size (the maximum number of events allowed),
+    Mean sample size (the mean simulated number of events),
+    mean sample size conditional on increase and
+    Ratio of adaptive sample size over fixed sample size}
+  \item{O'Brien-Fleming boundaries, interim analysis schedule=s2}{The same group sequential
+    design and simulation results computed with the information fractions s2}
+  \item{Pocock boundaries, interim analysis schedule=s1}{The same group sequential design and
+    simulation results computed with Pocock boundaries and the information fractions s1}
+  \item{Pocock boundaries, interim analysis schedule=s2}{The same group sequential design and
+    simulation results computed with Pocock boundaries and the information fractions s2}
+  \item{Alpha-spending boundaries, interim analysis schedule=s1}{The same group sequential
+    design and simulation results computed with alpha-spending boundaries and the information
+    fractions s1}
+  \item{Alpha-spending boundaries, interim analysis schedule=s2}{The same group sequential
+    design and simulation results computed with alpha-spending boundaries and the information
+    fractions s2}
+}
 }
 \description{
 Group sequential designs / Adaptive sequential designs: Simulations, Survival analysis, Optimizing adaptive sequential design
 }
 \examples{
 \donttest{
-asd_simu_OC_survival(HR = c(0.7,0.78,0.8), s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05,
+set.seed(1)
+asd_simu_OC_survival(HR = c(0.75,0.8,0.85), s1 = c(1/3,2/3,1), s2 = c(0.5,1), alpha_2 = 0.05,
 alpha_2_alps_s1 = c(0.001,0.001,0.048), alpha_2_alps_s2 = c(0.001,0.049), surv_rate = 0.5,
-evt_num_1 = 600, evt_num_2 = 800, evt_max_1 = 1000, evt_max_2 = 1500,
-HR_cut = 0.95, beta = 0.1, sim_num = 20)
+evt_num_1 = 200, evt_num_2 = 300, evt_max_1 = 2000, evt_max_2 = 3000, HR_cut = 0.95, beta = 0.1,
+sim_num = 20)
 }
 
 }
 \references{
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}.
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 

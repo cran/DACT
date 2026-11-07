@@ -17,17 +17,23 @@ asd_new_design_theta_survival(
 )
 }
 \arguments{
-\item{theta}{Assumed effect size}
+\item{theta}{Assumed effect size used for the conditional power calculation, i.e. minus the log
+of the hazard ratio; different values of theta can be entered to check the sensitivity of the
+conditional power to the effect size; if theta < 0.001 the new number of events and the new
+critical boundary are returned as 'NA'}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
 \item{c_bry}{Vector of critical boundaries for each analysis}
 
-\item{inter_vt}{Index of the interim analysis at which the sample size is re-estimated (1-based)}
+\item{inter_vt}{Index of the interim analysis at which the sample size is re-estimated (1-based);
+must be less than length(s)}
 
-\item{snew}{Vector of new information fractions after the sample size is changed}
+\item{snew}{Vector of new information fractions after the sample size is changed, e.g. c(0.5, 1);
+the fractions are relative to the new total information and the last element must be 1}
 
-\item{theta_hat_inter}{Treatment effect estimate observed at the interim analysis}
+\item{theta_hat_inter}{Treatment effect estimate observed at the interim analysis, i.e. minus the
+log of the observed hazard ratio}
 
 \item{theta_hat_inter_sd}{Standard error of 'theta_hat_inter'}
 
@@ -36,7 +42,23 @@ asd_new_design_theta_survival(
 \item{beta}{Type II error rate, i.e. 1 - power}
 }
 \value{
-A named list containing the following elements: 'Interim analysis hypothesis test', 'Wald statistics', 'Critical boundary', 'Assumed effect size: theta', 'c_alpha', 'c_power_theta', ' events_new', 'New information fraction', 'New critical boundary'.
+A named list with the following components:
+\describe{
+  \item{Interim analysis hypothesis test}{Character string giving the outcome of the interim
+    hypothesis test: whether the null hypothesis was rejected at the interim analysis}
+  \item{Wald statistics}{Wald statistic of the treatment effect observed at the interim analysis}
+  \item{Critical boundary}{Planned critical boundary at the interim analysis at which the sample
+    size is re-estimated}
+  \item{Assumed effect size: theta}{The assumed effect size theta used for the conditional power
+    calculation}
+  \item{c_alpha}{Conditional type I error at the interim analysis, calculated by setting theta = 0}
+  \item{c_power_theta}{Conditional power at the interim analysis using the assumed effect size theta}
+  \item{events_new}{New total number of events required after the sample size re-estimation,
+    or 'NA' if the null hypothesis was rejected at the interim analysis or if theta < 0.001}
+  \item{New information fraction}{The new information fractions after the sample size change}
+  \item{New critical boundary}{New critical boundaries for the new interim analyses
+    (O'Brien-Fleming type), or 'NA' if they were not calculated}
+}
 }
 \description{
 Group sequential designs / Adaptive sequential designs: Interim analysis, Survival analysis, Input theta

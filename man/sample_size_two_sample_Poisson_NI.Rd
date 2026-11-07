@@ -15,28 +15,32 @@ sample_size_two_sample_Poisson_NI(
 )
 }
 \arguments{
-\item{lambda_t}{The event rate of the test arm}
+\item{lambda_t}{Event rate of the test arm under the Poisson model; must be > 0}
 
-\item{lambda_c}{The event rate of the control arm}
+\item{lambda_c}{Event rate of the control arm under the Poisson model; must be > 0}
 
-\item{margin}{The non-inferiority margin}
+\item{margin}{Non-inferiority margin; set to 0 for a superiority trial}
 
-\item{direction}{Test direction: 1 = smaller lambda is better, 0 = larger lambda is better}
+\item{direction}{Test direction: 1 = larger values of the endpoint parameter are better, otherwise smaller values are better}
 
-\item{alpha}{The type I error for the one-sided test}
+\item{alpha}{Type I error for the one-sided test; 0 < alpha < 1}
 
 \item{beta}{Type II error rate, i.e. 1 - power}
 
-\item{rand_ratio}{The ratio of the number of subjects in the test arm vs. the number of subjects in the control arm}
+\item{rand_ratio}{Randomization ratio: number of subjects in the test arm vs. the number of subjects in the control arm; must be > 0}
 }
 \value{
-The output will show the sample size for the control arm and the test arm
+A named list with the following components:
+\describe{
+  \item{Sample size for experimental arm}{Sample size required for the experimental (test) arm}
+  \item{Sample size for control arm}{Sample size required for the control arm}
+}
 }
 \description{
 Fixed sample designs: Poisson distribution, Non-inferiority trial, Sample size calculation
 }
 \examples{
-sample_size_two_sample_Poisson_NI(lambda_t = 1.1, lambda_c = 1.0, margin = 0.1, direction = 0,
-alpha = 0.025, beta = 0.1, rand_ratio = 1)
+sample_size_two_sample_Poisson_NI( lambda_t = 1.1, lambda_c = 1.0, margin = 0.1, direction = 1,
+  alpha = 0.025, beta = 0.1, rand_ratio = 1)
 
 }

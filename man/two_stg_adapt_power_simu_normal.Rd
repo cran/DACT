@@ -21,45 +21,58 @@ two_stg_adapt_power_simu_normal(
 )
 }
 \arguments{
-\item{mu_t}{Means of the test arm}
+\item{mu_t}{Vector of means of the test arms, one entry per dose}
 
-\item{mu_c}{Means of the control arm}
+\item{mu_c}{Mean of the control arm}
 
-\item{sigma_t}{Standard deviation of the test arm}
+\item{sigma_t}{Standard deviation of the test arms}
 
 \item{sigma_c}{Standard deviation of the control arm}
 
-\item{direction}{Test direction: 1 = larger mu is better, 0 = smaller mu is better}
+\item{direction}{Test direction: 1 = larger mu is better, otherwise smaller mu is better}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
-\item{bry_type}{Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock, 3 = alpha-spending}
+\item{bry_type}{Critical boundary type: 1 = O'Brien-Fleming, 2 = Pocock; any other value leaves the boundaries undefined}
 
-\item{alpha_2}{Type I error for the two-sided test}
+\item{alpha_2}{Type I error for the two-sided test; 0 < alpha_2 < 1}
 
-\item{theta_cut}{Efficacy cut-off on the effect-size scale applied at the interim analysis}
+\item{theta_cut}{Lack-of-efficacy threshold: an effect size below which the test drug is not considered to provide clinically meaningful efficacy}
 
 \item{samsz}{Planned sample size of the control arm used in the simulation}
 
-\item{N_max}{Maximum allowed sample size (control arm)}
+\item{N_max}{Maximum sample size (control arm) allowed after sample size re-estimation}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Conditional type II error; 1 - beta is the target conditional power for the sample size re-estimation; 0 < beta < 1}
 
 \item{sim_num}{Number of simulation replicates}
 }
 \value{
-A matrix in which each row corresponds to one simulation replicate and the columns hold the simulated operating characteristics
-(e.g. rejection indicators, sample sizes and stopping stages).
+A named numeric vector with the following components:
+\describe{
+  \item{Rejection rate without SSR}{Rejection rate of the trial if the sample size is not re-estimated}
+  \item{Rejection rate with SSR}{Rejection rate of the trial under the adaptive procedure with sample size re-estimation}
+  \item{rate of sample size increase}{Rate of simulations in which the sample size is increased}
+  \item{Rejection rate without SSR/(meeting sample size incerase criteria)}{Rejection rate without sample size re-estimation among the simulations that meet the sample size increase criteria}
+  \item{Rejection rate with SSR/(sample size incerase)}{Rejection rate with sample size re-estimation among the simulations in which the sample size is increased}
+  \item{Type I error}{Simulated one-sided type I error rate}
+  \item{Non-Type I error rejection rate}{Simulated rejection rate when the true effect is non-zero}
+  \item{Futility rate}{Rate of simulations stopped for lack of efficacy, i.e. for which the observed interim effect size is below theta_cut}
+  \item{Planned control sample size}{Planned sample size of the control arm}
+  \item{Maximum control sample size}{Maximum permitted sample size of the control arm}
+  \item{Mean control sample size}{Mean simulated sample size of the control arm}
+  \item{Planned total sample size}{Planned total sample size of the trial}
+  \item{Mean total sample size}{Mean simulated total sample size of the trial}
+  \item{mean control sample size conditional on increase}{Mean simulated control sample size among the simulations in which the sample size is increased}
+}
 }
 \description{
 Phase 2/3 seamless combination Group sequential design: Simulations, Normal distribution, Operating characteristics
 }
 \examples{
-\donttest{
-two_stg_adapt_power_simu_normal(mu_t = c(0,0.4,0.5), mu_c = 0, sigma_t = 1, sigma_c = 1,
-direction = 1, s = c(1/3,2/3,1), bry_type = 1, alpha_2 = 0.05, theta_cut = 0.05, samsz = 100,
-N_max = 1000, beta = 0.1, sim_num = 20)
-}
+two_stg_adapt_power_simu_normal(mu_t = c(0,0,0), mu_c = 0, sigma_t = 1, sigma_c = 1,
+direction = 1, s = c(1/3,2/3,1), bry_type = 2, alpha_2 = c(0.001,0.001,0.048),
+theta_cut = 0.05, samsz = 100, N_max = 500, beta = 0.1, sim_num = 20)
 
 }
 \references{
@@ -67,7 +80,7 @@ P. Gao, Y. Li (05 May 2024): Adaptive two-stage seamless sequential design for c
 
 Gao, P., Zhang, W. (2024). A systematic approach to adaptive sequential design for clinical trials: using simulations to select a design with desired operating characteristics. Journal of Biopharmaceutical Statistics,2024 Aug;34(5):737-752. doi:10.1080/10543406.2024.2358796. Epub 2024 May 30. To link to this article: \url{https://www.tandfonline.com/doi/full/10.1080/10543406.2024.2358796}
 
-H.H. Müller, H. Sch?fer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
+H.H. Müller, H. Schäfer. Adaptive Group Sequential Designs for Clinical Trials: Combining the Advantages of Adaptive and of Classical Group Sequential Approaches. BIOMETRICs 57, 886-891. September 2001.
 
 P. Gao, J. H. Ware, C. Mehta. Sample size re-estimation for adaptive sequential design in clinical trials. J Biopharm Stat. 2008;18(6):1184-96.
 }

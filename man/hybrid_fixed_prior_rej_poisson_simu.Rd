@@ -21,44 +21,62 @@ hybrid_fixed_prior_rej_poisson_simu(
 )
 }
 \arguments{
-\item{t_prior}{The prior is assumed to have a normal distribution. This is the mean of the prior distribution}
+\item{t_prior}{Prior information time: the prior distribution of
+theta = lambda_t - lambda_c is assumed to have a normal distribution, and the Fisher's
+information time is the reciprocal of the variance of the prior distribution; set
+t_prior = 0 for a non-informative prior}
 
-\item{theta_prior}{The prior distribution of theta is assumed to have a normal distribution. The Fisher’s information time is the reciprocal of the variance from the prior distribution}
+\item{theta_prior}{Mean effect size of prior: the mean of the normal prior distribution of
+theta = lambda_t - lambda_c; set theta_prior = 0 for a non-informative prior}
 
-\item{lambda_t}{Event rate in the test arm (Poisson / negative binomial endpoint)}
+\item{lambda_t}{Event rate in the test arm of the current trial: the number of events per
+subject, generated as rpois(lambda_t). The effect size is theta = lambda_t - lambda_c.
+Enter lambda_t = lambda_c to verify type I error control and lambda_t > lambda_c for the
+power simulation}
 
-\item{lambda_c}{Event rate in the control arm (Poisson / negative binomial endpoint)}
+\item{lambda_c}{Event rate in the control arm of the current trial, generated as
+rpois(lambda_c); the effect size is theta = lambda_t - lambda_c}
 
 \item{s}{Vector of information fractions of each analysis, e.g. c(1/3, 2/3, 1); the last element must be 1}
 
 \item{sampsz}{Planned sample size: the planned sample size at the final analysis}
 
-\item{N_max}{Maximum sample size: a user chosen , maximum allowable sample size for sample size modification}
+\item{N_max}{Maximum sample size: a user chosen, maximum allowable sample size for sample size modification}
 
-\item{theta_cut}{Efficacy cut-off on the effect-size scale applied at the interim analysis}
+\item{theta_cut}{Futility threshold: a cut-off for theta_hat. In the simulations, if
+theta_hat at the interim analysis is at or below theta_cut the trial is considered futile
+and proceeds to the planned sample size without any change}
 
-\item{cp_min}{Promising zone cp_min}
+\item{cp_min}{Promising zone cp_min: CP_min in the promising zone sample size re-estimation;
+a conditional power below cp_min is the unfavorable zone. The user should select this
+value from Mehta, Pocock (2011)}
 
-\item{gamma}{Parameter chosen for the credible interval modified predictive power (CI_MPP)}
+\item{gamma}{Parameter chosen for the credible interval modified predictive power (CI_MPP);
+it defines the (1 - gamma) credible interval of the posterior for theta, e.g. gamma = 0.5
+gives a 50 percent interval}
 
 \item{alpha_2}{Type I error for the two-sided test}
 
-\item{beta}{Type II error rate, i.e. 1 - power}
+\item{beta}{Conditional type II error; 1 - beta is the target conditional power used for the
+sample size re-estimation}
 
 \item{sim_num}{Number of simulation replicates}
 }
 \value{
-The simulations are conducted with both non-informative prior and informative prior
+A named list with the following components:
+\describe{
+  \item{rejection rate and mean sample size}{A data frame with the columns "Prior type", "SSR method", "Rejection rate" and "Mean sample size", with one row per sample size re-estimation (SSR) method. The methods compared are the planned sample size with no SSR, the promising zone SSR, the SSR using the true effect size with conditional power, and, for both the non-informative prior and the informative prior, the cp SSR, pp SSR, mpp SSR and ci_mpp SSR methods}
+  \item{futility rate}{The rate at which the observed theta_hat at the interim analysis is at or below theta_cut, so that the trial proceeds without any sample size change}
+  \item{References}{A data frame of the references for the methods compared}
+}
 }
 \description{
 Hybrid: Simulations, Poisson distribution, Using given estimates of informative prior
 }
 \examples{
-\donttest{
 hybrid_fixed_prior_rej_poisson_simu(t_prior = 5, theta_prior = 0.2, lambda_t = 0.5,
 lambda_c = 0.5, s = c(0.5,1), sampsz = 100, N_max = 150, theta_cut = 0.001, cp_min = 0.27,
 gamma = 0.5, alpha_2 = 0.05, beta = 0.1, sim_num = 20)
-}
 
 }
 \references{
